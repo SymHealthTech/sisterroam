@@ -23,7 +23,7 @@ export default function PublicNavbar() {
   const dropdownRef = useRef(null)
 
   useEffect(() => {
-    function onScroll() { setScrolled(window.scrollY > 80) }
+    function onScroll() { setScrolled(window.scrollY > 20) }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -48,7 +48,7 @@ export default function PublicNavbar() {
 
   return (
     <header className={cn(
-      'fixed top-0 left-0 right-0 z-50 h-[60px] transition-all duration-300',
+      'fixed top-0 left-0 right-0 z-50 h-[60px] transition-[background-color,border-color,box-shadow] duration-150',
       scrolled ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm' : 'bg-transparent',
     )}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">

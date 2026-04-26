@@ -10,11 +10,18 @@ import {
   Star,
   MapPin,
   ArrowRight,
+  ArrowLeft,
   Bike,
   Mountain,
   Activity,
   Car,
   Globe,
+  Smartphone,
+  Bell,
+  Users,
+  MessageCircle,
+  MoreHorizontal,
+  BookOpen,
 } from "lucide-react";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
@@ -72,6 +79,7 @@ const HERO_HOSTS = [
     femaleOnly: false,
     rating: 4.8,
     type: "Shared room",
+    cyclingNote: true,
   },
 ];
 
@@ -283,18 +291,25 @@ export default async function HomePage() {
       <main>
         {/* ── S1: Hero ─────────────────────────────────────────────────── */}
         <section
-          className="relative min-h-screen flex items-center overflow-hidden"
+          className="relative min-h-screen lg:min-h-[600px] flex items-center overflow-hidden bg-cover bg-[60%_center] lg:bg-[60%_75%]"
           style={{
             backgroundImage:
               "url(https://images.unsplash.com/photo-1723764881665-5b40cea01c9b?w=1920&q=80)",
-            backgroundSize: "cover",
-            backgroundPosition: "center center",
           }}
           aria-label="Hero"
         >
-          {/* Brand overlay */}
+          {/* Mobile overlay — full coverage gradient */}
           <div
-            className="absolute inset-0 bg-gradient-to-r from-brand/95 via-brand/80 to-brand/55"
+            className="absolute inset-0 lg:hidden bg-gradient-to-r from-brand/95 via-brand/80 to-brand/55"
+            aria-hidden="true"
+          />
+          {/* Desktop overlay — fades to clear after ~60% so the woman is visible */}
+          <div
+            className="absolute inset-0 hidden lg:block"
+            style={{
+              background:
+                "linear-gradient(to right, rgba(93,26,139,0.95) 0%, rgba(93,26,139,0.85) 35%, rgba(93,26,139,0.6) 65%, rgba(93,26,139,0.5) 100%)",
+            }}
             aria-hidden="true"
           />
 
@@ -302,7 +317,7 @@ export default async function HomePage() {
             {/* Desktop: 55/45 grid · Mobile: single column */}
             <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-12 lg:gap-16 items-center">
               {/* Left column */}
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {/* Pill badge */}
                 <div className="inline-flex items-center gap-2 bg-white/10 text-white text-sm font-medium px-4 py-2 rounded-full">
                   <span
@@ -322,10 +337,10 @@ export default async function HomePage() {
                 </h1>
 
                 {/* Value prop */}
-                <p className="text-white/75 text-lg leading-relaxed max-w-lg">
-                  SisterRoam is the only hospitality exchange built exclusively
-                  for female solo travellers. Every host is ID-verified, every
-                  stay has a safety net.
+                <p className="text-white/75 text-base md:text-lg leading-relaxed max-w-lg">
+                  The verified community for female solo travellers. Find a
+                  host, a co-traveller, or local recommendations — all from
+                  sisters you can trust.
                 </p>
 
                 {/* CTAs */}
@@ -342,6 +357,39 @@ export default async function HomePage() {
                   >
                     Browse hosts first
                   </Link>
+                </div>
+
+                {/* Feature pills */}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    {
+                      icon: UserPlus,
+                      label: "Find a co-traveller",
+                      href: "/cotraveller",
+                    },
+                    {
+                      icon: MapPin,
+                      label: "Place recommendations",
+                      href: "/recommendations",
+                    },
+                    {
+                      icon: BookOpen,
+                      label: "Travel stories",
+                      href: "/stories",
+                    },
+                  ].map(({ icon: Icon, label, href }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs border border-white/25 hover:bg-white/25 transition-colors"
+                    >
+                      <Icon
+                        className="w-3.5 h-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      {label}
+                    </Link>
+                  ))}
                 </div>
 
                 {/* Trust points */}
@@ -370,7 +418,6 @@ export default async function HomePage() {
                   <div
                     key={host.name}
                     className="bg-white/10 backdrop-blur border border-white/15 rounded-2xl p-4 flex items-center gap-3"
-                    style={{ transform: `translateX(${i === 1 ? 24 : 0}px)` }}
                   >
                     <Avatar name={host.name} size="md" />
                     <div className="flex-1 min-w-0">
@@ -403,6 +450,11 @@ export default async function HomePage() {
                         <span className="mx-1">·</span>
                         <span>{host.type}</span>
                       </div>
+                      {host.cyclingNote && (
+                        <p className="text-xs text-white/60 italic mt-1">
+                          Also looking for a cycling partner in April
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Star
@@ -415,6 +467,80 @@ export default async function HomePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Feature cards row (desktop only) ────────────────────────── */}
+        <section
+          className="hidden md:block bg-white border-b border-gray-100 py-6"
+          aria-label="Feature highlights"
+        >
+          <div className="max-w-6xl mx-auto px-10">
+            <div className="grid grid-cols-3 gap-0">
+              {/* Card 1 — Co-traveller */}
+              <div className="flex items-start gap-3 pr-6 border-r border-gray-100">
+                <div className="w-10 h-10 rounded-xl bg-brand-lighter flex items-center justify-center shrink-0">
+                  <UserPlus className="w-5 h-5 text-brand" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Find a co-traveller
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-0.5">
+                    Post your trip and connect with verified sisters who share
+                    your destination.
+                  </p>
+                  <Link
+                    href="/cotraveller"
+                    className="text-xs text-brand font-medium mt-1 inline-block hover:underline"
+                  >
+                    Explore trips →
+                  </Link>
+                </div>
+              </div>
+              {/* Card 2 — Recommendations */}
+              <div className="flex items-start gap-3 px-6 border-r border-gray-100">
+                <div className="w-10 h-10 rounded-xl bg-teal-lighter flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-teal" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Place recommendations
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-0.5">
+                    Real tips on stays, food, transport and safety from sisters
+                    who have been there.
+                  </p>
+                  <Link
+                    href="/recommendations"
+                    className="text-xs text-brand font-medium mt-1 inline-block hover:underline"
+                  >
+                    Browse tips →
+                  </Link>
+                </div>
+              </div>
+              {/* Card 3 — Travel Stories */}
+              <div className="flex items-start gap-3 pl-6">
+                <div className="w-10 h-10 rounded-xl bg-pink-lighter flex items-center justify-center shrink-0">
+                  <BookOpen className="w-5 h-5 text-pink" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    Travel stories
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-0.5">
+                    Authentic experiences shared by verified female solo
+                    travellers worldwide.
+                  </p>
+                  <Link
+                    href="/stories"
+                    className="text-xs text-brand font-medium mt-1 inline-block hover:underline"
+                  >
+                    Read stories →
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -661,7 +787,7 @@ export default async function HomePage() {
 
         {/* ── S5: Safety features ──────────────────────────────────────── */}
         <section
-          className="py-14 lg:py-24 bg-gradient-to-b from-white via-brand-lighter/20 to-white"
+          className="py-14 lg:py-24 bg-gradient-to-b from-brand-lighter/40 via-brand-lighter/20 to-white"
           aria-labelledby="safety-title"
         >
           <div className="max-w-5xl mx-auto px-6">
@@ -713,58 +839,378 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── S6: Testimonials ─────────────────────────────────────────── */}
+        {/* ── S6: Mobile App + Testimonials ────────────────────────────── */}
         <section
-          className="bg-brand py-14 lg:py-20"
-          aria-labelledby="testimonials-title"
+          className="bg-brand py-14 lg:py-24 overflow-hidden relative"
+          aria-labelledby="app-section-title"
         >
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2
-                id="testimonials-title"
-                className="text-white text-3xl font-medium"
-              >
-                Sisters who roam, sisters who trust
-              </h2>
-              <p className="text-white/60 mt-3">
-                Real experiences from the SisterRoam community.
-              </p>
-            </div>
+          {/* Decorative blobs */}
+          <div
+            className="absolute top-0 left-0 w-64 h-64 rounded-full bg-white/5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-white/5 translate-x-1/3 translate-y-1/3 pointer-events-none"
+            aria-hidden="true"
+          />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {TESTIMONIALS.map(({ quote, name, location }) => (
-                <div
-                  key={name}
-                  className="bg-white/[0.08] border border-white/15 rounded-2xl p-6 space-y-4"
+          <div className="relative max-w-5xl mx-auto px-6">
+            {/* ── App promo row ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+              {/* Left: headline + features + download buttons */}
+              <div className="space-y-6 text-white">
+                <span className="inline-flex items-center gap-2 bg-white/10 text-white/90 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest">
+                  <Smartphone className="w-3 h-3" aria-hidden="true" />
+                  Mobile App
+                </span>
+
+                <h2
+                  id="app-section-title"
+                  className="text-3xl font-medium leading-tight"
                 >
-                  {/* Stars */}
-                  <div className="flex gap-0.5" aria-label="5 stars" role="img">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className="w-4 h-4 fill-amber text-amber"
+                  Your safety net,
+                  <br />
+                  always in your pocket
+                </h2>
+
+                <p className="text-white/75 leading-relaxed max-w-md">
+                  The SisterRoam app puts verified hosts, one-tap SOS, and daily
+                  safety check-ins right at your fingertips — wherever your next
+                  adventure takes you.
+                </p>
+
+                <ul className="space-y-3">
+                  {[
+                    "One-tap SOS from anywhere",
+                    "Browse & message hosts on the go",
+                    "Daily safety check-ins",
+                    "Offline access to your host's contact",
+                  ].map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-center gap-2.5 text-sm text-white/85"
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full bg-teal flex items-center justify-center shrink-0"
                         aria-hidden="true"
-                      />
-                    ))}
-                  </div>
+                      >
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
 
-                  {/* Quote */}
-                  <blockquote>
-                    <p className="text-white/90 text-sm leading-relaxed italic">
-                      &ldquo;{quote}&rdquo;
-                    </p>
-                  </blockquote>
+                {/* Download buttons — mobile only */}
+                <div className="md:hidden flex flex-col sm:flex-row gap-3 pt-2">
+                  <a
+                    href="#"
+                    className="inline-flex items-center gap-3 px-5 py-3.5 bg-white text-gray-900 rounded-[10px] hover:bg-white/90 transition-colors"
+                    aria-label="Download on the App Store"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 shrink-0"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                    </svg>
+                    <div className="text-left">
+                      <p className="text-[10px] text-gray-500 leading-none">
+                        Download on the
+                      </p>
+                      <p className="text-sm font-semibold leading-tight">
+                        App Store
+                      </p>
+                    </div>
+                  </a>
+                  <a
+                    href="#"
+                    className="inline-flex items-center gap-3 px-5 py-3.5 bg-white text-gray-900 rounded-[10px] hover:bg-white/90 transition-colors"
+                    aria-label="Get it on Google Play"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 shrink-0"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M3.18 23.76c.38.21.82.26 1.25.12l12.49-7.21-2.72-2.73-11.02 9.82zM.75 1.61C.44 1.97.25 2.5.25 3.17v17.66c0 .67.19 1.2.5 1.56l.08.08 9.9-9.9v-.22L.83 1.53l-.08.08zM20.3 10.28l-2.82-1.63-3.07 3.07 3.07 3.07 2.84-1.64c.81-.47.81-1.23-.02-1.87zM4.43.12L16.92 7.33l-2.72 2.72L3.18.23C3.62.09 4.06.13 4.43.12z" />
+                    </svg>
+                    <div className="text-left">
+                      <p className="text-[10px] text-gray-500 leading-none">
+                        Get it on
+                      </p>
+                      <p className="text-sm font-semibold leading-tight">
+                        Google Play
+                      </p>
+                    </div>
+                  </a>
+                </div>
 
-                  {/* Author */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <Avatar name={name} size="sm" />
-                    <div>
-                      <p className="text-white text-sm font-medium">{name}</p>
-                      <p className="text-white/60 text-xs">{location}</p>
+                {/* Desktop hint */}
+                <p className="hidden md:block text-sm text-white/50 italic">
+                  Open this page on your phone to download the app.
+                </p>
+              </div>
+
+              {/* Right: tilted phone mockup */}
+              <div className="flex justify-center lg:justify-end py-10 lg:py-6">
+                <div
+                  className="relative rotate-[8deg] drop-shadow-2xl"
+                  style={{ width: 224 }}
+                  role="img"
+                  aria-label="SisterRoam app preview"
+                >
+                  {/* Glow */}
+                  <div
+                    className="absolute inset-0 blur-3xl bg-white/15 rounded-full scale-90 translate-y-6 pointer-events-none"
+                    aria-hidden="true"
+                  />
+
+                  {/* Phone shell */}
+                  <div
+                    className="relative w-full bg-gray-900 rounded-[2.5rem] border-[5px] border-gray-800 overflow-hidden"
+                    style={{ aspectRatio: "9 / 20" }}
+                  >
+                    {/* Dynamic island */}
+                    <div
+                      className="absolute top-3 left-1/2 -translate-x-1/2 w-[68px] h-[17px] bg-gray-900 rounded-full z-20"
+                      aria-hidden="true"
+                    />
+
+                    {/* Screen */}
+                    <div className="absolute inset-0 bg-gray-50 flex flex-col overflow-hidden">
+                      {/* Status bar */}
+                      <div className="h-8 bg-gray-50 flex items-end justify-between px-3.5 pb-1 shrink-0">
+                        <span className="text-[7px] font-semibold text-gray-800">
+                          9:41
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {/* Signal bars */}
+                          <div className="flex gap-px items-end">
+                            {[2, 3, 4, 5].map((h) => (
+                              <div
+                                key={h}
+                                className="w-[3px] bg-gray-800 rounded-sm"
+                                style={{ height: h }}
+                              />
+                            ))}
+                          </div>
+                          {/* Wifi */}
+                          <svg
+                            viewBox="0 0 16 12"
+                            className="w-3 h-2.5 fill-gray-800"
+                            aria-hidden="true"
+                          >
+                            <path d="M8 2.4C5.2 2.4 2.7 3.5 1 5.3L0 4.2C2 2.1 4.8.8 8 .8s6 1.3 8 3.4l-1 1.1C13.3 3.5 10.8 2.4 8 2.4zm0 3.2c-1.7 0-3.2.7-4.3 1.8L2.6 6.3C4 4.9 5.9 4 8 4s4 .9 5.4 2.3L12.3 7.4C11.2 6.3 9.7 5.6 8 5.6zm0 3.2c-.9 0-1.7.4-2.3.9L8 12l2.3-2.3C9.7 9.2 8.9 8.8 8 8.8z" />
+                          </svg>
+                          {/* Battery */}
+                          <div className="flex items-center">
+                            <div className="w-5 h-2.5 border border-gray-700 rounded-sm overflow-hidden flex items-stretch p-px">
+                              <div className="w-4/5 bg-gray-800 rounded-sm" />
+                            </div>
+                            <div className="w-0.5 h-1.5 bg-gray-600 rounded-r-sm" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* App mini-header — matches AppLayout mobile header */}
+                      <div className="h-10 bg-white border-b border-gray-100 flex items-center px-3 shrink-0 relative">
+                        <ArrowLeft
+                          className="w-3.5 h-3.5 text-gray-600 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span className="absolute left-1/2 -translate-x-1/2 text-[9px] font-semibold text-gray-900 whitespace-nowrap">
+                          Good morning, Priya!
+                        </span>
+                        <div className="ml-auto relative shrink-0">
+                          <Bell
+                            className="w-3.5 h-3.5 text-gray-400"
+                            aria-hidden="true"
+                          />
+                          <span
+                            className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-danger rounded-full"
+                            aria-hidden="true"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Feed content */}
+                      <div className="flex-1 overflow-hidden px-2.5 pt-2.5 pb-1 space-y-2">
+                        {/* Greeting row */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[9px] font-bold text-gray-900 leading-tight">
+                              Ready for your next adventure?
+                            </p>
+                          </div>
+                          <div className="relative shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center">
+                              <span className="text-white text-[8px] font-bold">
+                                P
+                              </span>
+                            </div>
+                            <span className="absolute bottom-0 right-0 w-2 h-2 bg-teal rounded-full border border-white" />
+                          </div>
+                        </div>
+
+                        {/* Search bar */}
+                        <div className="bg-white border border-gray-200 rounded-[8px] h-6 flex items-center px-2 gap-1.5 shadow-sm">
+                          <Search
+                            className="w-2.5 h-2.5 text-gray-400 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="text-[7px] text-gray-400 truncate">
+                            Search for a host in any city...
+                          </span>
+                        </div>
+
+                        {/* Quick chips */}
+                        <div className="flex gap-1 overflow-hidden">
+                          {["Browse all", "♀ Only", "Cyclists", "Trekkers"].map(
+                            (chip) => (
+                              <span
+                                key={chip}
+                                className="shrink-0 text-[6px] px-1.5 py-0.5 bg-white border border-gray-200 rounded-full text-gray-600 font-medium"
+                              >
+                                {chip}
+                              </span>
+                            ),
+                          )}
+                        </div>
+
+                        {/* Section header */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] font-semibold text-gray-900">
+                            Verified hosts near you
+                          </span>
+                          <span className="text-[7px] text-brand font-medium">
+                            See all
+                          </span>
+                        </div>
+
+                        {/* Host cards */}
+                        <div className="space-y-1.5">
+                          {[
+                            {
+                              initial: "P",
+                              name: "Priya M.",
+                              city: "Mumbai",
+                              rating: "4.9",
+                              type: "Private room",
+                            },
+                            {
+                              initial: "A",
+                              name: "Ananya K.",
+                              city: "Delhi",
+                              rating: "5.0",
+                              type: "Shared room",
+                            },
+                          ].map((h) => (
+                            <div
+                              key={h.name}
+                              className="bg-white rounded-lg border border-gray-100 p-1.5 flex gap-2 items-center shadow-sm"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand to-brand-dark shrink-0 flex items-center justify-center">
+                                <span className="text-white text-[9px] font-bold">
+                                  {h.initial}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-[8px] font-semibold text-gray-900 truncate">
+                                    {h.name}
+                                  </span>
+                                  <div className="flex items-center gap-0.5 shrink-0">
+                                    <Star
+                                      className="w-2 h-2 fill-amber text-amber"
+                                      aria-hidden="true"
+                                    />
+                                    <span className="text-[7px] text-gray-600">
+                                      {h.rating}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-0.5 mt-0.5">
+                                  <MapPin
+                                    className="w-1.5 h-1.5 text-gray-400 shrink-0"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="text-[7px] text-gray-400 truncate">
+                                    {h.city} · {h.type}
+                                  </span>
+                                </div>
+                                <div className="flex gap-0.5 mt-0.5">
+                                  <span className="text-[6px] px-1 py-0.5 bg-brand-lighter text-brand rounded-full font-medium">
+                                    Verified
+                                  </span>
+                                  <span className="text-[6px] px-1 py-0.5 bg-pink-lighter text-pink rounded-full font-medium">
+                                    ♀ Only
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Community preview row */}
+                        <div className="flex items-center justify-between pt-0.5">
+                          <span className="text-[8px] font-semibold text-gray-900">
+                            From the community
+                          </span>
+                          <span className="text-[7px] text-brand font-medium">
+                            View all
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-lg border border-gray-100 p-2 flex gap-2 shadow-sm">
+                          <div className="w-5 h-5 rounded-full bg-teal-lighter shrink-0 flex items-center justify-center">
+                            <span className="text-teal text-[7px] font-bold">
+                              V
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="h-1.5 w-20 bg-gray-200 rounded-full mb-1" />
+                            <div className="h-1.5 w-14 bg-gray-100 rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom TabBar — matches TabBar.jsx */}
+                      <div className="bg-white border-t border-gray-100 flex h-10 shrink-0">
+                        {[
+                          { Icon: Home, label: "Home", active: true },
+                          { Icon: Search, label: "Explore", active: false },
+                          { Icon: Users, label: "Community", active: false },
+                          {
+                            Icon: MessageCircle,
+                            label: "Messages",
+                            active: false,
+                          },
+                          {
+                            Icon: MoreHorizontal,
+                            label: "More",
+                            active: false,
+                          },
+                        ].map(({ Icon, label, active }) => (
+                          <div
+                            key={label}
+                            className={`flex-1 flex flex-col items-center justify-center gap-0.5 ${
+                              active ? "text-brand" : "text-gray-300"
+                            }`}
+                          >
+                            <Icon className="w-3 h-3" aria-hidden="true" />
+                            <span className="text-[5.5px] font-medium">
+                              {label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </section>
@@ -819,7 +1265,58 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── S8: Final CTA ────────────────────────────────────────────── */}
+        {/* ── S8: Testimonials ─────────────────────────────────────────── */}
+        <section
+          className="bg-brand py-14 lg:py-24"
+          aria-labelledby="testimonials-title"
+        >
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2
+                id="testimonials-title"
+                className="text-white text-2xl lg:text-3xl font-medium"
+              >
+                Sisters who roam, sisters who trust
+              </h2>
+              <p className="text-white/60 mt-3 text-sm">
+                Real experiences from the SisterRoam community.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {TESTIMONIALS.map(({ quote, name, location }) => (
+                <div
+                  key={name}
+                  className="bg-white/[0.08] border border-white/15 rounded-2xl p-6 space-y-4"
+                >
+                  <div className="flex gap-0.5" aria-label="5 stars" role="img">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className="w-4 h-4 fill-amber text-amber"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <blockquote>
+                    <p className="text-white/90 text-sm leading-relaxed italic">
+                      &ldquo;{quote}&rdquo;
+                    </p>
+                  </blockquote>
+                  <div className="flex items-center gap-3 pt-2">
+                    <Avatar name={name} size="sm" />
+                    <div>
+                      <p className="text-white text-sm font-medium">{name}</p>
+                      <p className="text-white/60 text-xs">{location}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── S9: Final CTA ────────────────────────────────────────────── */}
         <section
           className="bg-brand-lighter py-14 lg:py-20"
           aria-label="Call to action"
