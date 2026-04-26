@@ -1,9 +1,9 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM =
-  process.env.RESEND_FROM_EMAIL ?? "SisterRoam <noreply@sisterroam.com>";
-// const FROM   = 'SisterRoam <noreply@sisterroam.com>'
+// const FROM =
+//   process.env.RESEND_FROM_EMAIL ?? "SisterRoam <noreply@sisterroam.com>";
+const FROM = "SisterRoam <noreply@sisterroam.com>";
 const BRAND = "#5D1A8B";
 const SITE = process.env.NEXTAUTH_URL ?? "https://sisterroam.com";
 
@@ -310,10 +310,14 @@ export async function sendSOSAlert(
 
 /* ── Co-traveller: interest expressed (to post author) ──────── */
 
-export async function sendCoTravellerInterestEmail(author, interestedUser, post) {
-  const firstName = author.fullName?.split(' ')[0] ?? 'there'
-  const intName   = interestedUser.fullName ?? 'A sister'
-  const preview   = (post.interestedCount ?? 1)
+export async function sendCoTravellerInterestEmail(
+  author,
+  interestedUser,
+  post,
+) {
+  const firstName = author.fullName?.split(" ")[0] ?? "there";
+  const intName = interestedUser.fullName ?? "A sister";
+  const preview = post.interestedCount ?? 1;
   return sendEmail({
     to: author.email,
     subject: `${intName} wants to join your trip to ${post.toCity}!`,
@@ -323,21 +327,30 @@ export async function sendCoTravellerInterestEmail(author, interestedUser, post)
       <div style="background:#f9fafb;border-radius:12px;padding:16px 20px;margin:16px 0;border:1px solid #e5e7eb;">
         <p style="margin:0 0 6px;font-size:13px;"><strong>Trip:</strong> ${post.fromCity} → ${post.toCity}</p>
         <p style="margin:0 0 6px;font-size:13px;"><strong>Member:</strong> ${intName}</p>
-        ${interestedUser.city ? `<p style="margin:0 0 6px;font-size:13px;"><strong>Based in:</strong> ${interestedUser.city}</p>` : ''}
+        ${interestedUser.city ? `<p style="margin:0 0 6px;font-size:13px;"><strong>Based in:</strong> ${interestedUser.city}</p>` : ""}
       </div>
-      <div style="text-align:center;">${btn('Review her interest', `${SITE}/cotraveller/${post._id}/interests`)}</div>
-      ${p(`<span style="color:#9ca3af;font-size:12px;">You have ${preview} total interested member${preview !== 1 ? 's' : ''} for this trip.</span>`)}
+      <div style="text-align:center;">${btn("Review her interest", `${SITE}/cotraveller/${post._id}/interests`)}</div>
+      ${p(`<span style="color:#9ca3af;font-size:12px;">You have ${preview} total interested member${preview !== 1 ? "s" : ""} for this trip.</span>`)}
     `),
-  })
+  });
 }
 
 /* ── Co-traveller: accepted (to interested user) ────────────── */
 
-export async function sendCoTravellerAcceptedEmail(interestedUser, author, post, chatRequestId) {
-  const firstName = interestedUser.fullName?.split(' ')[0] ?? 'there'
-  const depDate   = post.departureDate
-    ? new Date(post.departureDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    : ''
+export async function sendCoTravellerAcceptedEmail(
+  interestedUser,
+  author,
+  post,
+  chatRequestId,
+) {
+  const firstName = interestedUser.fullName?.split(" ")[0] ?? "there";
+  const depDate = post.departureDate
+    ? new Date(post.departureDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
   return sendEmail({
     to: interestedUser.email,
     subject: `You are matched for ${post.toCity}!`,
@@ -347,35 +360,39 @@ export async function sendCoTravellerAcceptedEmail(interestedUser, author, post,
       ${p(`<strong>${author.fullName}</strong> has accepted your request to join the trip to <strong>${post.toCity}</strong>.`)}
       <div style="background:#E1F5EE;border-radius:12px;padding:16px 20px;margin:16px 0;">
         <p style="margin:0 0 6px;font-size:13px;"><strong>Route:</strong> ${post.fromCity} → ${post.toCity}</p>
-        ${depDate ? `<p style="margin:0;font-size:13px;"><strong>Departure:</strong> ${depDate}</p>` : ''}
+        ${depDate ? `<p style="margin:0;font-size:13px;"><strong>Departure:</strong> ${depDate}</p>` : ""}
       </div>
-      ${p(`You can now chat with <strong>${author.fullName?.split(' ')[0]}</strong> to plan your journey together.`)}
-      <div style="text-align:center;">${btn('Open your conversation', `${SITE}/messages/${chatRequestId}`)}</div>
+      ${p(`You can now chat with <strong>${author.fullName?.split(" ")[0]}</strong> to plan your journey together.`)}
+      <div style="text-align:center;">${btn("Open your conversation", `${SITE}/messages/${chatRequestId}`)}</div>
     `),
-  })
+  });
 }
 
 /* ── Co-traveller: declined (to interested user) ────────────── */
 
-export async function sendCoTravellerDeclinedEmail(interestedUser, author, post) {
-  const firstName = interestedUser.fullName?.split(' ')[0] ?? 'there'
+export async function sendCoTravellerDeclinedEmail(
+  interestedUser,
+  author,
+  post,
+) {
+  const firstName = interestedUser.fullName?.split(" ")[0] ?? "there";
   return sendEmail({
     to: interestedUser.email,
     subject: `Trip update for ${post.toCity}`,
     html: layout(`
       ${hi(firstName)}
-      ${p(`We wanted to let you know your request to join <strong>${author.fullName?.split(' ')[0]}</strong>'s trip to <strong>${post.toCity}</strong> was not accepted this time.`)}
+      ${p(`We wanted to let you know your request to join <strong>${author.fullName?.split(" ")[0]}</strong>'s trip to <strong>${post.toCity}</strong> was not accepted this time.`)}
       ${p("Don't be discouraged — there are many more trips to explore, and the right travel companion is out there!")}
-      <div style="text-align:center;">${btn('Browse more trips', `${SITE}/cotraveller`)}</div>
+      <div style="text-align:center;">${btn("Browse more trips", `${SITE}/cotraveller`)}</div>
       ${p('<span style="color:#9ca3af;font-size:12px;">Keep exploring and posting your own trip plans to find your ideal co-traveller.</span>')}
     `),
-  })
+  });
 }
 
 /* ── New answer on recommendation question ───────────────────── */
 
 export async function sendNewAnswerEmail(questionAuthor, answerer, question) {
-  const firstName = questionAuthor.fullName?.split(' ')[0] ?? 'there'
+  const firstName = questionAuthor.fullName?.split(" ")[0] ?? "there";
   return sendEmail({
     to: questionAuthor.email,
     subject: `${answerer.fullName} answered your question about ${question.city}`,
@@ -385,41 +402,47 @@ export async function sendNewAnswerEmail(questionAuthor, answerer, question) {
       <div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">
         <p style="margin:0;font-size:13px;font-style:italic;color:#374151;">"${question.question}"</p>
       </div>
-      <div style="text-align:center;">${btn('Read the full answer', `${SITE}/recommendations/questions/${question._id}`)}</div>
+      <div style="text-align:center;">${btn("Read the full answer", `${SITE}/recommendations/questions/${question._id}`)}</div>
       ${p('<span style="color:#9ca3af;font-size:12px;">You can mark an answer as the best answer to help other travellers find useful information quickly.</span>')}
     `),
-  })
+  });
 }
 
 /* ── Story published (author) ───────────────────────────────── */
 
 export async function sendStoryPublishedEmail(author, story) {
-  const firstName = author.fullName?.split(' ')[0] ?? 'there'
-  const storyUrl  = `${SITE}/stories/${story.slug}`
-  const shareText = encodeURIComponent(`Read my travel story on SisterRoam: ${story.title} ${storyUrl}`)
+  const firstName = author.fullName?.split(" ")[0] ?? "there";
+  const storyUrl = `${SITE}/stories/${story.slug}`;
+  const shareText = encodeURIComponent(
+    `Read my travel story on SisterRoam: ${story.title} ${storyUrl}`,
+  );
   return sendEmail({
     to: author.email,
-    subject: 'Your travel story is live on SisterRoam!',
+    subject: "Your travel story is live on SisterRoam!",
     html: layout(`
       ${hi(firstName)}
       ${p(`Your story <strong>"${story.title}"</strong> is now published on SisterRoam. 🎉`)}
-      ${story.excerpt ? `<div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">
+      ${
+        story.excerpt
+          ? `<div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">
         <p style="margin:0;font-size:13px;color:#374151;font-style:italic;">"${story.excerpt}"</p>
-      </div>` : ''}
-      <div style="text-align:center;">${btn('Read your story', storyUrl)}</div>
+      </div>`
+          : ""
+      }
+      <div style="text-align:center;">${btn("Read your story", storyUrl)}</div>
       ${p(`Share it with your friends: <a href="https://wa.me/?text=${shareText}" style="color:${BRAND};">Share on WhatsApp</a>`)}
       ${p('<span style="color:#9ca3af;font-size:12px;">Your story is visible to everyone on the SisterRoam website — no login required.</span>')}
     `),
-  })
+  });
 }
 
 /* ── Story verification prompt (future campaigns) ───────────── */
 
 export async function sendStoryVerificationPromptEmail(user) {
-  const firstName = user.fullName?.split(' ')[0] ?? 'sister'
+  const firstName = user.fullName?.split(" ")[0] ?? "sister";
   return sendEmail({
     to: user.email,
-    subject: 'Share your travel story with 1,200+ sisters',
+    subject: "Share your travel story with 1,200+ sisters",
     html: layout(`
       ${hi(firstName)}
       ${p("You've been on SisterRoam for a while — we'd love to hear your story!")}
@@ -433,9 +456,9 @@ export async function sendStoryVerificationPromptEmail(user) {
           <li>Hosting and co-traveller stories</li>
         </ul>
       </div>
-      <div style="text-align:center;">${btn('Get verified and share', `${SITE}/profile/verification`)}</div>
+      <div style="text-align:center;">${btn("Get verified and share", `${SITE}/profile/verification`)}</div>
     `),
-  })
+  });
 }
 
 /* ── Admin SOS notification ─────────────────────────────────── */
