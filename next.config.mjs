@@ -21,7 +21,12 @@ const nextConfig = {
 
   async redirects() {
     return [
-      { source: '/browse', destination: '/explore', permanent: false },
+      { source: '/browse',            destination: '/explore',           permanent: false },
+      { source: '/blog',              destination: '/stories',           permanent: true  },
+      { source: '/blog/:slug',        destination: '/stories/:slug',     permanent: true  },
+      { source: '/community/blog',    destination: '/community/stories', permanent: true  },
+      { source: '/community/blog/new',destination: '/community/stories/new', permanent: true },
+      { source: '/community/blog/:slug', destination: '/stories/:slug',  permanent: true  },
     ]
   },
 

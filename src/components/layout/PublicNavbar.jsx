@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: '/#how-it-works', label: 'How it Works' },
   { href: '/browse',        label: 'Browse Hosts' },
   { href: '/safety',        label: 'Safety'        },
-  { href: '/blog',          label: 'Blog'          },
+  { href: '/stories',       label: 'Stories'       },
 ]
 
 export default function PublicNavbar() {

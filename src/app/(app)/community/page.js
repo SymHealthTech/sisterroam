@@ -9,7 +9,7 @@ import PostComposer from '@/components/community/PostComposer'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils'
 
-const TABS = ['Feed', 'Circles', 'Blog']
+const TABS = ['Feed', 'Circles', 'Stories']
 
 const CATEGORIES = [
   { value: '',               label: 'All' },
@@ -173,28 +173,28 @@ function CirclesTab() {
   )
 }
 
-/* ── Blog tab (quick preview + link) ─────────────────────── */
-function BlogTabPreview() {
+/* ── Stories tab (quick preview + link) ──────────────────── */
+function StoriesTabPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">Stories and guides from the community</p>
+        <p className="text-sm text-gray-600">Authentic stories from verified sisters</p>
         <Link
-          href="/community/blog"
+          href="/stories"
           className="text-sm text-brand font-medium hover:underline"
         >
           View all
         </Link>
       </div>
       <Link
-        href="/community/blog"
+        href="/community/stories"
         className="block bg-gradient-to-br from-brand-lighter to-pink/10 rounded-2xl p-6 text-center space-y-3 hover:shadow-sm transition-shadow"
       >
         <p className="text-4xl">✍️</p>
-        <p className="text-base font-bold text-brand">Community Blog</p>
-        <p className="text-sm text-gray-600">Read travel stories and tips written by verified sisters</p>
+        <p className="text-base font-bold text-brand">Travel Stories</p>
+        <p className="text-sm text-gray-600">Read and share stories from verified sisters around the world</p>
         <span className="inline-block px-4 py-2 bg-brand text-white text-sm rounded-full font-medium">
-          Explore blog →
+          Explore stories →
         </span>
       </Link>
     </div>
@@ -229,7 +229,7 @@ export default function CommunityPage() {
 
         {activeTab === 'Feed'    && <FeedTab user={session?.user} />}
         {activeTab === 'Circles' && <CirclesTab />}
-        {activeTab === 'Blog'    && <BlogTabPreview />}
+        {activeTab === 'Stories' && <StoriesTabPreview />}
       </div>
     </AppLayout>
   )

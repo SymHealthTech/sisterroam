@@ -11,7 +11,7 @@ import DocumentUpload from '@/components/ui/DocumentUpload'
 import VideoCapture from '@/components/ui/VideoCapture'
 import {
   CheckCircle, Circle, Clock, AlertCircle, Mail, Phone,
-  ShieldCheck, Lock, Star, ChevronRight, RefreshCw,
+  ShieldCheck, Lock, Star, ChevronRight, RefreshCw, BookOpen,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -59,6 +59,13 @@ function UnlockSection() {
             {item}
           </li>
         ))}
+        <li className="flex items-start gap-2.5 text-sm text-gray-700">
+          <BookOpen className="w-4 h-4 text-teal shrink-0 mt-0.5" />
+          <div>
+            <span className="font-medium">Share travel stories with the community</span>
+            <p className="text-xs text-gray-500 mt-0.5">Your story appears on the public SisterRoam website</p>
+          </div>
+        </li>
       </ul>
     </div>
   )

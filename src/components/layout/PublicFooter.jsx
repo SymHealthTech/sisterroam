@@ -4,14 +4,14 @@ const PLATFORM_LINKS = [
   { href: '/browse',       label: 'Find a Host'    },
   { href: '/how-it-works', label: 'How it Works'   },
   { href: '/pricing',      label: 'Pricing'         },
-  { href: '/blog',         label: 'Blog'            },
+  { href: '/stories',      label: 'Travel Stories'  },
   { href: '/signup',       label: 'Join Free'       },
 ]
 
 const COMMUNITY_LINKS = [
   { href: '/community',          label: 'Community Feed'   },
   { href: '/community/circles',  label: 'Circles'          },
-  { href: '/community/blog',     label: 'Travel Stories'   },
+  { href: '/stories',            label: 'Travel Stories'   },
   { href: '/explore',            label: 'Explore Hosts'    },
 ]
 

@@ -16,7 +16,7 @@ const STAT_ICONS = {
   pendingKyc:          { icon: FileCheck,       label: 'KYC Pending',        color: 'amber'  },
   activeStays:         { icon: Home,            label: 'Active Stays',       color: 'teal'   },
   openReports:         { icon: Flag,            label: 'Open Reports',       color: 'danger' },
-  blogPosts:           { icon: BookOpen,        label: 'Blog Posts',         color: 'brand'  },
+  blogPosts:           { icon: BookOpen,        label: 'Stories',            color: 'brand'  },
   openCoTravelPosts:   { icon: UserPlus,        label: 'Open Co-travel',     color: 'brand'  },
   totalRecommendations:{ icon: MapPin,          label: 'Recommendations',    color: 'teal'   },
   openQuestions:       { icon: MessageSquare,   label: 'Open Questions',     color: 'amber'  },

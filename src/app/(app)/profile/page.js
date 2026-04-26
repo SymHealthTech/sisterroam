@@ -13,7 +13,7 @@ import Skeleton from '@/components/ui/Skeleton'
 import StarRating from '@/components/ui/StarRating'
 import Toggle from '@/components/ui/Toggle'
 import ImageUpload from '@/components/ui/ImageUpload'
-import BlogCard from '@/components/community/BlogCard'
+import StoryCard from '@/components/stories/StoryCard'
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
 import {
   Camera, Edit2, MapPin, Globe, Shield, Check, X,
@@ -182,7 +182,7 @@ export default function ProfilePage() {
   const [reviewsTotal, setReviewsTotal] = useState(0)
   const [reviewPage, setReviewPage] = useState(1)
   const [reviewsLoading, setReviewsLoading] = useState(false)
-  const [blogPosts,  setBlogPosts]  = useState([])
+  const [myStories,  setMyStories]  = useState([])
   const [loading,    setLoading]    = useState(true)
   const [activeTab,  setActiveTab]  = useState('about')
   const [photoModal, setPhotoModal] = useState(false)
@@ -222,6 +222,14 @@ export default function ProfilePage() {
     }
   }, [activeTab, user?._id])
 
+  useEffect(() => {
+    if (activeTab === 'blog' && myStories.length === 0) {
+      fetch('/api/stories/my-stories')
+        .then(r => r.json())
+        .then(d => { if (d.success) setMyStories(d.data?.stories ?? []) })
+    }
+  }, [activeTab])
+
   async function handleHostToggle(field, value) {
     if (!host?._id) return
     const prev = { ...host }
@@ -260,7 +268,7 @@ export default function ProfilePage() {
     { id: 'about',    label: 'About' },
     ...(isHost ? [{ id: 'hosting', label: 'Hosting' }] : []),
     { id: 'reviews',  label: `Reviews (${user.totalReviews ?? 0})` },
-    { id: 'blog',     label: 'Blog Posts' },
+    { id: 'blog',     label: 'Stories' },
   ]
   const memberSince = formatDate(user.createdAt)
 
@@ -353,7 +361,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-gray-400">Reviews</p>
                   </div>
                   <div className="text-center lg:text-right">
-                    <p className="text-lg font-bold text-gray-900">{blogPosts.length}</p>
+                    <p className="text-lg font-bold text-gray-900">{myStories.length}</p>
                     <p className="text-xs text-gray-400">Posts</p>
                   </div>
                 </div>
@@ -536,24 +544,41 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* Blog posts tab */}
+                {/* Stories tab */}
                 {activeTab === 'blog' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">My posts</h3>
-                      <Button href="/community/blog/new" size="sm" variant="secondary">
-                        <PenSquare className="w-3.5 h-3.5" /> Write
-                      </Button>
+                      <h3 className="text-sm font-semibold text-gray-900">My stories</h3>
+                      {['verified', 'trusted'].includes(session?.user?.verificationTier) && (
+                        <Button href="/community/stories/new" size="sm" variant="secondary">
+                          <PenSquare className="w-3.5 h-3.5" /> Share story
+                        </Button>
+                      )}
                     </div>
-                    {blogPosts.length === 0 ? (
+                    {!['verified', 'trusted'].includes(session?.user?.verificationTier) && (
+                      <div className="p-3 bg-amber-lighter/40 border border-amber/20 rounded-xl text-xs text-amber-dark">
+                        Get verified to share travel stories with the community.{' '}
+                        <Link href="/profile/verification" className="underline font-medium">Get verified →</Link>
+                      </div>
+                    )}
+                    {myStories.length === 0 ? (
                       <div className="text-center py-10">
                         <BookOpen className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">No blog posts yet</p>
-                        <p className="text-xs text-gray-400 mt-1">Share your travel stories with the community</p>
+                        <p className="text-sm text-gray-400">No stories yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Share your travel experiences with the community</p>
                       </div>
                     ) : (
                       <div className="grid gap-4 sm:grid-cols-2">
-                        {blogPosts.map(p => <BlogCard key={p._id} post={p} />)}
+                        {myStories.map(s => (
+                          <div key={s._id} className="relative">
+                            <StoryCard story={s} variant="compact" />
+                            {!s.isPublished && (
+                              <span className="absolute top-2 right-2 px-2 py-0.5 bg-amber text-white text-[10px] font-bold rounded-full">
+                                Draft
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

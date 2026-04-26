@@ -63,7 +63,6 @@ export default function AdminLayout({ children }) {
     { href: '/admin/reports',   icon: Shield,          label: 'Safety Reports',       badge: counts.reports },
     { href: '/admin/users',     icon: Users,           label: 'User Management',      badge: 0             },
     { href: '/admin/community', icon: Flag,            label: 'Community Moderation', badge: 0             },
-    { href: '/admin/blog',      icon: BookOpen,        label: 'Blog Management',      badge: 0             },
   ]
 
   return (

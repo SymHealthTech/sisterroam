@@ -49,7 +49,6 @@ const hostProfileSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-hostProfileSchema.index({ userId: 1 })
 hostProfileSchema.index({ addressCountry: 1 })
 hostProfileSchema.index({ addressCity: 1 })
 hostProfileSchema.index({ femaleOnly: 1 })

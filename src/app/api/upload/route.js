@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import VerificationRequest from '@/models/VerificationRequest'
 import SafetyReport from '@/models/SafetyReport'
-import BlogPost from '@/models/BlogPost'
+import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
 
@@ -117,7 +117,7 @@ export async function POST(request) {
           ],
         })
         if (extra) {
-          await BlogPost.findOneAndUpdate(
+          await TravelStory.findOneAndUpdate(
             { slug: extra },
             { coverImageUrl: result.url, coverImagePublicId: result.publicId }
           )

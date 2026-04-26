@@ -93,8 +93,6 @@ const userSchema = new mongoose.Schema(
   }
 )
 
-userSchema.index({ email: 1 })
-userSchema.index({ username: 1 })
 userSchema.index({ country: 1 })
 userSchema.index({ city: 1 })
 userSchema.index({ verificationTier: 1 })

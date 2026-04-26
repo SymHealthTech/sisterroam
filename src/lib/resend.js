@@ -391,6 +391,53 @@ export async function sendNewAnswerEmail(questionAuthor, answerer, question) {
   })
 }
 
+/* ── Story published (author) ───────────────────────────────── */
+
+export async function sendStoryPublishedEmail(author, story) {
+  const firstName = author.fullName?.split(' ')[0] ?? 'there'
+  const storyUrl  = `${SITE}/stories/${story.slug}`
+  const shareText = encodeURIComponent(`Read my travel story on SisterRoam: ${story.title} ${storyUrl}`)
+  return sendEmail({
+    to: author.email,
+    subject: 'Your travel story is live on SisterRoam!',
+    html: layout(`
+      ${hi(firstName)}
+      ${p(`Your story <strong>"${story.title}"</strong> is now published on SisterRoam. 🎉`)}
+      ${story.excerpt ? `<div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">
+        <p style="margin:0;font-size:13px;color:#374151;font-style:italic;">"${story.excerpt}"</p>
+      </div>` : ''}
+      <div style="text-align:center;">${btn('Read your story', storyUrl)}</div>
+      ${p(`Share it with your friends: <a href="https://wa.me/?text=${shareText}" style="color:${BRAND};">Share on WhatsApp</a>`)}
+      ${p('<span style="color:#9ca3af;font-size:12px;">Your story is visible to everyone on the SisterRoam website — no login required.</span>')}
+    `),
+  })
+}
+
+/* ── Story verification prompt (future campaigns) ───────────── */
+
+export async function sendStoryVerificationPromptEmail(user) {
+  const firstName = user.fullName?.split(' ')[0] ?? 'sister'
+  return sendEmail({
+    to: user.email,
+    subject: 'Share your travel story with 1,200+ sisters',
+    html: layout(`
+      ${hi(firstName)}
+      ${p("You've been on SisterRoam for a while — we'd love to hear your story!")}
+      ${p("Verified members can share travel stories that appear on the public SisterRoam website. Your experience could inspire another sister to take the trip of a lifetime.")}
+      <div style="background:#EEEDFE;border-radius:12px;padding:16px 20px;margin:20px 0;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${BRAND};">When you get verified, you can share:</p>
+        <ul style="margin:0;padding-left:20px;font-size:13px;color:#374151;line-height:1.8;">
+          <li>Solo travel adventures</li>
+          <li>Safety tips and experiences</li>
+          <li>Cultural discoveries and food journeys</li>
+          <li>Hosting and co-traveller stories</li>
+        </ul>
+      </div>
+      <div style="text-align:center;">${btn('Get verified and share', `${SITE}/profile/verification`)}</div>
+    `),
+  })
+}
+
 /* ── Admin SOS notification ─────────────────────────────────── */
 
 export async function sendAdminSOSNotification(adminEmail, user, coordinates) {

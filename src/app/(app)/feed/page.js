@@ -15,6 +15,7 @@ import {
   AlertCircle, BarChart2, Copy, BookOpen, UserPlus,
 } from 'lucide-react'
 import TripPostCard from '@/components/cotraveller/TripPostCard'
+import StoryCard from '@/components/stories/StoryCard'
 import { formatDateRange, formatRelativeTime } from '@/lib/utils'
 
 function getGreeting() {
@@ -150,6 +151,7 @@ export default function FeedPage() {
   const [hosts, setHosts] = useState([])
   const [communityPosts, setCommunityPosts] = useState([])
   const [recentTrips, setRecentTrips] = useState([])
+  const [travelStories, setTravelStories] = useState([])
   const [activeStay, setActiveStay] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -169,12 +171,13 @@ export default function FeedPage() {
         const profile = userData.data ?? {}
         setUserProfile(profile)
 
-        const [hostsRes, postsRes, requestsRes, unreadRes, tripsRes] = await Promise.allSettled([
+        const [hostsRes, postsRes, requestsRes, unreadRes, tripsRes, storiesRes] = await Promise.allSettled([
           fetch(`/api/hosts?country=${encodeURIComponent(profile.country ?? '')}&limit=4&sort=stays`),
           fetch('/api/community/posts?limit=2'),
           fetch('/api/requests'),
           fetch('/api/messages/unread-count'),
           fetch('/api/cotraveller?limit=2&status=open'),
+          fetch('/api/stories?sort=newest&limit=2'),
         ])
 
         if (hostsRes.status === 'fulfilled' && hostsRes.value.ok) {
@@ -205,6 +208,10 @@ export default function FeedPage() {
         if (tripsRes.status === 'fulfilled' && tripsRes.value.ok) {
           const d = await tripsRes.value.json()
           setRecentTrips(d.data?.posts ?? [])
+        }
+        if (storiesRes.status === 'fulfilled' && storiesRes.value.ok) {
+          const d = await storiesRes.value.json()
+          setTravelStories(d.data?.stories ?? [])
         }
       }
     } finally {
@@ -419,6 +426,44 @@ export default function FeedPage() {
               </Link>
             )}
           </section>
+
+          {/* Travel Stories section */}
+          {(loading || travelStories.length > 0) && (
+            <section className="pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">Travel stories</h2>
+                  {!isBasicTier && (
+                    <Button
+                      href="/community/stories/new"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs px-0 hover:bg-transparent text-brand"
+                    >
+                      + Share your story
+                    </Button>
+                  )}
+                </div>
+                <Button href="/stories" variant="ghost" size="sm">View all →</Button>
+              </div>
+              {isBasicTier && (
+                <p className="text-xs text-gray-400 mb-3">Get verified to share your own story</p>
+              )}
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className={`grid gap-3 ${travelStories.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                  {travelStories.map(story => (
+                    <StoryCard key={story._id} story={story} variant="feed" />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         {/* ── Right sidebar (desktop only) ── */}

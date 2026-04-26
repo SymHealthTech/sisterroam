@@ -3,7 +3,7 @@ import HostProfile from '@/models/HostProfile'
 import VerificationRequest from '@/models/VerificationRequest'
 import HostingRequest from '@/models/HostingRequest'
 import SafetyReport from '@/models/SafetyReport'
-import BlogPost from '@/models/BlogPost'
+import TravelStory from '@/models/TravelStory'
 import CoTravelPost from '@/models/CoTravelPost'
 import Recommendation from '@/models/Recommendation'
 import RecommendationQuestion from '@/models/RecommendationQuestion'
@@ -30,7 +30,7 @@ export async function GET() {
       VerificationRequest.countDocuments({ status: 'pending' }),
       HostingRequest.countDocuments({ status: 'accepted' }),
       SafetyReport.countDocuments({ status: 'open' }),
-      BlogPost.countDocuments({ isPublished: true }),
+      TravelStory.countDocuments({ isPublished: true }),
       CoTravelPost.countDocuments({ status: 'open' }),
       Recommendation.countDocuments({ isFlagged: false }),
       RecommendationQuestion.countDocuments({ status: 'open' }),

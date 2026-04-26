@@ -20,7 +20,7 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import HostProfile from "@/models/HostProfile";
 import HostingRequest from "@/models/HostingRequest";
-import BlogPost from "@/models/BlogPost";
+import TravelStory from "@/models/TravelStory";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import HostCard from "@/components/host/HostCard";
@@ -216,7 +216,7 @@ async function getPageData() {
         })
         .limit(20)
         .lean(),
-      BlogPost.find({ isPublished: true })
+      TravelStory.find({ isPublished: true })
         .sort({ publishedAt: -1 })
         .limit(3)
         .populate("authorId", "fullName profilePhotoUrl")
