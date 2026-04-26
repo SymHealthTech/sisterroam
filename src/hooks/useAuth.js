@@ -1,23 +1,16 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
-export function useAuth({ required = false } = {}) {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (required && status === 'unauthenticated') {
-      router.push('/login')
-    }
-  }, [required, status, router])
+export function useAuth() {
+  const { data: session, status, update } = useSession()
 
   return {
     user: session?.user ?? null,
     isLoading: status === 'loading',
     isAuthenticated: status === 'authenticated',
-    session,
+    isVerified: session?.user?.verificationTier !== 'basic',
+    isAdmin: session?.user?.isAdmin === true,
+    updateSession: update,
   }
 }

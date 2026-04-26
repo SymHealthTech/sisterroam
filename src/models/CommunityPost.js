@@ -1,24 +1,34 @@
 import mongoose from 'mongoose'
 
-const communityPostSchema = new mongoose.Schema({
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  content: { type: String, required: true, maxlength: 5000 },
-  images: [{ type: String }],
-  circle: { type: String, enum: ['general', 'safety_tips', 'travel_stories', 'advice', 'meetups'] },
+const communityPostSchema = new mongoose.Schema(
+  {
+    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  likeCount: { type: Number, default: 0 },
-  commentCount: { type: Number, default: 0 },
+    content: { type: String, required: true, maxlength: 2000 },
 
-  comments: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    content: { type: String, maxlength: 1000 },
-    createdAt: { type: Date, default: Date.now },
-    isDeleted: { type: Boolean, default: false },
-  }],
+    category: {
+      type: String,
+      enum: ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions'],
+      default: 'general',
+    },
 
-  isDeleted: { type: Boolean, default: false },
-  isPinned: { type: Boolean, default: false },
-}, { timestamps: true })
+    imageUrls: { type: [String], validate: [v => v.length <= 3, 'Max 3 images'] },
+    imagePublicIds: [{ type: String }],
+
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    likesCount: { type: Number, default: 0 },
+    commentsCount: { type: Number, default: 0 },
+
+    isPublished: { type: Boolean, default: true },
+    isPinned: { type: Boolean, default: false },
+    reportCount: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+)
+
+communityPostSchema.index({ authorId: 1 })
+communityPostSchema.index({ category: 1 })
+communityPostSchema.index({ createdAt: -1 })
+communityPostSchema.index({ likesCount: -1 })
 
 export default mongoose.models.CommunityPost || mongoose.model('CommunityPost', communityPostSchema)

@@ -1,7 +1,6 @@
-export default function BlogPostPage() {
-  return (
-    <main>
-      <h1>Blog Post</h1>
-    </main>
-  )
+import { redirect } from 'next/navigation'
+
+export default async function AppBlogPostPage({ params }) {
+  const { slug } = await params
+  redirect(`/blog/${slug}`)
 }

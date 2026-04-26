@@ -1,30 +1,56 @@
 import mongoose from 'mongoose'
 
-const hostingRequestSchema = new mongoose.Schema({
-  guest: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  hostProfile: { type: mongoose.Schema.Types.ObjectId, ref: 'HostProfile', required: true },
+const hostingRequestSchema = new mongoose.Schema(
+  {
+    guestId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  checkIn: { type: Date, required: true },
-  checkOut: { type: Date, required: true },
-  guests: { type: Number, default: 1 },
-  message: { type: String, maxlength: 1000 },
+    checkInDate: { type: Date, required: true },
+    checkOutDate: { type: Date, required: true },
+    nights: { type: Number },
 
-  status: {
-    type: String,
-    enum: ['pending', 'accepted', 'declined', 'cancelled', 'completed'],
-    default: 'pending',
+    message: { type: String, required: true, maxlength: 1000 },
+
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'declined', 'completed', 'cancelled'],
+      default: 'pending',
+    },
+
+    declineReason: { type: String },
+
+    guestEmergencyContactName: { type: String },
+    guestEmergencyContactPhone: { type: String },
+    guestEmergencyContactRelationship: { type: String },
+
+    safetyAcknowledged: { type: Boolean, default: false },
+
+    guestReviewId: { type: mongoose.Schema.Types.ObjectId, ref: 'Review' },
+    hostReviewId: { type: mongoose.Schema.Types.ObjectId, ref: 'Review' },
+
+    lastMessageAt: { type: Date },
+    lastMessagePreview: { type: String, maxlength: 100 },
+
+    requestType: {
+      type: String,
+      enum: ['hosting', 'cotraveller'],
+      default: 'hosting',
+    },
   },
+  { timestamps: true }
+)
 
-  declineReason: { type: String },
-  cancelReason: { type: String },
-  cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+hostingRequestSchema.index({ guestId: 1 })
+hostingRequestSchema.index({ hostId: 1 })
+hostingRequestSchema.index({ status: 1 })
+hostingRequestSchema.index({ checkInDate: 1 })
 
-  checkInConfirmed: { type: Boolean, default: false },
-  checkOutConfirmed: { type: Boolean, default: false },
-
-  lastCheckin: { type: Date },
-  nextCheckinDue: { type: Date },
-}, { timestamps: true })
+hostingRequestSchema.pre('save', function (next) {
+  if (this.checkInDate && this.checkOutDate) {
+    const diff = this.checkOutDate - this.checkInDate
+    this.nights = Math.round(diff / (1000 * 60 * 60 * 24))
+  }
+  next()
+})
 
 export default mongoose.models.HostingRequest || mongoose.model('HostingRequest', hostingRequestSchema)

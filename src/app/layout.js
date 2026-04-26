@@ -1,5 +1,5 @@
 import './globals.css'
-import { SessionProvider } from 'next-auth/react'
+import SessionProvider from '@/components/auth/SessionProvider'
 import ToastProvider from '@/components/ui/Toast'
 
 export const metadata = {

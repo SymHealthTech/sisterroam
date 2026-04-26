@@ -1,46 +1,59 @@
 import mongoose from 'mongoose'
 
-const hostProfileSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+const paidServiceSchema = new mongoose.Schema(
+  {
+    name: { type: String },
+    description: { type: String },
+    price: { type: Number },
+    currency: { type: String, default: 'INR' },
+    duration: { type: String },
+  },
+  { _id: false }
+)
 
-  title: { type: String, required: true },
-  description: { type: String, required: true, maxlength: 2000 },
-  photos: [{ type: String }],
+const hostProfileSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
 
-  location: {
-    city: { type: String, required: true },
-    state: { type: String },
-    country: { type: String, required: true },
-    coordinates: {
-      lat: { type: Number },
-      lng: { type: Number },
+    accommodationType: {
+      type: String,
+      enum: ['private_room', 'shared_room', 'couch', 'floor_space', 'tent_space'],
+      required: true,
     },
+
+    maxGuests: { type: Number, default: 1, min: 1, max: 6 },
+
+    freeOfferings: {
+      type: [String],
+      enum: ['bed', 'breakfast', 'dinner', 'city_guide', 'airport_pickup', 'laundry', 'wifi', 'bicycle'],
+    },
+
+    houseRules: { type: String, maxlength: 1000 },
+    languagesForGuests: [{ type: String }],
+
+    femaleOnly: { type: Boolean, default: false },
+    isAcceptingGuests: { type: Boolean, default: true },
+    isListingActive: { type: Boolean, default: true },
+
+    responseRate: { type: Number, default: 100 },
+    responseTimeHours: { type: Number, default: 24 },
+    totalStays: { type: Number, default: 0 },
+
+    paidServices: [paidServiceSchema],
+
+    addressLine: { type: String },
+    addressCity: { type: String },
+    addressCountry: { type: String },
+    addressVerified: { type: Boolean, default: false },
   },
+  { timestamps: true }
+)
 
-  accommodation: {
-    type: { type: String, enum: ['private_room', 'shared_room', 'entire_place', 'sofa'] },
-    maxGuests: { type: Number, default: 1 },
-    amenities: [{ type: String }],
-    houseRules: [{ type: String }],
-  },
-
-  availability: {
-    isActive: { type: Boolean, default: true },
-    minStay: { type: Number, default: 1 },
-    maxStay: { type: Number, default: 14 },
-    advanceNotice: { type: Number, default: 1 },
-  },
-
-  safety: {
-    femaleOnlyGuests: { type: Boolean, default: true },
-    safetyFeatures: [{ type: String }],
-  },
-
-  rating: { type: Number, default: 0, min: 0, max: 5 },
-  reviewCount: { type: Number, default: 0 },
-  totalHostings: { type: Number, default: 0 },
-
-  isPublished: { type: Boolean, default: false },
-}, { timestamps: true })
+hostProfileSchema.index({ userId: 1 })
+hostProfileSchema.index({ addressCountry: 1 })
+hostProfileSchema.index({ addressCity: 1 })
+hostProfileSchema.index({ femaleOnly: 1 })
+hostProfileSchema.index({ isAcceptingGuests: 1 })
+hostProfileSchema.index({ isListingActive: 1 })
 
 export default mongoose.models.HostProfile || mongoose.model('HostProfile', hostProfileSchema)

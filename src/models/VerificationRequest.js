@@ -1,27 +1,28 @@
 import mongoose from 'mongoose'
 
-const verificationRequestSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+const verificationRequestSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  tier: { type: Number, enum: [1, 2, 3], required: true },
+    idDocumentUrl:       { type: String },
+    idDocumentPublicId:  { type: String },
+    idDocumentBackUrl:   { type: String },
+    selfieVideoUrl:      { type: String },
+    selfieVideoPublicId: { type: String },
+    socialMediaUrl:      { type: String },
 
-  documents: [{
-    type: { type: String, enum: ['govt_id', 'selfie', 'video_intro', 'address_proof'] },
-    url: { type: String },
-    publicId: { type: String },
-    uploadedAt: { type: Date, default: Date.now },
-  }],
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
 
-  status: {
-    type: String,
-    enum: ['pending', 'under_review', 'approved', 'rejected'],
-    default: 'pending',
+    reviewerNotes: { type: String },
+    reviewedAt: { type: Date },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    rejectionCount: { type: Number, default: 0 },
   },
-
-  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  reviewedAt: { type: Date },
-  rejectionReason: { type: String },
-  adminNotes: { type: String },
-}, { timestamps: true })
+  { timestamps: true }
+)
 
 export default mongoose.models.VerificationRequest || mongoose.model('VerificationRequest', verificationRequestSchema)

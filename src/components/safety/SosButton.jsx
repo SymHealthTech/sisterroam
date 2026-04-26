@@ -1,67 +1,95 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { useState, useRef, useCallback } from 'react'
 
-export default function SosButton() {
-  const [pressed, setPressed] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+const HOLD_MS       = 3000
+const CIRCLE_RADIUS = 36
+const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS
 
-  function handlePress() {
-    if (pressed) return
-    setPressed(true)
-    setCountdown(5)
+export default function SosButton({ onActivate }) {
+  const [progress, setProgress] = useState(0)
+  const [holding,  setHolding]  = useState(false)
+  const intervalRef  = useRef(null)
+  const startTimeRef = useRef(null)
 
-    let t = 5
-    const interval = setInterval(() => {
-      t -= 1
-      setCountdown(t)
-      if (t <= 0) {
-        clearInterval(interval)
-        triggerSos()
+  const cancelHold = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    setHolding(false)
+    setProgress(0)
+  }, [])
+
+  const startHold = useCallback(() => {
+    setHolding(true)
+    startTimeRef.current = Date.now()
+    intervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTimeRef.current
+      const p = Math.min(elapsed / HOLD_MS, 1)
+      setProgress(p)
+      if (p >= 1) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+        setHolding(false)
+        setProgress(0)
+        onActivate?.()
       }
-    }, 1000)
-  }
+    }, 30)
+  }, [onActivate])
 
-  function cancel() {
-    setPressed(false)
-    setCountdown(0)
-  }
-
-  async function triggerSos() {
-    navigator.geolocation?.getCurrentPosition(async (pos) => {
-      await fetch('/api/safety/sos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }),
-      })
-    })
-    toast.error('🆘 SOS sent! Your emergency contacts have been notified.', { duration: 6000 })
-    setPressed(false)
-  }
-
-  if (pressed) {
-    return (
-      <div className="fixed bottom-24 lg:bottom-6 right-4 z-50 flex flex-col items-center gap-2">
-        <div className="bg-danger text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold shadow-lg animate-pulse">
-          {countdown}
-        </div>
-        <button onClick={cancel} className="text-xs text-gray-500 underline">Cancel</button>
-      </div>
-    )
-  }
+  const dashOffset = CIRCUMFERENCE * (1 - progress)
 
   return (
-    <button
-      onClick={handlePress}
-      className="fixed bottom-24 lg:bottom-6 right-4 z-50 bg-danger text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-danger-dark transition-colors active:scale-95"
-      title="SOS - Hold for emergency"
-    >
-      <AlertTriangle className="w-6 h-6" />
-    </button>
+    <div className="relative inline-flex items-center justify-center select-none">
+      {/* Animated ring */}
+      <svg
+        width="96"
+        height="96"
+        className="absolute pointer-events-none"
+        style={{ transform: 'rotate(-90deg)' }}
+      >
+        <circle
+          cx="48" cy="48" r={CIRCLE_RADIUS}
+          fill="none" stroke="rgba(226,75,74,0.2)" strokeWidth="4"
+        />
+        <circle
+          cx="48" cy="48" r={CIRCLE_RADIUS}
+          fill="none" stroke="#E24B4A" strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={CIRCUMFERENCE}
+          strokeDashoffset={dashOffset}
+          style={{ transition: holding ? 'none' : 'stroke-dashoffset 0.25s ease' }}
+        />
+      </svg>
+
+      <button
+        onPointerDown={startHold}
+        onPointerUp={cancelHold}
+        onPointerLeave={cancelHold}
+        onContextMenu={e => e.preventDefault()}
+        style={{
+          width:           80,
+          height:          80,
+          borderRadius:    '50%',
+          backgroundColor: '#E24B4A',
+          border:          '4px solid rgba(255,255,255,0.3)',
+          color:           'white',
+          fontSize:        14,
+          fontWeight:      500,
+          cursor:          'pointer',
+          touchAction:     'none',
+          WebkitUserSelect: 'none',
+          userSelect:      'none',
+          letterSpacing:   1,
+          boxShadow:       holding
+            ? '0 0 0 8px rgba(226,75,74,0.15)'
+            : '0 4px 16px rgba(226,75,74,0.35)',
+          transition:      'box-shadow 0.2s ease',
+        }}
+      >
+        SOS
+      </button>
+    </div>
   )
 }

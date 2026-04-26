@@ -101,3 +101,51 @@ body {
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
+/* ── Skeleton shimmer ─────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.shimmer {
+  background-color: #f3f4f6;
+  background-image: linear-gradient(
+    90deg,
+    #f3f4f6 0px,
+    #e9eaec 150px,
+    #f3f4f6 300px
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Modal animations ─────────────────────────────────────── */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.modal-backdrop-enter {
+  animation: modal-fade-in 0.2s ease-out forwards;
+}
+
+.modal-panel-enter {
+  animation: modal-slide-up 0.28s ease-out forwards;
+}
+
+@media (min-width: 640px) {
+  .modal-panel-enter {
+    animation: modal-scale-in 0.2s ease-out forwards;
+  }
+}

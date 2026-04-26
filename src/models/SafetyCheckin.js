@@ -1,23 +1,19 @@
 import mongoose from 'mongoose'
 
 const safetyCheckinSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  request: { type: mongoose.Schema.Types.ObjectId, ref: 'HostingRequest', required: true },
+  requestId: { type: mongoose.Schema.Types.ObjectId, ref: 'HostingRequest', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  status: { type: String, enum: ['scheduled', 'completed', 'missed', 'sos'], default: 'scheduled' },
+  checkinType: { type: String, enum: ['arrival', 'morning', 'departure'], required: true },
+
   scheduledAt: { type: Date, required: true },
-  completedAt: { type: Date },
+  sentAt: { type: Date },
+  confirmedAt: { type: Date },
 
-  note: { type: String },
-  location: {
-    lat: { type: Number },
-    lng: { type: Number },
-    address: { type: String },
-  },
+  isMissed: { type: Boolean, default: false },
+  alertSent: { type: Boolean, default: false },
 
-  isSos: { type: Boolean, default: false },
-  sosAlertSentAt: { type: Date },
-  emergencyContactNotified: { type: Boolean, default: false },
-}, { timestamps: true })
+  createdAt: { type: Date, default: Date.now },
+})
 
 export default mongoose.models.SafetyCheckin || mongoose.model('SafetyCheckin', safetyCheckinSchema)

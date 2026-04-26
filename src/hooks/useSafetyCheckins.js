@@ -1,37 +1,71 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import toast from 'react-hot-toast'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
-export function useSafetyCheckins(requestId) {
-  const [checkins, setCheckins] = useState([])
-  const [loading, setLoading] = useState(true)
+const POLL_INTERVAL = 30 * 60 * 1000 // 30 minutes
 
-  const fetchCheckins = useCallback(async () => {
-    if (!requestId) { setLoading(false); return }
-    setLoading(true)
-    const res = await fetch(`/api/safety/checkins?requestId=${requestId}`)
-    const data = await res.json()
-    setCheckins(data)
-    setLoading(false)
-  }, [requestId])
+export function useSafetyCheckins(userId) {
+  const [prompt, setPrompt] = useState(null)
+  // prompt = { checkinId, type, requestId, otherPartyName } | null
+  const snoozedUntilRef = useRef(null)
 
-  useEffect(() => { fetchCheckins() }, [fetchCheckins])
+  const check = useCallback(async () => {
+    if (!userId) return
+    if (snoozedUntilRef.current && Date.now() < snoozedUntilRef.current) return
 
-  function handleCheckedIn(id) {
-    setCheckins(prev => prev.map(c =>
-      c._id === id ? { ...c, status: 'completed', completedAt: new Date() } : c
-    ))
-  }
+    try {
+      const res  = await fetch('/api/requests?activeToday=true')
+      const json = await res.json()
+      if (!json.success || !json.data?.length) { setPrompt(null); return }
 
-  const hasMissed = checkins.some(c => c.status === 'missed')
-  const nextDue = checkins.find(c => c.status === 'scheduled')
+      const activeRequest = json.data[0]
+      const isGuest = activeRequest.guestId?._id?.toString() === userId
+                   || activeRequest.guestId?.toString()       === userId
+      const otherParty     = isGuest ? activeRequest.hostId : activeRequest.guestId
+      const otherPartyName = otherParty?.fullName ?? 'your host'
+
+      const cr   = await fetch(`/api/safety/checkins?requestId=${activeRequest._id}`)
+      const cj   = await cr.json()
+      if (!cj.success) return
+
+      const now = new Date()
+      const due = (cj.data ?? []).find(c =>
+        !c.confirmedAt && !c.isMissed && new Date(c.scheduledAt) <= now
+      )
+
+      setPrompt(due
+        ? { checkinId: due._id, type: due.checkinType, requestId: activeRequest._id, otherPartyName }
+        : null
+      )
+    } catch {
+      // silently ignore — non-critical background check
+    }
+  }, [userId])
 
   useEffect(() => {
-    if (hasMissed) {
-      toast.error('You missed a safety check-in!', { id: 'missed-checkin', duration: 8000 })
-    }
-  }, [hasMissed])
+    check()
+    const interval = setInterval(check, POLL_INTERVAL)
+    return () => clearInterval(interval)
+  }, [check])
 
-  return { checkins, loading, handleCheckedIn, hasMissed, nextDue, refresh: fetchCheckins }
+  async function confirm() {
+    if (!prompt) return
+    try {
+      await fetch('/api/safety/checkins/confirm', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ requestId: prompt.requestId, checkinType: prompt.type }),
+      })
+      setPrompt(null)
+    } catch {
+      // ignore
+    }
+  }
+
+  function snooze() {
+    snoozedUntilRef.current = Date.now() + POLL_INTERVAL
+    setPrompt(null)
+  }
+
+  return { prompt, confirm, snooze }
 }

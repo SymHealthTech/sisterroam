@@ -1,0 +1,64 @@
+{
+  "functions": {
+    "src/app/api/sse/route.js": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self)"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "MONGODB_URI":              "@mongodb-uri",
+    "NEXTAUTH_SECRET":          "@nextauth-secret",
+    "NEXTAUTH_URL":             "@nextauth-url",
+    "GOOGLE_CLIENT_ID":         "@google-client-id",
+    "GOOGLE_CLIENT_SECRET":     "@google-client-secret",
+    "CLOUDINARY_CLOUD_NAME":    "@cloudinary-cloud-name",
+    "CLOUDINARY_API_KEY":       "@cloudinary-api-key",
+    "CLOUDINARY_API_SECRET":    "@cloudinary-api-secret",
+    "RESEND_API_KEY":           "@resend-api-key",
+    "ADMIN_EMAIL":              "@admin-email"
+  }
+}

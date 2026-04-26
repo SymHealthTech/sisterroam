@@ -1,0 +1,343 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { Video, Upload, Square, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
+import Button from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
+
+function formatTime(seconds) {
+  const m = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const s = String(seconds % 60).padStart(2, '0')
+  return `${m}:${s}`
+}
+
+export default function VideoCapture({ userId, onUploadComplete }) {
+  const [tab, setTab] = useState('record')
+
+  // Record tab
+  const [camState,     setCamState]     = useState('idle') // idle | requesting | denied | granted
+  const [recording,    setRecording]    = useState(false)
+  const [elapsed,      setElapsed]      = useState(0)
+  const [recordedBlob, setRecordedBlob] = useState(null)
+  const [recordedUrl,  setRecordedUrl]  = useState(null)
+  const [uploading,    setUploading]    = useState(false)
+  const [recordDone,   setRecordDone]   = useState(false)
+
+  // Upload tab
+  const [selectedFile,  setSelectedFile]  = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadDone,    setUploadDone]    = useState(false)
+
+  const streamRef        = useRef(null)
+  const mediaRecorderRef = useRef(null)
+  const chunksRef        = useRef([])
+  const previewVideoRef  = useRef(null)
+  const timerRef         = useRef(null)
+  const fileInputRef     = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      clearInterval(timerRef.current)
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl)
+    }
+  }, [])
+
+  // Attach live stream to preview video element
+  useEffect(() => {
+    if (camState === 'granted' && streamRef.current && previewVideoRef.current) {
+      previewVideoRef.current.srcObject = streamRef.current
+    }
+  }, [camState])
+
+  async function startCamera() {
+    setCamState('requesting')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      streamRef.current = stream
+      setCamState('granted')
+    } catch {
+      setCamState('denied')
+    }
+  }
+
+  function startRecording() {
+    if (!streamRef.current) return
+    chunksRef.current = []
+
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+      ? 'video/webm;codecs=vp9,opus'
+      : 'video/webm'
+
+    const mr = new MediaRecorder(streamRef.current, { mimeType })
+    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+    mr.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+      setRecordedBlob(blob)
+      setRecordedUrl(URL.createObjectURL(blob))
+    }
+    mr.start(1000)
+    mediaRecorderRef.current = mr
+    setRecording(true)
+    setElapsed(0)
+    timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000)
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop()
+    clearInterval(timerRef.current)
+    setRecording(false)
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
+  }
+
+  function recordAgain() {
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl)
+    setRecordedBlob(null)
+    setRecordedUrl(null)
+    setElapsed(0)
+    setCamState('idle')
+  }
+
+  async function uploadRecordedVideo() {
+    if (!recordedBlob) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', recordedBlob, 'intro.webm')
+      fd.append('type', 'intro_video')
+
+      const res  = await fetch('/api/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+
+      setRecordDone(true)
+      onUploadComplete?.({ url: data.url, publicId: data.publicId })
+      toast.success('Video uploaded!')
+    } catch (err) {
+      toast.error(err.message ?? 'Upload failed. Try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function onFileSelect(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error('File too large. Max 100MB.')
+      e.target.value = ''
+      return
+    }
+    setSelectedFile(file)
+    setUploadProgress(0)
+    setUploadDone(false)
+  }
+
+  async function uploadSelectedFile() {
+    if (!selectedFile) return
+    setUploading(true)
+    setUploadProgress(0)
+    try {
+      const fd = new FormData()
+      fd.append('file', selectedFile)
+      fd.append('type', 'intro_video')
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const data = JSON.parse(xhr.responseText)
+            onUploadComplete?.({ url: data.url, publicId: data.publicId })
+            resolve(data)
+          } else {
+            reject(new Error(JSON.parse(xhr.responseText)?.error ?? 'Upload failed'))
+          }
+        }
+        xhr.onerror = () => reject(new Error('Network error'))
+        xhr.open('POST', '/api/upload')
+        xhr.send(fd)
+      })
+
+      setUploadDone(true)
+      toast.success('Video uploaded!')
+    } catch (err) {
+      toast.error(err.message ?? 'Upload failed. Try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const canStop = recording && elapsed >= 10
+
+  return (
+    <div className="space-y-4">
+      {/* Tabs */}
+      <div className="flex border border-gray-200 rounded-lg p-0.5 gap-0.5" role="tablist">
+        {[
+          { id: 'record', label: 'Record video' },
+          { id: 'upload', label: 'Upload file' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
+              tab === t.id ? 'bg-brand text-white' : 'text-gray-500 hover:text-gray-700'
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Record tab ── */}
+      {tab === 'record' && (
+        <div className="space-y-4">
+          {camState === 'idle' && !recordedUrl && (
+            <div className="text-center py-8">
+              <Video className="w-12 h-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
+              <p className="text-sm text-gray-500 mb-4">Record a short intro video (minimum 10 seconds)</p>
+              <Button variant="primary" onClick={startCamera}>Start recording</Button>
+            </div>
+          )}
+
+          {camState === 'requesting' && (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" aria-hidden="true" />
+              <p className="text-sm text-gray-500">Requesting camera access…</p>
+            </div>
+          )}
+
+          {camState === 'denied' && (
+            <div className="rounded-xl bg-danger-lighter p-4 text-center space-y-1">
+              <AlertCircle className="w-6 h-6 text-danger mx-auto" aria-hidden="true" />
+              <p className="text-sm font-medium text-danger">Camera access denied</p>
+              <p className="text-xs text-gray-500">
+                Enable camera and microphone access in your browser settings, then try again.
+              </p>
+            </div>
+          )}
+
+          {camState === 'granted' && !recordedUrl && (
+            <div className="space-y-3">
+              <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
+                <video ref={previewVideoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                {recording && (
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" aria-hidden="true" />
+                    <span aria-live="polite" aria-atomic="true">{formatTime(elapsed)}</span>
+                  </div>
+                )}
+              </div>
+
+              {!recording ? (
+                <Button variant="primary" fullWidth onClick={startRecording}>
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400 mr-1.5" aria-hidden="true" />
+                  Start recording
+                </Button>
+              ) : (
+                <Button
+                  variant={canStop ? 'danger' : 'ghost'}
+                  fullWidth
+                  onClick={stopRecording}
+                  disabled={!canStop}
+                >
+                  <Square className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                  {canStop ? 'Stop recording' : `Stop recording (${10 - elapsed}s min)`}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {recordedUrl && (
+            <div className="space-y-3">
+              {recordDone ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="w-12 h-12 text-teal mx-auto mb-2" aria-hidden="true" />
+                  <p className="text-sm font-medium text-gray-900">Video uploaded successfully!</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-black rounded-xl overflow-hidden aspect-video">
+                    <video src={recordedUrl} controls playsInline className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="ghost" className="flex-1" onClick={recordAgain} disabled={uploading}>
+                      <RotateCcw className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                      Record again
+                    </Button>
+                    <Button variant="primary" className="flex-1" loading={uploading} onClick={uploadRecordedVideo}>
+                      Use this video
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Upload tab ── */}
+      {tab === 'upload' && (
+        <div className="space-y-4">
+          {uploadDone ? (
+            <div className="text-center py-8">
+              <CheckCircle className="w-12 h-12 text-teal mx-auto mb-2" aria-hidden="true" />
+              <p className="text-sm font-medium text-gray-900">Video uploaded successfully!</p>
+            </div>
+          ) : (
+            <>
+              <label className="block border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-brand transition-colors">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  {selectedFile ? selectedFile.name : 'Click to select a video'}
+                </p>
+                {selectedFile ? (
+                  <p className="text-xs text-gray-400">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB</p>
+                ) : (
+                  <p className="text-xs text-gray-400">MP4, MOV or AVI · Max 100 MB</p>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/avi"
+                  className="sr-only"
+                  onChange={onFileSelect}
+                />
+              </label>
+
+              {uploading && (
+                <div className="space-y-1.5" aria-label={`Upload progress ${uploadProgress}%`}>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-brand rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 text-right">{uploadProgress}%</p>
+                </div>
+              )}
+
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={uploadSelectedFile}
+                disabled={!selectedFile || uploading}
+                loading={uploading}
+              >
+                Upload video
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

@@ -1,7 +1,71 @@
+import { connectDB } from '@/lib/mongodb'
+import VerificationRequest from '@/models/VerificationRequest'
+import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
+import { sendEmail } from '@/lib/resend'
+
 export async function GET(request) {
-  return Response.json({ message: 'GET ok' })
+  try {
+    await connectDB()
+    const session = await getSession()
+    if (!session.user.isAdmin) return fail('Admin access required', 403)
+
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const limit  = Math.min(100, parseInt(searchParams.get('limit') ?? '50'))
+
+    const filter = {}
+    if (status && ['pending', 'approved', 'rejected'].includes(status)) filter.status = status
+
+    const verifications = await VerificationRequest.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('userId', 'fullName email profilePhotoUrl verificationTier')
+      .lean()
+
+    // Rename userId → userId (keep populated) for easier frontend use
+    return ok({ verifications })
+  } catch (e) {
+    return handleError(e)
+  }
 }
 
 export async function POST(request) {
-  return Response.json({ message: 'POST ok' })
+  try {
+    await connectDB()
+    const session = await getSession()
+    const body = await request.json()
+
+    const {
+      idDocumentUrl, idDocumentPublicId,
+      idDocumentBackUrl,
+      selfieVideoUrl, selfieVideoPublicId,
+      socialMediaUrl,
+    } = body
+
+    const existing = await VerificationRequest.findOne({ userId: session.user.id, status: 'pending' })
+    if (existing) return fail('You already have a pending verification request', 409)
+
+    const verif = await VerificationRequest.create({
+      userId: session.user.id,
+      idDocumentUrl,
+      idDocumentPublicId,
+      idDocumentBackUrl,
+      selfieVideoUrl,
+      selfieVideoPublicId,
+      socialMediaUrl,
+    })
+
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (adminEmail) {
+      sendEmail({
+        to:      adminEmail,
+        subject: 'New verification request – SisterRoam',
+        html:    `<p>${session.user.fullName} (${session.user.id}) submitted a verification request.</p><p><a href="${process.env.NEXTAUTH_URL}/admin/kyc">Review in admin panel</a></p>`,
+      }).catch(console.error)
+    }
+
+    return ok(verif.toObject())
+  } catch (e) {
+    return handleError(e)
+  }
 }

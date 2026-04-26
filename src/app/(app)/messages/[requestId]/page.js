@@ -1,7 +1,40 @@
-export default function ConversationPage() {
+'use client'
+
+import { use } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import AppLayout from '@/components/layout/AppLayout'
+import ConversationList from '@/components/messages/ConversationList'
+import ChatWindow from '@/components/messages/ChatWindow'
+
+export default function ConversationPage({ params }) {
+  const { requestId } = use(params)
+  const { data: session } = useSession()
+  const router = useRouter()
+  const userId = session?.user?.id
+
   return (
-    <main>
-      <h1>Conversation</h1>
-    </main>
+    <AppLayout title="">
+      <div className="flex h-full" style={{ height: 'calc(100vh - 56px)' }}>
+
+        {/* Left panel: hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block lg:w-[360px] lg:max-w-[360px] shrink-0 h-full">
+          <ConversationList
+            currentUserId={userId}
+            selectedRequestId={requestId}
+            onSelect={(id) => router.push(`/messages/${id}`)}
+          />
+        </div>
+
+        {/* Right panel: full width on mobile, flex-1 on desktop */}
+        <div className="flex-1 relative flex flex-col min-h-0">
+          <ChatWindow
+            requestId={requestId}
+            currentUserId={userId}
+          />
+        </div>
+
+      </div>
+    </AppLayout>
   )
 }
