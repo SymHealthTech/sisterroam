@@ -1,11 +1,15 @@
 import Link from 'next/link'
 
 const PLATFORM_LINKS = [
-  { href: '/browse',       label: 'Find a Host'    },
-  { href: '/how-it-works', label: 'How it Works'   },
-  { href: '/pricing',      label: 'Pricing'         },
-  { href: '/stories',      label: 'Travel Stories'  },
-  { href: '/signup',       label: 'Join Free'       },
+  { href: '/browse',               label: 'Find a Host'       },
+  { href: '/how-it-works',         label: 'How it Works'      },
+  { href: '/about',                label: 'About us'          },
+  { href: '/about#founder',        label: 'Our founder'       },
+  { href: '/about#ngo',            label: 'Our mission'       },
+  { href: '/about#contact',        label: 'Contact us'        },
+  { href: '/stories',              label: 'Travel Stories'    },
+  { href: '/signup',               label: 'Join Free'         },
+  { href: 'https://nutracare360.ca', label: 'nutracare360.ca ↗', external: true },
 ]
 
 const COMMUNITY_LINKS = [
@@ -77,12 +81,23 @@ export default function PublicFooter() {
             <ul className="space-y-3">
               {PLATFORM_LINKS.map((l) => (
                 <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-sm text-gray-500 hover:text-brand transition-colors"
-                  >
-                    {l.label}
-                  </Link>
+                  {l.external ? (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gray-500 hover:text-brand transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={l.href}
+                      className="text-sm text-gray-500 hover:text-brand transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

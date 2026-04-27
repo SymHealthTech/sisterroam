@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/browse',        label: 'Browse Hosts' },
   { href: '/safety',        label: 'Safety'        },
   { href: '/stories',       label: 'Stories'       },
+  { href: '/about',         label: 'About'         },
 ]
 
 export default function PublicNavbar() {
@@ -20,6 +21,7 @@ export default function PublicNavbar() {
   const [scrolled,     setScrolled]     = useState(false)
   const [mobileOpen,   setMobileOpen]   = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [freshPhotoUrl, setFreshPhotoUrl] = useState(null)
   const dropdownRef = useRef(null)
 
   useEffect(() => {
@@ -27,6 +29,14 @@ export default function PublicNavbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(d => { if (d.success) setFreshPhotoUrl(d.data.profilePhotoUrl ?? null) })
+      .catch(() => {})
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -43,8 +53,9 @@ export default function PublicNavbar() {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
-  const user   = session?.user
-  const isAuth = status === 'authenticated'
+  const user      = session?.user
+  const isAuth    = status === 'authenticated'
+  const avatarSrc = freshPhotoUrl ?? user?.profilePhotoUrl ?? null
 
   return (
     <header className={cn(
@@ -90,7 +101,7 @@ export default function PublicNavbar() {
                   aria-label="User menu"
                   aria-expanded={dropdownOpen}
                 >
-                  <Avatar src={user.profilePhotoUrl} name={user.fullName} size="sm" />
+                  <Avatar src={avatarSrc} name={user.fullName} size="sm" />
                   <ChevronDown className={cn('w-3.5 h-3.5 transition-transform mr-1', scrolled ? 'text-gray-500' : 'text-white/80', dropdownOpen && 'rotate-180')} />
                 </button>
 
@@ -130,13 +141,17 @@ export default function PublicNavbar() {
           )}
         </div>
 
-        {/* Hamburger — mobile */}
+        {/* Mobile trigger — avatar (logged in) or hamburger (guest) */}
         <button
-          className="md:hidden p-2 text-gray-700"
+          className="md:hidden p-1.5 rounded-full"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
         >
-          <Menu className="w-6 h-6" />
+          {isAuth ? (
+            <Avatar src={avatarSrc} name={user?.fullName} size="sm" />
+          ) : (
+            <Menu className={cn('w-6 h-6', scrolled ? 'text-gray-700' : 'text-white')} />
+          )}
         </button>
       </nav>
 

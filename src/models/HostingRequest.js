@@ -45,12 +45,11 @@ hostingRequestSchema.index({ hostId: 1 })
 hostingRequestSchema.index({ status: 1 })
 hostingRequestSchema.index({ checkInDate: 1 })
 
-hostingRequestSchema.pre('save', function (next) {
+hostingRequestSchema.pre('save', function () {
   if (this.checkInDate && this.checkOutDate) {
     const diff = this.checkOutDate - this.checkInDate
     this.nights = Math.round(diff / (1000 * 60 * 60 * 24))
   }
-  next()
 })
 
 export default mongoose.models.HostingRequest || mongoose.model('HostingRequest', hostingRequestSchema)

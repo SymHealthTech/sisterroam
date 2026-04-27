@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import PostCard from '@/components/community/PostCard'
 import PostComposer from '@/components/community/PostComposer'
 import Skeleton from '@/components/ui/Skeleton'
@@ -203,7 +202,7 @@ function StoriesTabPreview() {
 
 /* ── Main page ────────────────────────────────────────────── */
 export default function CommunityPage() {
-  const { data: session } = useSession()
+  const freshUser = useAppUser()
   const [activeTab, setActiveTab] = useState('Feed')
 
   return (
@@ -227,7 +226,7 @@ export default function CommunityPage() {
           ))}
         </div>
 
-        {activeTab === 'Feed'    && <FeedTab user={session?.user} />}
+        {activeTab === 'Feed'    && <FeedTab user={freshUser} />}
         {activeTab === 'Circles' && <CirclesTab />}
         {activeTab === 'Stories' && <StoriesTabPreview />}
       </div>

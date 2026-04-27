@@ -71,11 +71,10 @@ coTravelPostSchema.index({ createdAt: -1 })
 // TTL: auto-remove documents 7 days after departureDate
 coTravelPostSchema.index({ departureDate: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60, name: 'ttl_departure' })
 
-coTravelPostSchema.pre('save', function (next) {
+coTravelPostSchema.pre('save', function () {
   if (this.departureDate && this.departureDate < new Date()) {
     if (this.status === 'open') this.status = 'expired'
   }
-  next()
 })
 
 export default mongoose.models.CoTravelPost || mongoose.model('CoTravelPost', coTravelPostSchema)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import StoryCard from '@/components/stories/StoryCard'
 import Skeleton from '@/components/ui/Skeleton'
 import { Search } from 'lucide-react'
@@ -22,6 +23,7 @@ const CATEGORY_LABELS = {
 }
 
 export default function StoriesClient() {
+  const { status } = useSession()
   const [stories,     setStories]     = useState([])
   const [loading,     setLoading]     = useState(true)
   const [category,    setCategory]    = useState('')
@@ -155,19 +157,30 @@ export default function StoriesClient() {
         )}
       </div>
 
-      {/* Join CTA */}
+      {/* Story CTA */}
       <section className="bg-brand-lighter py-12 px-4">
         <div className="max-w-xl mx-auto text-center space-y-4">
           <h2 className="text-xl font-bold text-brand">Share your travel story</h2>
           <p className="text-brand-dark text-sm">
-            Join SisterRoam to share authentic experiences with verified sisters worldwide.
+            {status === 'authenticated'
+              ? 'Write and publish your experience with the SisterRoam community.'
+              : 'Join SisterRoam to share authentic experiences with verified sisters worldwide.'}
           </p>
-          <Link
-            href="/signup"
-            className="inline-block px-6 py-3 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-dark transition-colors"
-          >
-            Join free
-          </Link>
+          {status === 'authenticated' ? (
+            <Link
+              href="/community/stories/new"
+              className="inline-block px-6 py-3 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-dark transition-colors"
+            >
+              Write a story
+            </Link>
+          ) : status !== 'loading' && (
+            <Link
+              href="/signup"
+              className="inline-block px-6 py-3 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-dark transition-colors"
+            >
+              Join free
+            </Link>
+          )}
         </div>
       </section>
     </>

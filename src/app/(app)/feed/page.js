@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
@@ -145,7 +145,8 @@ function ShortcutsCard() {
 export default function FeedPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const sessionUser = session?.user
+  const freshUser = useAppUser()
+  const sessionUser = freshUser ?? session?.user
 
   const [userProfile, setUserProfile] = useState(null)
   const [hosts, setHosts] = useState([])

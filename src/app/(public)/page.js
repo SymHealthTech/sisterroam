@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   CheckCircle,
   UserPlus,
@@ -34,6 +35,7 @@ import HostCard from "@/components/host/HostCard";
 import PWAInstallButtons from "@/components/ui/PWAInstallButtons";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
+import { HeroCta, HowItWorksCta, FinalCta } from "@/components/home/HomeCtas";
 
 export const revalidate = 3600;
 
@@ -345,20 +347,7 @@ export default async function HomePage() {
                 </p>
 
                 {/* CTAs */}
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] bg-white text-brand font-medium text-sm hover:bg-white/90 transition-colors"
-                  >
-                    Join free — it takes 2 minutes
-                  </Link>
-                  <Link
-                    href="/browse"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] bg-transparent border border-white/50 text-white font-medium text-sm hover:bg-white/10 transition-colors"
-                  >
-                    Browse hosts first
-                  </Link>
-                </div>
+                <HeroCta />
 
                 {/* Feature pills */}
                 <div className="flex flex-wrap gap-2">
@@ -662,13 +651,7 @@ export default async function HomePage() {
 
             {/* CTA below */}
             <div className="mt-12 text-center">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-7 py-3 bg-brand text-white font-medium text-sm rounded-[10px] hover:opacity-90 transition-opacity"
-              >
-                Get started — it&apos;s free
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
+              <HowItWorksCta />
             </div>
           </div>
         </section>
@@ -1272,6 +1255,152 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── Founder's Word ────────────────────────────────────────────── */}
+        <section aria-label="Founder's word">
+          <div className="grid grid-cols-1 lg:grid-cols-[45fr_55fr]">
+            {/* Left: founder photo */}
+            <div className="relative overflow-hidden h-[300px] lg:h-auto lg:min-h-[560px]">
+              <Image
+                src="/founder-manisha-hero.jpg"
+                alt="Dr Manisha Sonawane — Founder of SisterRoam, International Mountaineer, Kilimanjaro, Elbrus"
+                fill
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="object-cover object-top"
+              />
+              {/* Gradient overlay at bottom */}
+              <div
+                className="absolute bottom-0 left-0 right-0 px-7 py-8"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(93,26,139,0.85) 0%, rgba(93,26,139,0.4) 60%, transparent 100%)",
+                }}
+                aria-hidden="true"
+              >
+                <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
+                  International Mountaineer
+                </p>
+                <p className="text-white text-sm font-medium leading-relaxed">
+                  ▲ Kilimanjaro 5,895m — Africa
+                </p>
+                <p className="text-white text-sm font-medium leading-relaxed">
+                  ▲ Elbrus 5,642m — Europe
+                </p>
+                <p className="text-white/80 text-xs mt-2">2 of the 7 Summits</p>
+              </div>
+            </div>
+
+            {/* Right: founder words */}
+            <div className="bg-white flex flex-col justify-center px-8 lg:px-16 py-16 lg:py-20">
+              {/* Eyebrow */}
+              <div className="flex items-center gap-3 mb-2">
+                <div
+                  className="w-8 h-0.5 bg-brand shrink-0"
+                  aria-hidden="true"
+                />
+                <p className="text-xs font-medium text-brand uppercase tracking-widest">
+                  Founder&apos;s word
+                </p>
+              </div>
+
+              {/* Decorative quote mark */}
+              <div
+                className="font-serif leading-none select-none mb-[-16px] text-gray-100"
+                style={{ fontSize: 100 }}
+                aria-hidden="true"
+              >
+                &ldquo;
+              </div>
+
+              {/* Quote */}
+              <blockquote
+                className="font-serif italic text-gray-800 leading-relaxed"
+                style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", maxWidth: 500 }}
+              >
+                <p className="mb-4">
+                  I have climbed Kilimanjaro and Elbrus. I have ridden my
+                  motorcycle through Himalayan passes and driven across this
+                  country from north to south. I have walked through six
+                  countries as a doctor, an adventurer, and a woman who travels
+                  alone.
+                </p>
+                <p>
+                  Every time, I wished there was a community I could trust. A
+                  verified sisterhood. SisterRoam is what I kept wishing existed
+                  — so I built it.
+                </p>
+              </blockquote>
+
+              {/* Attribution */}
+              <div className="mt-6">
+                <div className="w-12 h-0.5 bg-brand mb-5" />
+                <p className="text-lg font-medium text-gray-900">
+                  Dr Manisha Sonawane
+                </p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Founder &amp; Brand Ambassador, SisterRoam
+                </p>
+              </div>
+
+              {/* Credential pills */}
+              <div className="flex flex-wrap gap-2 mt-5">
+                {[
+                  {
+                    label: "Homeopathic Consultant · 18 years",
+                    bg: "bg-brand-lighter",
+                    color: "text-brand-dark",
+                  },
+                  {
+                    label: "Kilimanjaro & Elbrus",
+                    bg: "bg-teal-lighter",
+                    color: "text-teal-dark",
+                  },
+                  {
+                    label: "NGO President",
+                    bg: "bg-pink-lighter",
+                    color: "text-pink-dark",
+                  },
+                  {
+                    label: "Nutracare 360, Canada",
+                    bg: "bg-amber-lighter",
+                    color: "text-amber-dark",
+                  },
+                ].map(({ label, bg, color }) => (
+                  <span
+                    key={label}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium ${bg} ${color}`}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+
+              {/* Context sentence */}
+              <p className="text-sm text-gray-500 leading-relaxed mt-4 max-w-sm">
+                Mother of two. Doctor. Mountaineer. Entrepreneur. And the woman
+                who built SisterRoam because every female solo traveller
+                deserves a community she can trust.
+              </p>
+
+              {/* Links */}
+              <div className="flex gap-5 mt-6">
+                <Link
+                  href="/about"
+                  className="text-sm text-brand font-medium hover:underline flex items-center gap-1"
+                >
+                  Read her full story
+                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/signup"
+                  className="text-sm text-gray-400 hover:text-brand transition-colors"
+                >
+                  Join SisterRoam →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── S9: Final CTA ────────────────────────────────────────────── */}
         <section
           className="bg-brand-lighter py-14 lg:py-20"
@@ -1285,20 +1414,7 @@ export default async function HomePage() {
               Join thousands of verified women hosting and staying safely around
               the world. It&apos;s free, fast, and built just for you.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] bg-brand text-white font-medium text-sm hover:bg-brand-dark transition-colors"
-              >
-                Join SisterRoam — it&apos;s free
-              </Link>
-              <Link
-                href="/signup?role=host"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] border-2 border-brand text-brand font-medium text-sm hover:bg-brand hover:text-white transition-colors"
-              >
-                Become a host
-              </Link>
-            </div>
+            <FinalCta />
             <p className="text-xs text-brand-light">
               No credit card required · Verified within 48 hours
             </p>

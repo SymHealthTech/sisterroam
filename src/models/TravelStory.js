@@ -44,7 +44,7 @@ travelStorySchema.index({ isFeatured: 1 })
 travelStorySchema.index({ category: 1 })
 travelStorySchema.index({ publishedAt: -1 })
 
-travelStorySchema.pre('save', function (next) {
+travelStorySchema.pre('save', function () {
   if (this.isModified('title') && !this.slug) {
     this.slug = slugify(this.title) + '-' + Date.now()
   }
@@ -52,7 +52,6 @@ travelStorySchema.pre('save', function (next) {
     const wordCount = this.content.trim().split(/\s+/).filter(Boolean).length
     this.readTimeMinutes = Math.ceil(wordCount / 200)
   }
-  next()
 })
 
 export default mongoose.models.TravelStory || mongoose.model('TravelStory', travelStorySchema)

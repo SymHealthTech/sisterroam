@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, createContext, useContext } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
@@ -15,6 +15,9 @@ import CheckInPrompt from '@/components/safety/CheckInPrompt'
 import { useSafetyCheckins } from '@/hooks/useSafetyCheckins'
 import { SSEProvider } from '@/context/SSEContext'
 import { useSSEContext } from '@/context/SSEContext'
+
+const AppUserContext = createContext(null)
+export function useAppUser() { return useContext(AppUserContext) }
 
 function LoadingSkeleton() {
   return (
@@ -34,6 +37,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [freshPhotoUrl, setFreshPhotoUrl] = useState(null)
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { lastEvent } = useSSEContext()
@@ -43,6 +47,14 @@ function AppLayoutInner({ children, title }) {
       router.replace('/login')
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(d => { if (d.success) setFreshPhotoUrl(d.data.profilePhotoUrl ?? null) })
+      .catch(() => {})
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!lastEvent) return
@@ -64,11 +76,14 @@ function AppLayoutInner({ children, title }) {
   if (!session) return null
 
   const user = session.user
+  const avatarSrc = freshPhotoUrl ?? user.profilePhotoUrl ?? null
+  const freshUser = { ...user, profilePhotoUrl: avatarSrc }
 
   return (
+    <AppUserContext.Provider value={freshUser}>
     <div className="flex min-h-screen bg-gray-50">
       {/* Desktop sidebar */}
-      <Sidebar user={user} />
+      <Sidebar user={{ ...user, profilePhotoUrl: avatarSrc }} />
 
       {/* Main content column */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -79,7 +94,7 @@ function AppLayoutInner({ children, title }) {
           <div className="flex items-center gap-3">
             <NotificationPanel userId={user?.id} />
             <Link href="/profile">
-              <Avatar src={user.profilePhotoUrl} name={user.fullName} size="sm" />
+              <Avatar src={avatarSrc} name={user.fullName} size="sm" />
             </Link>
           </div>
         </div>
@@ -119,6 +134,7 @@ function AppLayoutInner({ children, title }) {
         <CheckInPrompt prompt={prompt} onConfirm={confirm} onSnooze={snooze} />
       )}
     </div>
+    </AppUserContext.Provider>
   )
 }
 
