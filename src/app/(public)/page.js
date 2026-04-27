@@ -1265,7 +1265,8 @@ export default async function HomePage() {
                 alt="Dr Manisha Sonawane — Founder of SisterRoam, International Mountaineer, Kilimanjaro, Elbrus"
                 fill
                 sizes="(min-width: 1024px) 45vw, 100vw"
-                className="object-cover object-top"
+                // className="object-cover object-top"
+                className="object-cover object-[center_-140px] lg:object-top"
               />
               {/* Gradient overlay at bottom */}
               <div
