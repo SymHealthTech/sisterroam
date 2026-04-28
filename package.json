@@ -20,6 +20,7 @@
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dodopayments": "^2.29.0",
     "lucide-react": "^1.8.0",
     "mongoose": "^9.4.1",
     "next": "16.2.4",

@@ -256,7 +256,7 @@ export default function FeedPage() {
             <div className="flex items-start gap-3 p-4 bg-amber-lighter border border-amber-light rounded-xl">
               <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
               <p className="flex-1 text-sm text-amber-dark font-medium">
-                Complete verification to send hosting requests
+                Get your verified badge — ₹199 one-time · Unlocks everything
               </p>
               <Button
                 href="/profile/verification"

@@ -1,4 +1,5 @@
 import './globals.css'
+import { auth } from '@/lib/auth'
 import SessionProvider from '@/components/auth/SessionProvider'
 import ToastProvider from '@/components/ui/Toast'
 import SplashScreen from '@/components/ui/SplashScreen'
@@ -109,7 +110,8 @@ export const viewport = {
   ],
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await auth()
   return (
     <html lang="en" className="h-full">
       <head>
@@ -119,7 +121,7 @@ export default function RootLayout({ children }) {
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 antialiased">
-        <SessionProvider>
+        <SessionProvider session={session}>
           <SplashScreen />
           {children}
           <ToastProvider />

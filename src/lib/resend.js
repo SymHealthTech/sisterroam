@@ -466,6 +466,48 @@ export async function sendStoryVerificationPromptEmail(user) {
   });
 }
 
+/* ── Verified badge activated ───────────────────────────────── */
+
+export async function sendVerificationBadgeEmail(user) {
+  const firstName = user.fullName?.split(' ')[0] ?? 'sister'
+  return sendEmail({
+    to: user.email,
+    subject: `Your verified badge is active, ${firstName}!`,
+    html: layout(`
+      <p style="margin:0 0 8px;font-size:24px;font-weight:500;color:#1a1a1a;font-family:Georgia,serif;">
+        Congratulations, ${firstName}!
+      </p>
+      ${p('Your SisterRoam verified badge is now active.')}
+      <div style="background:#EEEDFE;border-radius:12px;padding:20px;text-align:center;margin:20px 0;">
+        <span style="background:#5D1A8B;color:#fff;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:500;">
+          ✓ Verified Member
+        </span>
+        <p style="margin:12px 0 0;font-size:13px;color:#3C3489;">
+          Your profile now shows this badge
+        </p>
+      </div>
+      <p style="margin:0 0 8px;font-size:15px;font-weight:500;color:#1a1a1a;">What you can now do:</p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        ${[
+          'Send hosting requests to verified sisters',
+          'Receive hosting requests as a host',
+          'Priority placement in search results',
+          'Share your travel stories publicly',
+        ].map(item => `
+          <tr>
+            <td style="padding:6px 0;font-size:14px;color:#444;">✓ &nbsp;${item}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <div style="text-align:center;">${btn('Start exploring hosts →', `${SITE}/explore`)}</div>
+      ${p(`<span style="color:#9ca3af;font-size:13px;text-align:center;display:block;margin-top:32px;">
+        Welcome to the verified sisterhood.<br>
+        — Dr Manisha Sonawane &amp; the SisterRoam team
+      </span>`)}
+    `),
+  })
+}
+
 /* ── Admin SOS notification ─────────────────────────────────── */
 
 export async function sendAdminSOSNotification(adminEmail, user, coordinates) {
