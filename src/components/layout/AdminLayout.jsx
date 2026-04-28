@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, FileCheck, Shield, Users, Flag, BookOpen, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Logo from '@/components/ui/Logo'
 
 function AdminNavItem({ href, icon: Icon, label, badge, currentPath }) {
   const active = currentPath === href || (href !== '/admin' && currentPath.startsWith(href))
@@ -70,8 +71,8 @@ export default function AdminLayout({ children }) {
       {/* Sidebar */}
       <aside className="w-[200px] bg-gray-950 flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="px-4 py-5 border-b border-white/10">
-          <p className="text-white font-bold text-base">Admin Panel</p>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
+          <Logo variant="full" theme="light" size="sm" href="/admin" />
+          <p className="text-xs text-gray-500 mt-2 truncate">
             Logged in as {session.user.fullName ?? session.user.username ?? 'Admin'}
           </p>
         </div>

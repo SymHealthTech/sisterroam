@@ -5,6 +5,39 @@ const pwa = withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: false,
+  reloadOnOnline: true,
+  fallbacks: {
+    document: '/offline.html',
+  },
+  buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/sisterroam\.com\/api\//,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'sisterroam-api-cache',
+        expiration: { maxEntries: 64, maxAgeSeconds: 86400 },
+      },
+    },
+    {
+      urlPattern: /\.(png|jpg|jpeg|svg|gif|webp|ico)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'sisterroam-image-cache',
+        expiration: { maxEntries: 128, maxAgeSeconds: 2592000 },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/res\.cloudinary\.com\//,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'sisterroam-cloudinary-cache',
+        expiration: { maxEntries: 64, maxAgeSeconds: 2592000 },
+      },
+    },
+  ],
 })
 
 /** @type {import('next').NextConfig} */
@@ -21,12 +54,12 @@ const nextConfig = {
 
   async redirects() {
     return [
-      { source: '/browse',            destination: '/explore',           permanent: false },
-      { source: '/blog',              destination: '/stories',           permanent: true  },
-      { source: '/blog/:slug',        destination: '/stories/:slug',     permanent: true  },
-      { source: '/community/blog',    destination: '/community/stories', permanent: true  },
-      { source: '/community/blog/new',destination: '/community/stories/new', permanent: true },
-      { source: '/community/blog/:slug', destination: '/stories/:slug',  permanent: true  },
+      { source: '/browse',             destination: '/explore',               permanent: false },
+      { source: '/blog',               destination: '/stories',               permanent: true  },
+      { source: '/blog/:slug',         destination: '/stories/:slug',         permanent: true  },
+      { source: '/community/blog',     destination: '/community/stories',     permanent: true  },
+      { source: '/community/blog/new', destination: '/community/stories/new', permanent: true  },
+      { source: '/community/blog/:slug', destination: '/stories/:slug',       permanent: true  },
     ]
   },
 

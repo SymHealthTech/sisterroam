@@ -43,9 +43,14 @@ function layout(content) {
             <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
               <!-- Header -->
               <tr>
-                <td style="background:${BRAND};padding:24px 32px;border-radius:12px 12px 0 0;">
-                  <p style="margin:0;color:white;font-size:22px;font-weight:700;letter-spacing:-0.5px;">🌍 SisterRoam</p>
-                  <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:12px;">Safe travel for women, by women</p>
+                <td style="background:${BRAND};padding:24px 32px;border-radius:12px 12px 0 0;text-align:center;">
+                  <img
+                    src="https://sisterroam.com/logos/sisterroam-logo-on-purple.png"
+                    alt="SisterRoam"
+                    width="180"
+                    height="45"
+                    style="display:block;margin:0 auto;max-width:180px;"
+                  />
                 </td>
               </tr>
               <!-- Body -->

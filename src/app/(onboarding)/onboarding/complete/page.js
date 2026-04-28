@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
+import Logo from '@/components/ui/Logo'
 
 const ROLE_ACTIONS = {
   guest: [
@@ -63,13 +64,10 @@ export default function OnboardingCompletePage() {
 
         {/* Logo — scale-in animation */}
         <div className={cn(
-          'text-center mb-8 transition-all duration-700',
+          'flex justify-center mb-8 transition-all duration-700',
           animating ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
         )}>
-          <div className="inline-flex items-center gap-2 mb-2">
-            <span className="text-3xl font-bold text-brand">SisterRoam</span>
-            <span className="text-pink text-2xl" aria-hidden="true">♀</span>
-          </div>
+          <Logo variant="stacked" theme="light" size="xl" href="/" />
         </div>
 
         {/* Card */}

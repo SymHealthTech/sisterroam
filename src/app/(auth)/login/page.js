@@ -9,6 +9,7 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import Logo from '@/components/ui/Logo'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -63,10 +64,9 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold text-brand">SisterRoam</span>
-              <span className="text-pink text-xl" aria-hidden="true">♀</span>
-            </Link>
+            <div className="flex justify-center mb-4">
+              <Logo variant="stacked" theme="light" size="lg" href="/" />
+            </div>
             <h1 className="text-xl font-bold text-gray-900 mt-4">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
           </div>

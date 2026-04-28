@@ -1,66 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>You're offline – SisterRoam</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SisterRoam — You are offline</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f9fafb;
-      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #5D1A8B;
+      color: white;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
       text-align: center;
-      color: #111827;
     }
-    .logo {
-      width: 56px;
-      height: 56px;
-      background: #5D1A8B;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-    }
-    .logo svg { width: 30px; height: 30px; fill: white; }
-    h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-    p { font-size: 14px; color: #6B7280; line-height: 1.6; max-width: 280px; margin: 0 auto 28px; }
-    .icon { font-size: 56px; margin-bottom: 16px; }
+    .icon { margin-bottom: 24px; }
+    h1 { font-size: 24px; font-weight: 500; margin-bottom: 12px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.7);
+        line-height: 1.6; max-width: 300px; margin-bottom: 32px; }
     button {
-      background: #5D1A8B;
-      color: white;
+      background: white;
+      color: #5D1A8B;
       border: none;
-      border-radius: 16px;
-      padding: 14px 32px;
-      font-size: 14px;
-      font-weight: 600;
+      border-radius: 10px;
+      padding: 13px 28px;
+      font-size: 15px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background 0.2s;
     }
-    button:hover { background: #4a1570; }
-    .footer { margin-top: 40px; font-size: 12px; color: #9CA3AF; }
+    button:hover { background: #f3f4f6; }
+    .tagline {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 48px;
+      letter-spacing: 2px;
+    }
   </style>
 </head>
 <body>
-  <div class="icon">📡</div>
-  <div class="logo">
-    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="16" cy="10" r="5" />
-      <path d="M8 24c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+  <div class="icon">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="38" fill="rgba(255,255,255,0.12)"/>
+      <circle cx="30" cy="30" r="12" fill="white" opacity="0.95"/>
+      <path d="M12 58c0-9.941 8.059-18 18-18s18 8.059 18 18"
+            stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="52" cy="31" r="9" fill="#F4C0D1" opacity="0.9"/>
+      <path d="M54.5 46 Q64 41 65.5 50"
+            stroke="#F4C0D1" stroke-width="3.5" stroke-linecap="round" fill="none"/>
     </svg>
   </div>
-  <h1>You're offline</h1>
-  <p>
-    SisterRoam needs an internet connection to connect you with sisters around the world.
-    Check your connection and try again.
-  </p>
-  <button onclick="window.location.reload()">Retry connection</button>
-  <p class="footer">SisterRoam – Safe travel for women</p>
+  <h1>You are offline</h1>
+  <p>SisterRoam needs a connection to show you verified hosts and connect you with sisters.</p>
+  <button onclick="window.location.reload()">Try again</button>
+  <p class="tagline">SISTERROAM · EXPLORE FEARLESSLY</p>
 </body>
 </html>

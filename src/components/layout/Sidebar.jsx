@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
+import Logo from '@/components/ui/Logo'
 
 const NAV_ITEMS = [
   { href: '/feed',              icon: Home,          label: 'Home'            },
@@ -87,14 +88,11 @@ export default function Sidebar({ user }) {
       collapsed ? 'w-16' : 'w-60',
     )}>
       {/* Logo */}
-      <div className={cn('flex items-center gap-2 px-4 py-5 mb-2', collapsed && 'justify-center px-3')}>
+      <div className={cn('flex items-center px-4 py-5 mb-2', collapsed && 'justify-center px-3')}>
         {collapsed ? (
-          <span className="text-2xl text-pink" aria-label="SisterRoam">♀</span>
+          <Logo variant="icon" theme="light" size="sm" href="/feed" />
         ) : (
-          <Link href="/feed" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-brand">SisterRoam</span>
-            <span className="text-pink text-lg" aria-hidden="true">♀</span>
-          </Link>
+          <Logo variant="full" theme="light" size="sm" href="/feed" />
         )}
       </div>
 

@@ -10,6 +10,7 @@ import { Eye, EyeOff, ChevronDown, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import Logo from '@/components/ui/Logo'
 
 const DIAL_CODES = [
   { code: '+91',  country: 'India',               flag: '🇮🇳' },
@@ -358,11 +359,8 @@ export default function SignUpPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
           {/* Logo */}
-          <div className="text-center mb-6">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold text-brand">SisterRoam</span>
-              <span className="text-pink text-xl" aria-hidden="true">♀</span>
-            </Link>
+          <div className="flex justify-center mb-6">
+            <Logo variant="icon" theme="light" size="md" href="/" />
           </div>
 
           <StepDots current={step} />

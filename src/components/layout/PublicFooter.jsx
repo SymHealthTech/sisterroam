@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Logo from '@/components/ui/Logo'
 
 const PLATFORM_LINKS = [
   { href: '/browse',               label: 'Find a Host'       },
@@ -63,13 +64,10 @@ export default function PublicFooter() {
         {/* Main grid — 4 cols desktop, 2 cols mobile */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           {/* Col 1 — Brand */}
-          <div className="col-span-2 md:col-span-1 space-y-4">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-xl font-bold text-brand">SisterRoam</span>
-              <span className="text-pink text-lg" aria-hidden="true">♀</span>
-            </Link>
-            <p className="text-sm text-gray-500 leading-relaxed max-w-[220px]">
-              The safe hospitality exchange community for female solo travellers worldwide.
+          <div className="col-span-2 md:col-span-1 space-y-3">
+            <Logo variant="full" theme="light" size="sm" href="/" />
+            <p style={{ fontSize: '13px', color: 'var(--color-text-tertiary, #888780)', marginTop: '8px', lineHeight: '1.5' }}>
+              The verified hosting community<br />for female solo travellers worldwide.
             </p>
           </div>
 

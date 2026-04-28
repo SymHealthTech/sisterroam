@@ -1,33 +1,100 @@
 import './globals.css'
 import SessionProvider from '@/components/auth/SessionProvider'
 import ToastProvider from '@/components/ui/Toast'
+import SplashScreen from '@/components/ui/SplashScreen'
 
 export const metadata = {
+  metadataBase: new URL('https://sisterroam.com'),
   title: {
-    default: 'SisterRoam — Safe Hosting for Female Solo Travellers',
-    template: '%s | SisterRoam',
+    default: 'SisterRoam — Explore Fearlessly, Together',
+    template: '%s — SisterRoam',
   },
   description:
-    'The safe hospitality exchange community exclusively for female solo travellers. Find trusted female hosts worldwide.',
-  keywords: ['female solo travel', 'women hosting', 'safe travel', 'hospitality exchange'],
-  authors: [{ name: 'SisterRoam' }],
-  creator: 'SisterRoam',
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+    'The verified hosting community for female solo travellers. Find a verified female host, a co-traveller, or local recommendations — all from sisters you can trust.',
+  keywords: [
+    'female solo travel',
+    'women hosting women',
+    'safe travel for women',
+    'verified female hosts',
+    'solo female traveller community',
+    'Dr Manisha Sonawane',
+    'SisterRoam',
+    'co-traveller finder',
+    'travel recommendations women',
+    'female travel community India',
+  ],
+  authors: [{ name: 'Dr Manisha Sonawane', url: 'https://sisterroam.com/about' }],
+  creator: 'Dr Manisha Sonawane',
+  publisher: 'SisterRoam',
+
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/favicon.svg', color: '#5D1A8B' },
+    ],
+  },
+
+  manifest: '/manifest.json',
+
   openGraph: {
     type: 'website',
     locale: 'en_US',
+    url: 'https://sisterroam.com',
     siteName: 'SisterRoam',
-    title: 'SisterRoam — Safe Hosting for Female Solo Travellers',
-    description: 'Connect with verified female hosts worldwide. Travel safely.',
+    title: 'SisterRoam — Explore Fearlessly, Together',
+    description:
+      'The verified hosting community for female solo travellers. Stay with verified sisters. Host fearless women. Explore together.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'SisterRoam — The verified hosting community for female solo travellers',
+        type: 'image/png',
+      },
+    ],
   },
+
   twitter: {
     card: 'summary_large_image',
-    title: 'SisterRoam',
+    title: 'SisterRoam — Explore Fearlessly, Together',
+    description: 'The verified hosting community for female solo travellers.',
+    images: ['/og-image.png'],
+    creator: '@sisterroam',
+    site: '@sisterroam',
   },
-  manifest: '/manifest.json',
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  verification: {
+    google: 'add-your-google-verification-code-here',
+  },
+
+  alternates: {
+    canonical: 'https://sisterroam.com',
+  },
+
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'SisterRoam',
   },
 }
@@ -36,23 +103,24 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#5D1A8B',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#5D1A8B' },
+    { media: '(prefers-color-scheme: dark)', color: '#5D1A8B' },
+  ],
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SisterRoam" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        {/* Splash screens for common iPhones */}
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 antialiased">
         <SessionProvider>
+          <SplashScreen />
           {children}
           <ToastProvider />
         </SessionProvider>

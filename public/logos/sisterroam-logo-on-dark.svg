@@ -1,0 +1,17 @@
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="80" fill="#1A1A2E" rx="12"/>
+  <!-- Icon circle -->
+  <circle cx="40" cy="40" r="36" fill="#5D1A8B"/>
+  <!-- Primary figure: host sister (white) -->
+  <circle cx="32" cy="30" r="10" fill="white" opacity="0.97"/>
+  <path d="M15 58c0-9.389 7.611-17 17-17s17 7.611 17 17" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- Secondary figure: travelling sister (pink) -->
+  <circle cx="53" cy="31" r="7" fill="#D4537E" opacity="0.92"/>
+  <path d="M55.5 46 Q65 41 66.5 50" stroke="#D4537E" stroke-width="2.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <!-- Wordmark: Sister -->
+  <text x="88" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="white" letter-spacing="-0.8">Sister</text>
+  <!-- Wordmark: Roam -->
+  <text x="203" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="400" fill="#D4537E" letter-spacing="-0.8">Roam</text>
+  <!-- Tagline -->
+  <text x="88" y="62" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="rgba(255,255,255,0.4)" letter-spacing="3.5" font-weight="400">EXPLORE FEARLESSLY</text>
+</svg>

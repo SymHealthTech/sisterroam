@@ -1,0 +1,23 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#5D1A8B"/>
+  <!-- Subtle pattern: large decorative circles -->
+  <circle cx="1050" cy="100" r="280" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="150" cy="530" r="200" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="600" cy="315" r="450" fill="rgba(255,255,255,0.02)"/>
+  <!-- Large icon mark — left side -->
+  <circle cx="220" cy="315" r="160" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="185" cy="270" r="52" fill="white" opacity="0.95"/>
+  <path d="M100 400c0-47 38-85 85-85s85 38 85 85" stroke="white" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="270" cy="278" r="36" fill="#D4537E" opacity="0.9"/>
+  <path d="M280 335 Q318 315 324 348" stroke="#D4537E" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.88"/>
+  <!-- Wordmark: large, right side -->
+  <text x="430" y="285" font-family="Georgia, 'Times New Roman', serif" font-size="110" font-weight="700" fill="white" letter-spacing="-3">Sister</text>
+  <text x="430" y="400" font-family="Georgia, 'Times New Roman', serif" font-size="110" font-weight="400" fill="#F4C0D1" letter-spacing="-3">Roam</text>
+  <!-- Tagline -->
+  <text x="430" y="455" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="rgba(255,255,255,0.5)" letter-spacing="8" font-weight="400">EXPLORE FEARLESSLY</text>
+  <!-- Sub tagline -->
+  <text x="430" y="498" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="rgba(255,255,255,0.35)" letter-spacing="1">The verified hosting community for female solo travellers</text>
+  <!-- Domain -->
+  <text x="430" y="560" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="rgba(255,255,255,0.3)" letter-spacing="0.5">sisterroam.com</text>
+</svg>

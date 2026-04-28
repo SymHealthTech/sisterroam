@@ -7,6 +7,7 @@ import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import Avatar from '@/components/ui/Avatar'
+import Logo from '@/components/ui/Logo'
 
 const NAV_LINKS = [
   { href: '/#how-it-works', label: 'How it Works' },
@@ -65,10 +66,13 @@ export default function PublicNavbar() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className={cn('text-xl font-bold transition-colors', scrolled ? 'text-brand' : 'text-white')}>SisterRoam</span>
-          <span className={cn('text-lg transition-colors', scrolled ? 'text-pink' : 'text-white/80')} aria-hidden="true">♀</span>
-        </Link>
+        <Logo
+          variant="full"
+          theme={scrolled ? 'light' : 'purple'}
+          size="sm"
+          href="/"
+          className="shrink-0"
+        />
 
         {/* Center nav — desktop */}
         <div className="hidden md:flex items-center gap-6">
@@ -162,9 +166,8 @@ export default function PublicNavbar() {
       )}>
         {/* Top row */}
         <div className="flex items-center justify-between px-4 h-[60px] border-b border-gray-100 shrink-0">
-          <Link href="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <span className="text-xl font-bold text-brand">SisterRoam</span>
-            <span className="text-pink text-lg" aria-hidden="true">♀</span>
+          <Link href="/" onClick={() => setMobileOpen(false)}>
+            <Logo variant="full" theme="light" size="sm" />
           </Link>
           <button
             className="p-2 text-gray-700"

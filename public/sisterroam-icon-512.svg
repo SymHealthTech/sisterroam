@@ -1,0 +1,12 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background square with rounded corners (for PWA icon) -->
+  <rect width="512" height="512" rx="110" fill="#5D1A8B"/>
+  <!-- Primary figure: host sister (white) — large, centered-left -->
+  <circle cx="196" cy="186" r="78" fill="white" opacity="0.97"/>
+  <path d="M78 370c0-65.097 52.752-118 117.849-118C261.054 252 314 304.903 314 370" stroke="white" stroke-width="26" stroke-linecap="round"/>
+  <!-- Secondary figure: travelling sister (pink) — upper right -->
+  <circle cx="352" cy="196" r="56" fill="#D4537E" opacity="0.92"/>
+  <path d="M365 298 Q430 265 442 318" stroke="#D4537E" stroke-width="24" stroke-linecap="round" fill="none" opacity="0.88"/>
+  <!-- Small connecting dot suggestion between the two -->
+  <circle cx="314" cy="252" r="8" fill="rgba(255,255,255,0.3)"/>
+</svg>

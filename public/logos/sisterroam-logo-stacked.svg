@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle icon -->
+  <circle cx="100" cy="78" r="58" fill="#5D1A8B"/>
+  <!-- Primary figure -->
+  <circle cx="88" cy="64" r="16" fill="white" opacity="0.97"/>
+  <path d="M64 100c0-13.255 10.745-24 24-24s24 10.745 24 100" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 100c0-13.255 10.745-24 24-24s24 10.745 24 24" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <!-- Secondary figure -->
+  <circle cx="114" cy="65" r="11" fill="#D4537E" opacity="0.92"/>
+  <path d="M117 85 Q128 79.5 129.5 88" stroke="#D4537E" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.88"/>
+  <!-- Wordmark stacked -->
+  <text x="100" y="162" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700" fill="#5D1A8B" text-anchor="middle" letter-spacing="-0.5">Sister</text>
+  <text x="100" y="190" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="400" fill="#D4537E" text-anchor="middle" letter-spacing="-0.5">Roam</text>
+</svg>
