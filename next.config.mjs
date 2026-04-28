@@ -6,7 +6,6 @@ const pwa = withPWA({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   fallbacks: {
     document: '/offline.html',
