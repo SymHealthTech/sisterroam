@@ -223,6 +223,8 @@ export default function OnboardingProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  const isGoogleUser = !!session?.user?.googleId
+
   const [saving,          setSaving]          = useState(false)
   const [showHobbies,     setShowHobbies]     = useState(false)
   const [showSocial,      setShowSocial]      = useState(false)
@@ -330,6 +332,41 @@ export default function OnboardingProfilePage() {
       <div className="max-w-lg mx-auto px-4 py-8 pb-24">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Build your profile</h1>
         <p className="text-sm text-gray-500 mb-8">Help the community get to know you</p>
+
+        {/* Google welcome banner */}
+        {isGoogleUser && (
+          <div className="flex items-start gap-3 p-4 bg-teal-lighter/40 border border-teal/20 rounded-xl mb-6">
+            <svg width="20" height="20" viewBox="0 0 18 18" className="shrink-0 mt-0.5" aria-hidden="true">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+              <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-teal-dark">Your Google account has been connected.</p>
+              <p className="text-xs text-teal-dark/80 mt-0.5">Complete your SisterRoam profile to continue.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Email read-only for Google users */}
+        {isGoogleUser && session?.user?.email && (
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={session.user.email}
+                disabled
+                className="flex-1 h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-500 opacity-70"
+              />
+              <span className="flex items-center gap-1 text-xs font-medium text-teal bg-teal-lighter px-2.5 py-1.5 rounded-full whitespace-nowrap">
+                ✓ Google verified
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Verified via your Google account</p>
+          </div>
+        )}
 
         <form className="space-y-6" onSubmit={e => { e.preventDefault(); handleContinue() }}>
 

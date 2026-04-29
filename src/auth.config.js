@@ -17,7 +17,9 @@ const authConfig = {
       session.user.role              = token.role
       session.user.isAdmin           = token.isAdmin
       session.user.onboardingCompleted = token.onboardingCompleted
+      session.user.onboardingStep    = token.onboardingStep
       session.user.username          = token.username
+      session.user.googleId          = token.googleId
       return session
     },
   },

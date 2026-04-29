@@ -240,10 +240,29 @@ export default function SettingsPage() {
           </AccountRow>
 
           <AccountRow label="Phone number" value={userData?.phone ? userData.phone.replace(/(\+\d{2})\d+(\d{4})/, '$1••••$2') : 'Not added'}>
-            <p className="text-sm text-gray-600 mb-3">Phone verification requires OTP confirmation.</p>
-            <Button size="sm" variant="secondary" onClick={() => toast('Phone OTP flow coming soon')}>
-              {userData?.phone ? 'Change phone' : 'Add phone number'}
-            </Button>
+            {userData?.googleId && !userData?.phone ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2.5 p-3.5 bg-amber-lighter border border-amber/20 rounded-xl">
+                  <AlertTriangle className="w-4 h-4 text-amber shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-dark">Add your phone number for safety check-ins</p>
+                    <p className="text-xs text-amber-dark/80 mt-0.5">
+                      Your phone number is used to send automatic safety messages during your stays.
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" variant="secondary" onClick={() => toast('Phone OTP flow coming soon')}>
+                  Add phone number
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 mb-3">Phone verification requires OTP confirmation.</p>
+                <Button size="sm" variant="secondary" onClick={() => toast('Phone OTP flow coming soon')}>
+                  {userData?.phone ? 'Change phone' : 'Add phone number'}
+                </Button>
+              </>
+            )}
           </AccountRow>
 
           <AccountRow label="Password" value={userData?.googleId && !userData?.password ? 'Sign in with Google (no password)' : '••••••••'}>

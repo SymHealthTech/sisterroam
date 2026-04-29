@@ -5,6 +5,23 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import authConfig from '@/auth.config'
 
+async function generateUniqueUsername(name) {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .substring(0, 15) || 'sister'
+
+  let username = base
+  let counter = 1
+
+  while (await User.findOne({ username })) {
+    username = base + counter
+    counter++
+  }
+
+  return username
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -53,6 +70,7 @@ export const {
           role: user.role,
           isAdmin: user.isAdmin,
           onboardingCompleted: user.onboardingCompleted,
+          onboardingStep: user.onboardingStep,
         }
       },
     }),
@@ -61,20 +79,57 @@ export const {
   callbacks: {
     ...authConfig.callbacks,
 
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
           await connectDB()
-          const dbUser = await User.findOne({
-            $or: [{ googleId: account.providerAccountId }, { email: user.email }],
+
+          const existingUser = await User.findOne({
+            $or: [
+              { email: profile.email },
+              { googleId: profile.sub },
+            ],
           })
-          if (dbUser) {
-            if (dbUser.isPermanentlyBanned) return false
-            if (dbUser.isSuspended && dbUser.suspendedUntil > new Date()) return false
+
+          if (existingUser) {
+            if (existingUser.isPermanentlyBanned) return false
+            if (existingUser.isSuspended && existingUser.suspendedUntil > new Date()) {
+              return false
+            }
+
+            // Link googleId if they previously signed up with email+password
+            if (!existingUser.googleId) {
+              await User.findByIdAndUpdate(existingUser._id, {
+                $set: { googleId: profile.sub, emailVerified: true },
+              })
+            }
+
+            return true
           }
-        } catch (err) {
-          console.error('[auth][signIn][google]', err)
-          // Allow sign-in — jwt callback will handle user creation
+
+          // New user — create minimal account, skip OTP step
+          const username = await generateUniqueUsername(
+            profile.name || profile.email.split('@')[0]
+          )
+
+          await User.create({
+            email: profile.email,
+            googleId: profile.sub,
+            fullName: profile.name || '',
+            username,
+            emailVerified: true,
+            phoneVerified: false,
+            verificationTier: 'basic',
+            role: 'guest',
+            onboardingStep: 2,
+            onboardingCompleted: false,
+            isActive: true,
+          })
+
+          return true
+        } catch (error) {
+          console.error('Google signIn error:', error)
+          return false
         }
       }
       return true
@@ -88,31 +143,19 @@ export const {
         if (account.provider === 'google') {
           try {
             await connectDB()
-            let dbUser = await User.findOne({
-              $or: [{ googleId: account.providerAccountId }, { email: token.email }],
-            })
-
-            if (!dbUser) {
-              dbUser = await User.create({
-                googleId: account.providerAccountId,
-                email: token.email,
-                fullName: token.name,
-                profilePhotoUrl: token.picture,
-                emailVerified: true,
-              })
-            } else if (!dbUser.googleId) {
-              dbUser.googleId = account.providerAccountId
-              await dbUser.save()
+            const dbUser = await User.findOne({ email: token.email })
+            if (dbUser) {
+              token.id = dbUser._id.toString()
+              token.verificationTier = dbUser.verificationTier
+              token.role = dbUser.role
+              token.isAdmin = dbUser.isAdmin
+              token.onboardingCompleted = dbUser.onboardingCompleted
+              token.onboardingStep = dbUser.onboardingStep
+              token.username = dbUser.username
+              token.fullName = dbUser.fullName
+              token.profilePhotoUrl = dbUser.profilePhotoUrl ?? token.picture
+              token.googleId = dbUser.googleId
             }
-
-            token.id = dbUser._id.toString()
-            token.verificationTier = dbUser.verificationTier
-            token.role = dbUser.role
-            token.isAdmin = dbUser.isAdmin
-            token.onboardingCompleted = dbUser.onboardingCompleted
-            token.username = dbUser.username
-            token.fullName = dbUser.fullName
-            token.profilePhotoUrl = dbUser.profilePhotoUrl ?? token.picture
           } catch (err) {
             console.error('[auth][jwt][google]', err)
             token.fullName = token.fullName ?? token.name
@@ -124,6 +167,7 @@ export const {
           token.role = user.role
           token.isAdmin = user.isAdmin
           token.onboardingCompleted = user.onboardingCompleted
+          token.onboardingStep = user.onboardingStep
           token.username = user.username
           token.fullName = user.fullName
           token.profilePhotoUrl = user.profilePhotoUrl
