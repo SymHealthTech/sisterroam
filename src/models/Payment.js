@@ -14,6 +14,7 @@ const PaymentSchema = new mongoose.Schema({
     index: true,
   },
   dodoPaymentLinkId: { type: String },
+  checkoutUrl: { type: String },
   amount: { type: Number, required: true },
   currency: {
     type: String,

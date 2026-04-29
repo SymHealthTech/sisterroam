@@ -1,54 +1,45 @@
 import DodoPayments from 'dodopayments'
-import crypto from 'crypto'
 
 const dodoClient = new DodoPayments({
   bearerToken: process.env.DODO_SECRET_KEY,
+  webhookKey:  process.env.DODO_WEBHOOK_SECRET,
+  environment: 'test_mode',
 })
 
 export default dodoClient
 
-export async function createPaymentLink(userId, userEmail, userName, currency) {
+export async function createCheckoutSession(userId, userEmail, userName, currency) {
   const productId = currency === 'INR'
     ? process.env.DODO_PRODUCT_ID_INR
     : process.env.DODO_PRODUCT_ID_USD
 
-  const response = await dodoClient.payments.create({
-    billing: {
-      city: 'Mumbai',
-      country: currency === 'INR' ? 'IN' : 'US',
-      state: 'MH',
-      street: null,
-      zipcode: '400001',
-    },
+  const returnBase = process.env.NEXTAUTH_URL
+
+  const response = await dodoClient.checkoutSessions.create({
+    product_cart: [{ product_id: productId, quantity: 1 }],
     customer: {
       email: userEmail,
-      name: userName,
-      create_new_customer: true,
+      name:  userName,
     },
     metadata: {
-      userId: userId.toString(),
+      userId:  userId.toString(),
       purpose: 'verified_badge',
       currency,
     },
-    payment_link: true,
-    product_cart: [{ product_id: productId, quantity: 1 }],
-    return_url: process.env.NEXTAUTH_URL + '/profile/verification?payment=success',
-    tax_id: null,
+    return_url: `${returnBase}/profile/verification?payment=success`,
+    cancel_url: `${returnBase}/profile/verification?payment=cancelled`,
   })
 
-  return { paymentUrl: response.payment_link, paymentId: response.payment_id }
+  // response shape: { session_id, checkout_url }
+  return {
+    checkoutUrl: response.checkout_url,
+    sessionId:   response.session_id,
+  }
 }
 
-export function verifyWebhookSignature(payload, signature) {
-  try {
-    const hmac = crypto.createHmac('sha256', process.env.DODO_WEBHOOK_SECRET)
-    hmac.update(payload, 'utf8')
-    const computedSignature = hmac.digest('hex')
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(computedSignature, 'hex')
-    )
-  } catch {
-    return false
-  }
+// Use the Dodo SDK's built-in standardwebhooks verification.
+// Headers must include webhook-id, webhook-timestamp, webhook-signature.
+export function parseWebhookEvent(rawBody, headers) {
+  // unwrap throws if signature is invalid; returns parsed event object
+  return dodoClient.webhooks.unwrap(rawBody, { headers })
 }

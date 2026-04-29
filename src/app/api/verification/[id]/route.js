@@ -40,13 +40,11 @@ export async function PATCH(request, { params }) {
 
     await verif.save()
 
-    if (status === 'approved') {
-      await User.findByIdAndUpdate(verif.userId, { verificationTier: 'verified' })
-    }
+    // Do NOT promote tier here — payment webhook does that after payment succeeds.
 
     const isApproved = status === 'approved'
     const notifBody  = isApproved
-      ? 'Your identity has been verified. You now have a Verified badge!'
+      ? 'Your identity has been verified! Complete payment on the verification page to activate your badge.'
       : `Your verification was not approved.${reviewerNotes ? ` Notes: ${reviewerNotes}` : ' Please resubmit with clearer documents.'}`
 
     await Notification.create({

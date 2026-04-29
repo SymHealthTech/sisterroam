@@ -12,7 +12,7 @@ import Skeleton from '@/components/ui/Skeleton'
 import HostCard from '@/components/host/HostCard'
 import {
   Search, ShieldCheck, MessageSquare, Users, MapPin,
-  AlertCircle, BarChart2, Copy, BookOpen, UserPlus,
+  AlertCircle, Copy,
 } from 'lucide-react'
 import TripPostCard from '@/components/cotraveller/TripPostCard'
 import StoryCard from '@/components/stories/StoryCard'
@@ -227,7 +227,10 @@ export default function FeedPage() {
   }
 
   const firstName = (userProfile?.fullName ?? sessionUser?.fullName ?? '').split(' ')[0] || 'there'
-  const isBasicTier = sessionUser?.verificationTier === 'basic'
+  // Use fresh DB value when loaded; fall back to session during first render.
+  // Session verificationTier is stale after admin approves KYC.
+  const verTier = userProfile?.verificationTier ?? sessionUser?.verificationTier
+  const isBasicTier = !loading && verTier === 'basic'
   const hostName = activeStay?.hostId?.fullName ?? 'your host'
   const hostCity  = activeStay?.hostId?.city    ?? ''
 
