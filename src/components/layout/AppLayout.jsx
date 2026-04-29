@@ -37,7 +37,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [freshPhotoUrl, setFreshPhotoUrl] = useState(null)
+  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null })
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { lastEvent } = useSSEContext()
@@ -52,7 +52,12 @@ function AppLayoutInner({ children, title }) {
     if (status !== 'authenticated') return
     fetch('/api/users')
       .then(r => r.json())
-      .then(d => { if (d.success) setFreshPhotoUrl(d.data.profilePhotoUrl ?? null) })
+      .then(d => {
+        if (d.success) setFreshData({
+          profilePhotoUrl:  d.data.profilePhotoUrl  ?? null,
+          verificationTier: d.data.verificationTier ?? null,
+        })
+      })
       .catch(() => {})
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -76,8 +81,12 @@ function AppLayoutInner({ children, title }) {
   if (!session) return null
 
   const user = session.user
-  const avatarSrc = freshPhotoUrl ?? user.profilePhotoUrl ?? null
-  const freshUser = { ...user, profilePhotoUrl: avatarSrc }
+  const avatarSrc = freshData.profilePhotoUrl ?? user.profilePhotoUrl ?? null
+  const freshUser = {
+    ...user,
+    profilePhotoUrl:  avatarSrc,
+    ...(freshData.verificationTier ? { verificationTier: freshData.verificationTier } : {}),
+  }
 
   return (
     <AppUserContext.Provider value={freshUser}>

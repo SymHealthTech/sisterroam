@@ -282,7 +282,7 @@ function PaymentOptionsState({ user, selectedCurrency, setSelectedCurrency, isCr
 /* ── Main page ────────────────────────────────────────────── */
 
 export default function VerificationPage() {
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
 
   const [loading,        setLoading]        = useState(true)
   const [submitting,     setSubmitting]      = useState(false)
@@ -338,6 +338,27 @@ export default function VerificationPage() {
     }
     checkStatus()
   }, [])
+
+  // When Dodo redirects back with ?payment=success, immediately activate the
+  // badge in the DB (don't wait for the webhook) and refresh the session JWT
+  // so every page instantly sees verificationTier = 'verified'.
+  useEffect(() => {
+    if (paymentResult !== 'success') return
+    async function activate() {
+      try {
+        const res = await fetch('/api/payments/activate', { method: 'POST' })
+        if (res.ok) {
+          await updateSession({ verificationTier: 'verified' })
+          setPaymentStatus('completed')
+          const fresh = await fetch('/api/verification/status').then(r => r.json())
+          if (fresh.success) setVerifData(fresh.data)
+        }
+      } catch {
+        // Success UI is still visible via paymentResult param — ignore silently
+      }
+    }
+    activate()
+  }, [paymentResult]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUpload({ documentType, url, publicId }) {
     if (documentType === 'id_front') {

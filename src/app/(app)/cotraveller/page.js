@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import Button from '@/components/ui/Button'
 import TripPostCard from '@/components/cotraveller/TripPostCard'
 import PostTripModal from '@/components/cotraveller/PostTripModal'
@@ -92,8 +92,9 @@ function InterestCard({ item }) {
 
 export default function CoTravellerPage() {
   const { data: session } = useSession()
-  const currentUser       = session?.user
-  const userTier          = currentUser?.verificationTier
+  const appUser  = useAppUser()
+  // Prefer freshUser from AppLayout context (DB data); fall back to JWT session
+  const userTier = (appUser ?? session?.user)?.verificationTier
 
   const [activeTab, setActiveTab] = useState(0)
   const [showModal,   setModal]   = useState(false)
