@@ -4,6 +4,7 @@ import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
+import { deleteFile } from '@/lib/cloudinary'
 
 export async function PATCH(request, { params }) {
   try {
@@ -22,11 +23,21 @@ export async function PATCH(request, { params }) {
     if (!verif) return fail('Verification request not found', 404)
     if (verif.status !== 'pending') return fail('This request has already been reviewed', 400)
 
-    verif.status       = status
+    verif.status        = status
     verif.reviewerNotes = reviewerNotes ?? ''
-    verif.reviewedAt   = new Date()
-    verif.reviewedBy   = session.user.id
+    verif.reviewedAt    = new Date()
+    verif.reviewedBy    = session.user.id
     if (status === 'rejected') verif.rejectionCount += 1
+
+    // Delete selfie video from Cloudinary now that review is complete.
+    // Videos are only needed for the review itself; holding them longer
+    // would accumulate storage and retain sensitive biometric data unnecessarily.
+    if (verif.selfieVideoPublicId) {
+      deleteFile(verif.selfieVideoPublicId, 'video').catch(console.error)
+      verif.selfieVideoUrl      = undefined
+      verif.selfieVideoPublicId = undefined
+    }
+
     await verif.save()
 
     if (status === 'approved') {

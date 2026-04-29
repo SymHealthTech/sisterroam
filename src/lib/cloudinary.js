@@ -56,6 +56,10 @@ export async function uploadDocument(file, options = {}) {
     public_id:     publicId,
     resource_type: 'image',
     type:          'authenticated',
+    transformation: [
+      { width: 1920, height: 1920, crop: 'limit' },
+      { format: 'webp', quality: 'auto:good' },
+    ],
   })
 
   return {

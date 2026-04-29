@@ -6,6 +6,23 @@ import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 
+async function compressImage(file, maxPx = 1920) {
+  return new Promise((resolve) => {
+    const img = new window.Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const ratio = Math.min(maxPx / img.width, maxPx / img.height, 1)
+      const canvas = document.createElement('canvas')
+      canvas.width  = Math.round(img.width  * ratio)
+      canvas.height = Math.round(img.height * ratio)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(resolve, 'image/webp', 0.88)
+    }
+    img.src = url
+  })
+}
+
 const STATUS_CONFIG = {
   not_uploaded: { label: 'Not uploaded', variant: 'basic'    },
   uploaded:     { label: 'Uploaded',     variant: 'pending'  },
@@ -37,8 +54,9 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
     if (!preview?.file) return
     setUploading(true)
     try {
+      const compressed = await compressImage(preview.file)
       const fd = new FormData()
-      fd.append('file',  preview.file)
+      fd.append('file',  compressed, 'document.webp')
       fd.append('type',  'id_document')
       fd.append('extra', documentType)
 
@@ -123,7 +141,7 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
                 <p className="text-xs font-medium text-gray-600">
                   {status === 'uploaded' ? 'Upload a new photo' : 'Click to upload'}
                 </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">JPG, PNG or HEIC</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">JPG, PNG or HEIC · Max 10 MB · auto-compressed</p>
                 <input
                   ref={fileInputRef}
                   type="file"

@@ -1,14 +1,13 @@
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
-import VerificationRequest from '@/models/VerificationRequest'
 import SafetyReport from '@/models/SafetyReport'
 import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
-const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/avi'])
+const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/avi', 'video/webm'])
 
 const IMAGE_MAX = 10 * 1024 * 1024   // 10 MB
 const VIDEO_MAX = 100 * 1024 * 1024  // 100 MB
@@ -72,11 +71,6 @@ export async function POST(request) {
         const result = await uploadDocument(dataUri, {
           folder: `sisterroam/verifications/${userId}/id`,
         })
-        await VerificationRequest.findOneAndUpdate(
-          { userId },
-          { idDocumentUrl: result.url, idDocumentPublicId: result.publicId },
-          { upsert: true, new: true }
-        )
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }
 
@@ -85,11 +79,6 @@ export async function POST(request) {
         const result = await uploadVideo(dataUri, {
           folder: `sisterroam/verifications/${userId}/video`,
         })
-        await VerificationRequest.findOneAndUpdate(
-          { userId },
-          { selfieVideoUrl: result.url, selfieVideoPublicId: result.publicId },
-          { upsert: true, new: true }
-        )
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }
 
