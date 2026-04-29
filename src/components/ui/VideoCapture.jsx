@@ -100,20 +100,52 @@ export default function VideoCapture({ onUploadComplete }) {
     setCamState('idle')
   }
 
+  // Upload blob/file directly to Cloudinary (bypasses Next.js body size limit)
+  async function uploadToCloudinary(blob, fileName) {
+    const sigRes = await fetch('/api/upload/signature?folder=sisterroam/verifications/videos')
+    if (!sigRes.ok) throw new Error('Could not start upload. Please try again.')
+    const { signature, timestamp, apiKey, cloudName } = await sigRes.json()
+
+    const fd = new FormData()
+    fd.append('file', blob, fileName)
+    fd.append('folder', 'sisterroam/verifications/videos')
+    fd.append('timestamp', String(timestamp))
+    fd.append('signature', signature)
+    fd.append('api_key', apiKey)
+
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
+      }
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText)
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({ url: data.secure_url, publicId: data.public_id })
+          } else {
+            reject(new Error(data?.error?.message ?? 'Upload failed'))
+          }
+        } catch {
+          reject(new Error('Upload failed. Please try again.'))
+        }
+      }
+      xhr.onerror = () => reject(new Error('Network error'))
+      xhr.ontimeout = () => reject(new Error('Upload timed out. Try a shorter video.'))
+      xhr.timeout = 300000 // 5 min — goes straight to Cloudinary, no server middleman
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`)
+      xhr.send(fd)
+    })
+  }
+
   async function uploadRecordedVideo() {
     if (!recordedBlob) return
     setUploading(true)
+    setUploadProgress(0)
     try {
-      const fd = new FormData()
-      fd.append('file', recordedBlob, 'intro.webm')
-      fd.append('type', 'intro_video')
-
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
-
+      const result = await uploadToCloudinary(recordedBlob, 'intro.webm')
       setRecordDone(true)
-      onUploadComplete?.({ url: data.url, publicId: data.publicId })
+      onUploadComplete?.({ url: result.url, publicId: result.publicId })
       toast.success('Video uploaded!')
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
@@ -125,8 +157,8 @@ export default function VideoCapture({ onUploadComplete }) {
   function onFileSelect(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error('File too large. Max 100MB.')
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error('File too large. Max 500MB.')
       e.target.value = ''
       return
     }
@@ -140,36 +172,9 @@ export default function VideoCapture({ onUploadComplete }) {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const fd = new FormData()
-      fd.append('file', selectedFile)
-      fd.append('type', 'intro_video')
-
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
-        }
-        xhr.onload = () => {
-          try {
-            const data = JSON.parse(xhr.responseText)
-            if (xhr.status >= 200 && xhr.status < 300) {
-              onUploadComplete?.({ url: data.url, publicId: data.publicId })
-              resolve(data)
-            } else {
-              reject(new Error(data?.error ?? 'Upload failed'))
-            }
-          } catch {
-            reject(new Error(xhr.status === 413 ? 'File too large. Max 100MB.' : 'Upload failed. Please try again.'))
-          }
-        }
-        xhr.onerror = () => reject(new Error('Network error'))
-        xhr.ontimeout = () => reject(new Error('Upload timed out. Try a shorter video.'))
-        xhr.timeout = 180000 // 3 min
-        xhr.open('POST', '/api/upload')
-        xhr.send(fd)
-      })
-
+      const result = await uploadToCloudinary(selectedFile, selectedFile.name)
       setUploadDone(true)
+      onUploadComplete?.({ url: result.url, publicId: result.publicId })
       toast.success('Video uploaded!')
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
@@ -274,6 +279,17 @@ export default function VideoCapture({ onUploadComplete }) {
                   <div className="bg-black rounded-xl overflow-hidden aspect-video">
                     <video src={recordedUrl} controls playsInline className="w-full h-full object-cover" />
                   </div>
+                  {uploading && (
+                    <div className="space-y-1.5" aria-label={`Upload progress ${uploadProgress}%`}>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-brand rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 text-right">{uploadProgress}%</p>
+                    </div>
+                  )}
                   <div className="flex gap-3">
                     <Button variant="ghost" className="flex-1" onClick={recordAgain} disabled={uploading}>
                       <RotateCcw className="w-4 h-4 mr-1.5" aria-hidden="true" />
@@ -308,7 +324,7 @@ export default function VideoCapture({ onUploadComplete }) {
                 {selectedFile ? (
                   <p className="text-xs text-gray-400">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB</p>
                 ) : (
-                  <p className="text-xs text-gray-400">MP4, MOV or AVI · Max 100 MB</p>
+                  <p className="text-xs text-gray-400">MP4, MOV or AVI · Max 500 MB</p>
                 )}
                 <input
                   ref={fileInputRef}
@@ -323,16 +339,11 @@ export default function VideoCapture({ onUploadComplete }) {
                 <div className="space-y-1.5" aria-label={`Upload progress ${uploadProgress}%`}>
                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={cn(
-                        'h-full rounded-full transition-all duration-300',
-                        uploadProgress < 100 ? 'bg-brand' : 'bg-amber animate-pulse'
-                      )}
+                      className="h-full bg-brand rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-400 text-right">
-                    {uploadProgress < 100 ? `${uploadProgress}%` : 'Processing on server… please wait'}
-                  </p>
+                  <p className="text-xs text-gray-400 text-right">{uploadProgress}%</p>
                 </div>
               )}
 
