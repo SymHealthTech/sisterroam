@@ -340,6 +340,36 @@ export default function ChatWindow({ requestId, currentUserId }) {
     }
   }, [lastEvent, requestId])
 
+  // ── Polling fallback (4 s) ─────────────────────────────────────────────
+  // SSE requires the connections Map to be shared in-process; on multi-instance
+  // deployments (Vercel) each Lambda has its own process so SSE may not reach
+  // the client. Polling ensures messages always arrive within a few seconds.
+
+  useEffect(() => {
+    if (!requestId) return
+    const id = setInterval(async () => {
+      if (document.hidden) return
+      try {
+        const res = await fetch(`/api/messages/${requestId}`)
+        const json = await res.json()
+        if (!json.success || !json.data) return
+        setMessages(prev => {
+          const polledIds = new Set(json.data.map(m => m._id?.toString()))
+          // Keep still-pending optimistic messages (they have temp- IDs)
+          const pendingOptimistic = prev.filter(m => m.isOptimistic)
+          // Skip re-render if nothing new arrived
+          const prevReal = prev.filter(m => !m.isOptimistic)
+          if (
+            prevReal.length === json.data.length &&
+            prevReal.every(m => polledIds.has(m._id?.toString()))
+          ) return prev
+          return [...json.data, ...pendingOptimistic]
+        })
+      } catch {}
+    }, 4000)
+    return () => clearInterval(id)
+  }, [requestId])
+
   // ── Auto-scroll ─────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -497,9 +527,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
   const checkIn = new Date(request.checkInDate)
   const checkOut = new Date(request.checkOutDate)
   const stayActive = request.status === 'accepted' && today >= checkIn && today <= checkOut
-  const stayUpcoming = request.status === 'accepted' && today < checkIn
 
-  const showSafety = stayActive || stayUpcoming
+  const showSafety = stayActive
   const showReviewBanner =
     request.status === 'completed' &&
     ((isGuest && !request.guestReviewId) || (!isGuest && !request.hostReviewId))

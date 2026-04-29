@@ -1,11 +1,17 @@
 // Server-side SSE connection manager.
-// In-memory Map — works perfectly in dev and single-server deployments.
-// On Vercel serverless, SSE connections live in the long-running SSE function
-// instance; push from other routes in the same instance reaches connected clients.
-// Clients auto-reconnect every ~60s (Vercel free-tier maxDuration), so the UX
-// degrades gracefully rather than breaking.
+//
+// IMPORTANT: module-level variables in Next.js are NOT reliably shared between
+// different API routes — webpack compiles each route into its own chunk, and
+// hot-reload in dev creates fresh module instances. We use `global` as a true
+// singleton that survives across module re-instantiation and hot-reloads.
+//
+// Production note: on multi-instance deployments (Vercel serverless), each
+// Lambda has its own `global`, so SSE events can only reach clients connected
+// to the same instance. The ChatWindow polling fallback covers this case.
 
-const connections = new Map() // userId → Set<ReadableStreamDefaultController>
+if (!global._sseConnections) global._sseConnections = new Map()
+const connections = global._sseConnections
+
 const encoder = new TextEncoder()
 
 export function addConnection(userId, controller) {
