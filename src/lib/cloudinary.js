@@ -38,7 +38,6 @@ export async function uploadVideo(file, options = {}) {
     folder,
     public_id:     publicId,
     resource_type: 'video',
-    type:          'authenticated',
   })
 
   return {

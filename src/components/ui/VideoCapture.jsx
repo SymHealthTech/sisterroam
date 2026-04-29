@@ -12,7 +12,7 @@ function formatTime(seconds) {
   return `${m}:${s}`
 }
 
-export default function VideoCapture({ userId, onUploadComplete }) {
+export default function VideoCapture({ onUploadComplete }) {
   const [tab, setTab] = useState('record')
 
   // Record tab
@@ -150,15 +150,21 @@ export default function VideoCapture({ userId, onUploadComplete }) {
           if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
         }
         xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
+          try {
             const data = JSON.parse(xhr.responseText)
-            onUploadComplete?.({ url: data.url, publicId: data.publicId })
-            resolve(data)
-          } else {
-            reject(new Error(JSON.parse(xhr.responseText)?.error ?? 'Upload failed'))
+            if (xhr.status >= 200 && xhr.status < 300) {
+              onUploadComplete?.({ url: data.url, publicId: data.publicId })
+              resolve(data)
+            } else {
+              reject(new Error(data?.error ?? 'Upload failed'))
+            }
+          } catch {
+            reject(new Error(xhr.status === 413 ? 'File too large. Max 100MB.' : 'Upload failed. Please try again.'))
           }
         }
         xhr.onerror = () => reject(new Error('Network error'))
+        xhr.ontimeout = () => reject(new Error('Upload timed out. Try a shorter video.'))
+        xhr.timeout = 180000 // 3 min
         xhr.open('POST', '/api/upload')
         xhr.send(fd)
       })
@@ -317,11 +323,16 @@ export default function VideoCapture({ userId, onUploadComplete }) {
                 <div className="space-y-1.5" aria-label={`Upload progress ${uploadProgress}%`}>
                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-brand rounded-full transition-all duration-300"
+                      className={cn(
+                        'h-full rounded-full transition-all duration-300',
+                        uploadProgress < 100 ? 'bg-brand' : 'bg-amber animate-pulse'
+                      )}
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-400 text-right">{uploadProgress}%</p>
+                  <p className="text-xs text-gray-400 text-right">
+                    {uploadProgress < 100 ? `${uploadProgress}%` : 'Processing on server… please wait'}
+                  </p>
                 </div>
               )}
 
