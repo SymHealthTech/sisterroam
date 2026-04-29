@@ -2,43 +2,78 @@ import NextAuth from 'next-auth'
 import { NextResponse } from 'next/server'
 import authConfig from '@/auth.config'
 
-// Use Edge-safe auth (no mongoose) for proxy/middleware
 const { auth } = NextAuth(authConfig)
 
-const protectedRoutes = ['/feed', '/messages', '/profile', '/community', '/safety', '/admin']
-const adminRoutes     = ['/admin']
+const publicPaths = [
+  '/', '/about', '/how-it-works', '/safety',
+  '/pricing', '/browse', '/stories', '/blog',
+  '/login', '/signup', '/forgot-password',
+]
 
-export default auth((req) => {
-  const { nextUrl } = req
-  const isLoggedIn  = !!req.auth
-  const path        = nextUrl.pathname
+export default auth((request) => {
+  const { pathname } = request.nextUrl
+  const session = request.auth
 
-  const isProtected  = protectedRoutes.some((r) => path.startsWith(r))
-  const isAdminRoute = adminRoutes.some((r) => path.startsWith(r))
+  const isPublicPath = publicPaths.some(p =>
+    pathname === p || pathname.startsWith(p + '/')
+  )
+  const isApiPath       = pathname.startsWith('/api/')
+  const isNextPath      = pathname.startsWith('/_next/')
+  const isOnboardingPath = pathname.startsWith('/onboarding/')
+  const isStaticFile    = /\.(png|jpg|svg|ico|webp|json)$/.test(pathname)
+  const isWebhook       = pathname === '/api/payments/webhook'
 
-  if (isAdminRoute && (!isLoggedIn || !req.auth?.user?.isAdmin)) {
-    return NextResponse.redirect(new URL('/', nextUrl))
+  if (isNextPath || isStaticFile || isWebhook) {
+    return NextResponse.next()
   }
 
-  if (!isLoggedIn && isProtected) {
-    const loginUrl = new URL('/login', nextUrl)
-    loginUrl.searchParams.set('callbackUrl', path)
+  const isProtectedPath =
+    pathname.startsWith('/feed') ||
+    pathname.startsWith('/explore') ||
+    pathname.startsWith('/messages') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/community') ||
+    pathname.startsWith('/cotraveller') ||
+    pathname.startsWith('/recommendations') ||
+    pathname.startsWith('/request') ||
+    pathname.startsWith('/admin')
+
+  if (!session && isProtectedPath) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (
-    isLoggedIn &&
-    !req.auth?.user?.onboardingCompleted &&
-    !path.startsWith('/onboarding') &&
-    !path.startsWith('/login') &&
-    !path.startsWith('/signup')
-  ) {
-    return NextResponse.redirect(new URL('/onboarding/role', nextUrl))
+  if (session && !session.user.onboardingCompleted) {
+    if (isOnboardingPath || isApiPath || isPublicPath) {
+      return NextResponse.next()
+    }
+
+    const step = session.user.onboardingStep || 2
+
+    if (step <= 2) {
+      return NextResponse.redirect(new URL('/onboarding/profile', request.url))
+    }
+    if (step === 3) {
+      return NextResponse.redirect(new URL('/onboarding/role', request.url))
+    }
+  }
+
+  if (pathname.startsWith('/admin')) {
+    if (!session?.user?.isAdmin) {
+      return NextResponse.redirect(new URL('/feed', request.url))
+    }
+  }
+
+  if (session && session.user.onboardingCompleted) {
+    if (pathname === '/login' || pathname === '/signup') {
+      return NextResponse.redirect(new URL('/feed', request.url))
+    }
   }
 
   return NextResponse.next()
 })
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon\\.ico|icons|manifest).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
