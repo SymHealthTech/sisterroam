@@ -468,27 +468,13 @@ export default function VerificationPage() {
               <span>{user?.email ?? '—'}</span>
             </div>
             {user?.emailVerified ? (
-              user?.googleId ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-teal">
-                  <svg width="12" height="12" viewBox="0 0 18 18" aria-hidden="true">
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-                    <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                  </svg>
-                  Verified via Google
-                </span>
-              ) : (
-                <span className="text-xs text-teal font-medium">Verified</span>
-              )
+              <span className="text-xs text-teal font-medium">Verified</span>
             ) : (
               <Button size="sm" variant="secondary" onClick={() => toast('Resend email coming soon')}>Resend</Button>
             )}
           </div>
           {user?.emailVerified && (
-            <p className="text-xs text-teal mt-1">
-              {user?.googleId ? 'Your email is verified via Google account.' : 'Your email is confirmed.'}
-            </p>
+            <p className="text-xs text-teal mt-1">Your email is confirmed.</p>
           )}
         </StepCard>
 
@@ -496,19 +482,9 @@ export default function VerificationPage() {
         <StepCard
           number={2}
           title="Phone number"
-          status={user?.phoneVerified ? 'done' : (user?.googleId && !user?.phone ? 'pending' : 'idle')}
+          status={user?.phoneVerified ? 'done' : 'idle'}
         >
-          {user?.googleId && !user?.phone ? (
-            <div className="space-y-2">
-              <p className="text-sm text-amber-dark font-medium">Phone number not added yet</p>
-              <p className="text-sm text-gray-600">
-                Add your phone number in Settings to complete your profile.
-              </p>
-              <a href="/profile/settings" className="inline-flex items-center gap-1 text-sm text-brand font-medium hover:underline">
-                Go to Settings <ChevronRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          ) : (
+          {(
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <Phone className="w-4 h-4 text-gray-400" />

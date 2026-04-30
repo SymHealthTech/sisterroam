@@ -19,7 +19,6 @@ const authConfig = {
       session.user.onboardingCompleted = token.onboardingCompleted
       session.user.onboardingStep    = token.onboardingStep
       session.user.username          = token.username
-      session.user.googleId          = token.googleId
       return session
     },
   },

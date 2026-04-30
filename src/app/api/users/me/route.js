@@ -7,10 +7,9 @@ export async function GET() {
     const user = await User.findById(session.user.id).select('+password').lean()
     if (!user) return fail('User not found', 404)
 
-    const isGoogleUser = !!user.googleId && !user.password
     delete user.password
 
-    return ok({ ...user, isGoogleUser })
+    return ok({ ...user })
   } catch (e) {
     return handleError(e)
   }
