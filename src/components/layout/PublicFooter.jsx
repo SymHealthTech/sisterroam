@@ -2,15 +2,11 @@ import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
 
 const PLATFORM_LINKS = [
-  { href: '/browse',               label: 'Find a Host'       },
-  { href: '/how-it-works',         label: 'How it Works'      },
-  { href: '/about',                label: 'About us'          },
-  { href: '/about#founder',        label: 'Our founder'       },
-  { href: '/about#ngo',            label: 'Our mission'       },
-  { href: '/about#contact',        label: 'Contact us'        },
-  { href: '/stories',              label: 'Travel Stories'    },
-  { href: '/signup',               label: 'Join Free'         },
-  { href: 'https://nutracare360.ca', label: 'nutracare360.ca ↗', external: true },
+  { href: '/browse',        label: 'Find a Host'    },
+  { href: '/about',         label: 'About us'       },
+  { href: '/about#contact', label: 'Contact us'     },
+  { href: '/stories',       label: 'Travel Stories' },
+  { href: '/signup',        label: 'Join Free'      },
 ]
 
 const COMMUNITY_LINKS = [
@@ -56,8 +52,6 @@ const SOCIAL_LINKS = [
 ]
 
 export default function PublicFooter() {
-  const year = new Date().getFullYear()
-
   return (
     <footer className="bg-gray-50 border-t border-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -143,7 +137,7 @@ export default function PublicFooter() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-400">
-            © {year} SisterRoam. Made with ♥ for women who roam.
+            © 2026 SisterRoam . Made with ♥ for women who roam . a product by Sym Healthtech.
           </p>
 
           {/* Social links */}
