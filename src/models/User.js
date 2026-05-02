@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
 
     education: {
       type: String,
-      enum: ['high_school', 'undergraduate', 'postgraduate', 'doctorate', 'other', 'prefer_not_to_say'],
+      enum: ['high_school', 'undergraduate', 'graduate', 'postgraduate', 'doctorate', 'other', 'prefer_not_to_say'],
     },
     occupation: { type: String },
     bio: { type: String, maxlength: 1000 },
