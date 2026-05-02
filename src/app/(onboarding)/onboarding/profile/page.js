@@ -45,6 +45,7 @@ const COMMON_LANGUAGES = [
 const EDUCATION_OPTIONS = [
   { value: 'high_school',        label: 'High School'          },
   { value: 'undergraduate',      label: 'Undergraduate'        },
+  { value: 'graduate',           label: 'Graduate'             },
   { value: 'postgraduate',       label: 'Postgraduate'         },
   { value: 'doctorate',          label: 'Doctorate'            },
   { value: 'other',              label: 'Other'                },
@@ -199,23 +200,6 @@ function SearchableSelect({ label, value, onChange, options, placeholder, requir
   )
 }
 
-function GenderCard({ value, label, emoji, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(value)}
-      className={cn(
-        'flex-1 flex flex-col items-center gap-1.5 py-4 px-3 rounded-xl border-2 transition-all text-sm font-medium',
-        selected
-          ? 'border-brand bg-brand-lighter text-brand'
-          : 'border-gray-100 hover:border-gray-200 text-gray-600',
-      )}
-    >
-      <span className="text-2xl">{emoji}</span>
-      {label}
-    </button>
-  )
-}
 
 /* ── Page ────────────────────────────────────────────────── */
 
@@ -231,9 +215,11 @@ export default function OnboardingProfilePage() {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState('')
   const [fullName,        setFullName]        = useState('')
   const [age,             setAge]             = useState('')
-  const [gender,          setGender]          = useState('')
+  const gender = 'female'
   const [city,            setCity]            = useState('')
   const [country,         setCountry]         = useState('')
+  const [cities,          setCities]          = useState([])
+  const [loadingCities,   setLoadingCities]   = useState(false)
   const [languages,       setLanguages]       = useState([])
   const [education,       setEducation]       = useState('')
   const [occupation,      setOccupation]      = useState('')
@@ -252,6 +238,24 @@ export default function OnboardingProfilePage() {
       setProfilePhotoUrl(session.user.profilePhotoUrl ?? '')
     }
   }, [session, status, router])
+
+  useEffect(() => {
+    if (!country) { setCities([]); return }
+    setCity('')
+    setLoadingCities(true)
+    fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error && Array.isArray(data.data)) setCities(data.data.sort())
+        else setCities([])
+      })
+      .catch(() => setCities([]))
+      .finally(() => setLoadingCities(false))
+  }, [country])
 
   function toggleCategory(val) {
     setCategories(prev =>
@@ -366,26 +370,16 @@ export default function OnboardingProfilePage() {
             max={99}
           />
 
-          {/* Gender */}
+          {/* Gender — female only, pre-selected */}
           <div>
             <label className="text-xs font-medium text-gray-600 mb-2 block">
               Gender <span className="text-danger">*</span>
             </label>
-            <div className="flex gap-3">
-              <GenderCard value="female"     label="Female"     emoji="♀️"  selected={gender === 'female'}     onClick={setGender} />
-              <GenderCard value="non-binary" label="Non-binary" emoji="⚧️"  selected={gender === 'non-binary'} onClick={setGender} />
-              <GenderCard value="other"      label="Other"      emoji="🌈"  selected={gender === 'other'}      onClick={setGender} />
+            <div className="flex items-center gap-2 h-[44px] sm:h-[40px] px-3 rounded-xl border-2 border-brand bg-brand-lighter text-brand text-sm font-medium select-none">
+              <span className="text-lg" aria-hidden="true">♀️</span>
+              Female
             </div>
           </div>
-
-          {/* City */}
-          <Input
-            label="Home city"
-            name="city"
-            value={city}
-            onChange={e => setCity(e.target.value)}
-            placeholder="e.g. Mumbai"
-          />
 
           {/* Country */}
           <SearchableSelect
@@ -395,6 +389,34 @@ export default function OnboardingProfilePage() {
             options={COUNTRIES}
             placeholder="Select your country"
           />
+
+          {/* City — appears after country is selected */}
+          {country && (
+            loadingCities ? (
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-gray-600 mb-1">Home city</label>
+                <div className="h-[44px] sm:h-[40px] rounded-lg border border-gray-200 bg-gray-50 flex items-center px-3 text-sm text-gray-400">
+                  Loading cities…
+                </div>
+              </div>
+            ) : cities.length > 0 ? (
+              <SearchableSelect
+                label="Home city"
+                value={city}
+                onChange={setCity}
+                options={cities}
+                placeholder="Select your city"
+              />
+            ) : (
+              <Input
+                label="Home city"
+                name="city"
+                value={city}
+                onChange={e => setCity(e.target.value)}
+                placeholder="Enter your city"
+              />
+            )
+          )}
 
           {/* Languages */}
           <TagInput
