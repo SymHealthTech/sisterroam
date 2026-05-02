@@ -173,12 +173,6 @@ const COMMON_LANGUAGES = [
   "Malayalam",
 ];
 
-const GENDER_OPTIONS = [
-  { value: "female", label: "Female" },
-  { value: "non-binary", label: "Non-binary" },
-  { value: "other", label: "Other" },
-];
-
 const RELATIONSHIP_OPTIONS = [
   { value: "spouse", label: "Spouse" },
   { value: "partner", label: "Partner" },
@@ -418,6 +412,8 @@ export default function ProfileEditPage() {
   const [gender, setGender] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
+  const [cities, setCities] = useState([]);
+  const [citiesFetchedFor, setCitiesFetchedFor] = useState(null);
   const [languages, setLanguages] = useState([]);
   const [education, setEducation] = useState("");
   const [occupation, setOccupation] = useState("");
@@ -433,7 +429,25 @@ export default function ProfileEditPage() {
   const [emergencyRel, setEmergencyRel] = useState("");
   const [emergencyEmail, setEmergencyEmail] = useState("");
 
-  const debounceRef = useRef(null);
+  const loadingCities = !!country && citiesFetchedFor !== country;
+
+  useEffect(() => {
+    if (!country) return;
+    let cancelled = false;
+    fetch("https://countriesnow.space/api/v0.1/countries/cities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ country }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        setCities(!data.error && Array.isArray(data.data) ? data.data.sort() : []);
+        setCitiesFetchedFor(country);
+      })
+      .catch(() => { if (!cancelled) { setCities([]); setCitiesFetchedFor(country); } });
+    return () => { cancelled = true; };
+  }, [country]);
 
   useEffect(() => {
     fetch("/api/users")
@@ -552,23 +566,14 @@ export default function ProfileEditPage() {
     [userId, buildPayload, profilePhotoUrl, fullName, update, router],
   );
 
-  const triggerAutoSave = useCallback(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => save(false), 3000);
-  }, [save]);
-
   function field(setter) {
-    return (e) => {
-      setter(e.target.value);
-      triggerAutoSave();
-    };
+    return (e) => setter(e.target.value);
   }
 
   function toggleCategory(val) {
     setCategories((prev) =>
       prev.includes(val) ? prev.filter((c) => c !== val) : [...prev, val],
     );
-    triggerAutoSave();
   }
 
   if (loading) {
@@ -602,7 +607,6 @@ export default function ProfileEditPage() {
                 setProfilePhotoUrl(url);
                 setProfilePhotoPublicId(publicId ?? "");
                 update({ profilePhotoUrl: url });
-                triggerAutoSave();
               }}
             />
             <p className="text-xs text-gray-400">Tap to update your photo</p>
@@ -627,32 +631,47 @@ export default function ProfileEditPage() {
             min={18}
             max={99}
           />
-          <Select
-            label="Gender"
-            value={gender}
-            onChange={(e) => {
-              setGender(e.target.value);
-              triggerAutoSave();
-            }}
-            placeholder="Select gender"
-            options={GENDER_OPTIONS}
-          />
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-2 block">
+              Gender
+            </label>
+            <div className="flex items-center gap-2 h-[44px] sm:h-[40px] px-3 rounded-xl border-2 border-brand bg-brand-lighter text-brand text-sm font-medium select-none">
+              <span className="text-lg" aria-hidden="true">♀️</span>
+              Female
+            </div>
+          </div>
           <SearchableSelect
             label="Home country"
             value={country}
-            onChange={(v) => {
-              setCountry(v);
-              triggerAutoSave();
-            }}
+            onChange={(v) => { setCity(""); setCountry(v); }}
             options={COUNTRIES}
             placeholder="Select your country"
           />
-          <Input
-            label="Home city"
-            value={city}
-            onChange={field(setCity)}
-            placeholder="e.g. Mumbai"
-          />
+          {country && (
+            loadingCities ? (
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-gray-600 mb-1">Home city</label>
+                <div className="h-[44px] sm:h-[40px] rounded-lg border border-gray-200 bg-gray-50 flex items-center px-3 text-sm text-gray-400">
+                  Loading cities…
+                </div>
+              </div>
+            ) : cities.length > 0 ? (
+              <SearchableSelect
+                label="Home city"
+                value={city}
+                onChange={setCity}
+                options={cities}
+                placeholder="Select your city"
+              />
+            ) : (
+              <Input
+                label="Home city"
+                value={city}
+                onChange={field(setCity)}
+                placeholder="Enter your city"
+              />
+            )
+          )}
         </Section>
 
         {/* About */}
@@ -674,19 +693,13 @@ export default function ProfileEditPage() {
               rows={4}
               placeholder="Tell the community about yourself…"
               maxLength={500}
-              onChange={(e) => {
-                setBio(e.target.value);
-                triggerAutoSave();
-              }}
+              onChange={(e) => setBio(e.target.value)}
             />
           </div>
           <Select
             label="Education"
             value={education}
-            onChange={(e) => {
-              setEducation(e.target.value);
-              triggerAutoSave();
-            }}
+            onChange={(e) => setEducation(e.target.value)}
             placeholder="Select level"
             options={EDUCATION_OPTIONS}
           />
@@ -703,20 +716,14 @@ export default function ProfileEditPage() {
           <TagInput
             label="Languages spoken"
             tags={languages}
-            onChange={(v) => {
-              setLanguages(v);
-              triggerAutoSave();
-            }}
+            onChange={setLanguages}
             suggestions={COMMON_LANGUAGES}
             placeholder="Type a language and press Enter…"
           />
           <TagInput
             label="Countries visited"
             tags={countriesVisited}
-            onChange={(v) => {
-              setCountriesVisited(v);
-              triggerAutoSave();
-            }}
+            onChange={setCountriesVisited}
             suggestions={COUNTRIES}
             placeholder="Type a country and press Enter…"
           />
@@ -762,10 +769,7 @@ export default function ProfileEditPage() {
               <div className="mt-3">
                 <TagInput
                   tags={hobbies}
-                  onChange={(v) => {
-                    setHobbies(v);
-                    triggerAutoSave();
-                  }}
+                  onChange={setHobbies}
                   placeholder="e.g. Photography, Yoga…"
                 />
               </div>
@@ -793,10 +797,7 @@ export default function ProfileEditPage() {
           <Select
             label="Relationship"
             value={emergencyRel}
-            onChange={(e) => {
-              setEmergencyRel(e.target.value);
-              triggerAutoSave();
-            }}
+            onChange={(e) => setEmergencyRel(e.target.value)}
             placeholder="Select relationship"
             options={RELATIONSHIP_OPTIONS}
           />
