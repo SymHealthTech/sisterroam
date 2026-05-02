@@ -173,6 +173,23 @@ const COMMON_LANGUAGES = [
   "Malayalam",
 ];
 
+const GENDER_OPTIONS = [
+  { value: "female", label: "Female" },
+  { value: "non-binary", label: "Non-binary" },
+  { value: "other", label: "Other" },
+];
+
+const RELATIONSHIP_OPTIONS = [
+  { value: "spouse", label: "Spouse" },
+  { value: "partner", label: "Partner" },
+  { value: "parent", label: "Parent" },
+  { value: "sibling", label: "Sibling" },
+  { value: "friend", label: "Friend" },
+  { value: "relative", label: "Relative" },
+  { value: "colleague", label: "Colleague" },
+  { value: "other", label: "Other" },
+];
+
 const EDUCATION_OPTIONS = [
   { value: "high_school", label: "High School" },
   { value: "undergraduate", label: "Undergraduate" },
@@ -368,23 +385,6 @@ function SearchableSelect({ label, value, onChange, options, placeholder }) {
   );
 }
 
-function GenderCard({ value, label, emoji, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(value)}
-      className={cn(
-        "flex-1 flex flex-col items-center gap-1.5 py-4 px-3 rounded-xl border-2 transition-all text-sm font-medium",
-        selected
-          ? "border-brand bg-brand-lighter text-brand"
-          : "border-gray-100 hover:border-gray-200 text-gray-600",
-      )}
-    >
-      <span className="text-2xl">{emoji}</span>
-      {label}
-    </button>
-  );
-}
 
 function Section({ title, children }) {
   return (
@@ -535,8 +535,13 @@ export default function ProfileEditPage() {
           toast.error(d.error ?? "Failed to save");
           return;
         }
-        setSavedAt(new Date());
-        if (showToast) toast.success("Profile saved!");
+        if (showToast) {
+          setSavedAt(new Date());
+          toast.success("Profile saved!");
+          update({ profilePhotoUrl: profilePhotoUrl || undefined, fullName });
+          router.push("/profile");
+          return;
+        }
         update({ profilePhotoUrl: profilePhotoUrl || undefined, fullName });
       } catch {
         toast.error("Network error. Try again.");
@@ -544,7 +549,7 @@ export default function ProfileEditPage() {
         setSaving(false);
       }
     },
-    [userId, buildPayload, profilePhotoUrl, fullName, update],
+    [userId, buildPayload, profilePhotoUrl, fullName, update, router],
   );
 
   const triggerAutoSave = useCallback(() => {
@@ -622,48 +627,15 @@ export default function ProfileEditPage() {
             min={18}
             max={99}
           />
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-2 block">
-              Gender
-            </label>
-            <div className="flex gap-3">
-              <GenderCard
-                value="female"
-                label="Female"
-                emoji="♀️"
-                selected={gender === "female"}
-                onClick={(v) => {
-                  setGender(v);
-                  triggerAutoSave();
-                }}
-              />
-              <GenderCard
-                value="non-binary"
-                label="Non-binary"
-                emoji="⚧️"
-                selected={gender === "non-binary"}
-                onClick={(v) => {
-                  setGender(v);
-                  triggerAutoSave();
-                }}
-              />
-              <GenderCard
-                value="other"
-                label="Other"
-                emoji="🌈"
-                selected={gender === "other"}
-                onClick={(v) => {
-                  setGender(v);
-                  triggerAutoSave();
-                }}
-              />
-            </div>
-          </div>
-          <Input
-            label="Home city"
-            value={city}
-            onChange={field(setCity)}
-            placeholder="e.g. Mumbai"
+          <Select
+            label="Gender"
+            value={gender}
+            onChange={(e) => {
+              setGender(e.target.value);
+              triggerAutoSave();
+            }}
+            placeholder="Select gender"
+            options={GENDER_OPTIONS}
           />
           <SearchableSelect
             label="Home country"
@@ -674,6 +646,12 @@ export default function ProfileEditPage() {
             }}
             options={COUNTRIES}
             placeholder="Select your country"
+          />
+          <Input
+            label="Home city"
+            value={city}
+            onChange={field(setCity)}
+            placeholder="e.g. Mumbai"
           />
         </Section>
 
@@ -812,11 +790,15 @@ export default function ProfileEditPage() {
             onChange={field(setEmergencyPhone)}
             placeholder="+1 555 000 0000"
           />
-          <Input
+          <Select
             label="Relationship"
             value={emergencyRel}
-            onChange={field(setEmergencyRel)}
-            placeholder="e.g. Sister, Parent"
+            onChange={(e) => {
+              setEmergencyRel(e.target.value);
+              triggerAutoSave();
+            }}
+            placeholder="Select relationship"
+            options={RELATIONSHIP_OPTIONS}
           />
           <Input
             label="Email (optional)"
@@ -868,12 +850,12 @@ export default function ProfileEditPage() {
       </div>
 
       {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-10">
-        <div className="max-w-2xl mx-auto flex gap-3">
-          <Button variant="ghost" onClick={() => router.back()}>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2.5 z-10">
+        <div className="max-w-2xl mx-auto flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button fullWidth loading={saving} onClick={() => save(true)}>
+          <Button size="sm" loading={saving} onClick={() => save(true)}>
             Save changes
           </Button>
         </div>

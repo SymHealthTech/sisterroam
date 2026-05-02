@@ -129,13 +129,19 @@ export default function Sidebar({ user }) {
       {user && (
         <div className={cn(
           'border-t border-gray-100 p-3 shrink-0',
-          collapsed ? 'flex flex-col items-center gap-2' : 'space-y-2',
+          collapsed ? 'flex flex-col items-center gap-2' : 'flex flex-col items-center gap-1.5',
         )}>
-          {!collapsed && (
-            <div className="flex items-center gap-2.5 px-1">
-              <Avatar src={user.profilePhotoUrl} name={user.fullName} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-900 truncate">{user.fullName}</p>
+          <Link href="/profile" className="flex flex-col items-center gap-1 w-full">
+            <Avatar
+              src={user.profilePhotoUrl}
+              name={user.fullName}
+              size={collapsed ? 'sm' : 'md'}
+            />
+            {!collapsed && (
+              <>
+                <p className="text-xs font-semibold text-gray-900 truncate max-w-full text-center leading-tight mt-0.5">
+                  {user.fullName}
+                </p>
                 {user.verificationTier && user.verificationTier !== 'none' && (
                   <Badge
                     variant={user.verificationTier === 'trusted' ? 'trusted' : 'verified'}
@@ -144,18 +150,16 @@ export default function Sidebar({ user }) {
                     {user.verificationTier === 'trusted' ? 'Trusted' : 'Verified'}
                   </Badge>
                 )}
-              </div>
-            </div>
-          )}
-
-          {collapsed && <Avatar src={user.profilePhotoUrl} name={user.fullName} size="sm" />}
+              </>
+            )}
+          </Link>
 
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             title={collapsed ? 'Sign out' : undefined}
             className={cn(
-              'flex items-center gap-2 text-xs text-gray-400 hover:text-danger hover:bg-danger-lighter rounded-lg px-2 py-1.5 transition-colors',
-              collapsed ? 'justify-center w-full' : 'w-full',
+              'flex items-center gap-2 text-xs text-gray-400 hover:text-danger hover:bg-danger-lighter rounded-lg px-2 py-1.5 transition-colors mt-1',
+              collapsed ? 'justify-center w-full' : 'w-full justify-center',
             )}
           >
             <LogOut className="w-3.5 h-3.5" />
