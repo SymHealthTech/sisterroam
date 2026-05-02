@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import AppLayout from '@/components/layout/AppLayout'
+import VerificationGate from '@/components/ui/VerificationGate'
 import Button from '@/components/ui/Button'
 import ImageUpload from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
@@ -59,15 +60,8 @@ export default function NewStoryPage() {
 
   const editorRef = useRef(null)
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      const tier = session?.user?.verificationTier
-      if (!['verified', 'trusted'].includes(tier)) {
-        toast.error('Verification required to share travel stories')
-        router.replace('/profile/verification?reason=stories')
-      }
-    }
-  }, [status, session, router])
+  const tier = session?.user?.verificationTier
+  const isVerified = tier && tier !== 'basic'
 
   function handleEditorInput() {
     const text = editorRef.current?.innerText ?? ''
@@ -120,6 +114,14 @@ export default function NewStoryPage() {
     } finally {
       setter(false)
     }
+  }
+
+  if (!isVerified) {
+    return (
+      <AppLayout title="Share a Story">
+        <VerificationGate mode="page" />
+      </AppLayout>
+    )
   }
 
   return (

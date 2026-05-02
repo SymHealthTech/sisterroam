@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useForm, Controller } from 'react-hook-form'
 import { Shield, Users, Home, Star, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
+import VerificationGate from '@/components/ui/VerificationGate'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -156,6 +157,7 @@ export default function RequestPage() {
   const router = useRouter()
   const { hostId } = useParams()
   const { data: session } = useSession()
+  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
 
   const [host, setHost] = useState(null)
   const [hostLoading, setHostLoading] = useState(true)
@@ -280,6 +282,14 @@ export default function RequestPage() {
           <p className="text-sm text-gray-500">This host profile doesn&apos;t exist or has been removed.</p>
           <Button href="/explore" variant="secondary">Browse hosts</Button>
         </div>
+      </AppLayout>
+    )
+  }
+
+  if (!isVerified) {
+    return (
+      <AppLayout title="Request a stay">
+        <VerificationGate mode="page" />
       </AppLayout>
     )
   }

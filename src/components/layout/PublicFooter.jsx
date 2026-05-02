@@ -47,7 +47,7 @@ const FacebookIcon = () => (
 
 const SOCIAL_LINKS = [
   { href: 'https://instagram.com/sisterroam', label: 'Instagram', Icon: InstagramIcon },
-  { href: 'https://twitter.com/sisterroam',   label: 'Twitter',   Icon: TwitterIcon   },
+  { href: '',   label: 'Twitter',   Icon: TwitterIcon   },
   { href: 'https://www.facebook.com/profile.php?id=61589220085163',  label: 'Facebook',  Icon: FacebookIcon  },
 ]
 

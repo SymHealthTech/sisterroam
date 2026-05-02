@@ -1,6 +1,6 @@
 import Recommendation from '@/models/Recommendation'
 import HostingRequest from '@/models/HostingRequest'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 
@@ -10,12 +10,7 @@ export async function GET(request) {
   try {
     await connectDB()
     const session = await auth()
-    if (!session?.user?.id) {
-      const { NextResponse } = await import('next/server')
-      return NextResponse.json({ success: false, error: 'Login required' }, { status: 401 })
-    }
-
-    const userId = session.user.id
+    const userId = session?.user?.id ?? null
     const { searchParams } = new URL(request.url)
     const city     = searchParams.get('city')
     const country  = searchParams.get('country')
@@ -67,6 +62,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const userId  = session.user.id
     const body    = await request.json()
 

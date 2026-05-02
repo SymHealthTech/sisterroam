@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button'
 import TripPostCard from '@/components/cotraveller/TripPostCard'
 import PostTripModal from '@/components/cotraveller/PostTripModal'
 import Badge from '@/components/ui/Badge'
+import VerificationGate from '@/components/ui/VerificationGate'
 import { Search, SlidersHorizontal, UserPlus, Users, Heart, X } from 'lucide-react'
 import { cn, formatRelativeTime } from '@/lib/utils'
 
@@ -96,6 +97,8 @@ export default function CoTravellerPage() {
   // Prefer freshUser from AppLayout context (DB data); fall back to JWT session
   const userTier = (appUser ?? session?.user)?.verificationTier
 
+  const isVerified = userTier && userTier !== 'basic'
+
   const [activeTab, setActiveTab] = useState(0)
   const [showModal,   setModal]   = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -178,9 +181,15 @@ export default function CoTravellerPage() {
           Connect with verified sisters who share your destination. Travel together, explore fearlessly.
         </p>
         <div className="flex items-center justify-center gap-3 mt-4">
-          <Button variant="primary" size="sm" onClick={() => setModal(true)}>
-            Post my trip
-          </Button>
+          {isVerified ? (
+            <Button variant="primary" size="sm" onClick={() => setModal(true)}>
+              Post my trip
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" href="/profile/verification">
+              Get verified to post
+            </Button>
+          )}
           <Link href="#my-activity" className="text-sm text-brand font-medium hover:text-brand-dark" onClick={() => setActiveTab(1)}>
             My posts &amp; interests →
           </Link>
@@ -320,9 +329,10 @@ export default function CoTravellerPage() {
                 <Users className="w-10 h-10 text-gray-200 mx-auto" />
                 <p className="text-sm font-medium text-gray-500">No trips posted yet for this destination</p>
                 <p className="text-xs text-gray-400">Be the first to post your trip plan</p>
-                <Button variant="primary" size="sm" onClick={() => setModal(true)}>
-                  Post a trip
-                </Button>
+                {isVerified
+                  ? <Button variant="primary" size="sm" onClick={() => setModal(true)}>Post a trip</Button>
+                  : <Button variant="primary" size="sm" href="/profile/verification">Get verified to post</Button>
+                }
               </div>
             )}
           </>
@@ -331,22 +341,29 @@ export default function CoTravellerPage() {
         {/* ── My posts tab ── */}
         {activeTab === 1 && (
           <div className="space-y-4" id="my-activity">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-700">{myPosts.length} trip{myPosts.length !== 1 ? 's' : ''} posted</p>
-              <Button variant="primary" size="sm" onClick={() => setModal(true)}>
-                + Post a new trip
-              </Button>
-            </div>
-            {myPosts.length > 0 ? (
-              <div className="space-y-3">
-                {myPosts.map(post => <MyPostCard key={post._id} post={post} />)}
-              </div>
-            ) : (
-              <div className="text-center py-12 space-y-3">
-                <UserPlus className="w-10 h-10 text-gray-200 mx-auto" />
-                <p className="text-sm text-gray-500">You haven't posted any trips yet</p>
-                <Button variant="primary" size="sm" onClick={() => setModal(true)}>Post your first trip</Button>
-              </div>
+            {!isVerified && (
+              <VerificationGate mode="banner" action="Posting trips" />
+            )}
+            {isVerified && (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{myPosts.length} trip{myPosts.length !== 1 ? 's' : ''} posted</p>
+                  <Button variant="primary" size="sm" onClick={() => setModal(true)}>
+                    + Post a new trip
+                  </Button>
+                </div>
+                {myPosts.length > 0 ? (
+                  <div className="space-y-3">
+                    {myPosts.map(post => <MyPostCard key={post._id} post={post} />)}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 space-y-3">
+                    <UserPlus className="w-10 h-10 text-gray-200 mx-auto" />
+                    <p className="text-sm text-gray-500">You haven&apos;t posted any trips yet</p>
+                    <Button variant="primary" size="sm" onClick={() => setModal(true)}>Post your first trip</Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -378,7 +395,7 @@ export default function CoTravellerPage() {
         )}
       </div>
 
-      {showModal && (
+      {showModal && isVerified && (
         <PostTripModal
           onClose={() => setModal(false)}
           onCreated={() => {

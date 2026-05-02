@@ -1,7 +1,7 @@
 import CoTravelPost from '@/models/CoTravelPost'
 import Notification from '@/models/Notification'
 import User from '@/models/User'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import mongoose from 'mongoose'
@@ -11,6 +11,7 @@ export async function GET(request) {
     await connectDB()
     const session = await auth()
     if (!session?.user?.id) return fail('Login required to browse co-traveller posts', 401)
+    // basic-tier users can browse; write actions are blocked separately
 
     const { searchParams } = new URL(request.url)
     const toCountry   = searchParams.get('toCountry')
@@ -77,6 +78,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const userId  = session.user.id
     const body    = await request.json()
 

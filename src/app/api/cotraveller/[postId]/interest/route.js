@@ -3,7 +3,7 @@ import CoTravelInterest from '@/models/CoTravelInterest'
 import HostingRequest from '@/models/HostingRequest'
 import Notification from '@/models/Notification'
 import User from '@/models/User'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 import { sendToUser } from '@/lib/sse'
 import {
   sendCoTravellerInterestEmail,
@@ -46,6 +46,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const { postId } = await params
     const userId = session.user.id
     const body = await request.json()

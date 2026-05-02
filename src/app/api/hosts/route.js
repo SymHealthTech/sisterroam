@@ -1,7 +1,7 @@
 import { connectDB } from '@/lib/mongodb'
 import HostProfile from '@/models/HostProfile'
 import { auth } from '@/lib/auth'
-import { ok, fail, handleError } from '@/lib/apiHelpers'
+import { ok, fail, handleError, requireVerified } from '@/lib/apiHelpers'
 
 const HOST_PROJECT = {
   accommodationType: 1, maxGuests: 1, freeOfferings: 1, femaleOnly: 1,
@@ -75,6 +75,7 @@ export async function POST(request) {
     await connectDB()
     const session = await auth()
     if (!session?.user?.id) return fail('Not authenticated', 401)
+    if (session.user.verificationTier === 'basic') return fail('Verification required to become a host', 403)
 
     const body = await request.json()
     if (!body.accommodationType) return fail('accommodationType is required', 400)

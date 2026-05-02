@@ -6,6 +6,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import AppLayout from '@/components/layout/AppLayout'
 import Button from '@/components/ui/Button'
+import VerificationGate from '@/components/ui/VerificationGate'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import RecommendationCard from '@/components/recommendations/RecommendationCard'
@@ -30,7 +31,7 @@ const SORT_OPTIONS = [
   { value: 'verified_first', label: 'Verified first' },
 ]
 
-function QuestionCard({ question, userId, onAnswered }) {
+function QuestionCard({ question, userId, isVerified, onAnswered }) {
   const [expanded,   setExpanded]   = useState(false)
   const [answers,    setAnswers]    = useState(null)
   const [answerText, setAnswerText] = useState('')
@@ -190,21 +191,27 @@ function QuestionCard({ question, userId, onAnswered }) {
 
           {/* Answer input */}
           <div className="p-4">
-            <form onSubmit={handleAnswer} className="space-y-2">
-              <textarea
-                rows={3}
-                value={answerText}
-                onChange={e => setAnswerText(e.target.value)}
-                placeholder={`Share what you know about ${question.city}...`}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand resize-none"
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">{answerText.length}/800</span>
-                <Button type="submit" variant="primary" size="sm" loading={submitting} disabled={answerText.trim().length < 30}>
-                  Post answer
-                </Button>
-              </div>
-            </form>
+            {isVerified ? (
+              <form onSubmit={handleAnswer} className="space-y-2">
+                <textarea
+                  rows={3}
+                  value={answerText}
+                  onChange={e => setAnswerText(e.target.value)}
+                  placeholder={`Share what you know about ${question.city}...`}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand resize-none"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{answerText.length}/800</span>
+                  <Button type="submit" variant="primary" size="sm" loading={submitting} disabled={answerText.trim().length < 30}>
+                    Post answer
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-brand/70 bg-brand-lighter rounded-xl px-3 py-2">
+                <a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to post answers
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -215,6 +222,7 @@ function QuestionCard({ question, userId, onAnswered }) {
 export default function RecommendationsPage() {
   const { data: session } = useSession()
   const userId = session?.user?.id
+  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
 
   const [activeTab,  setActiveTab]  = useState(0)
   const [showRecModal,  setRecModal]  = useState(false)
@@ -300,14 +308,20 @@ export default function RecommendationsPage() {
             Place recommendations
           </h1>
           <p className="text-sm text-gray-500 mt-1">Real experiences shared by verified sisters</p>
-          <div className="flex gap-3 mt-4">
-            <Button variant="primary" size="sm" onClick={() => setRecModal(true)}>
-              <PlusCircle className="w-4 h-4 mr-1.5" />Share a recommendation
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setQModal(true)}>
-              <MessageSquare className="w-4 h-4 mr-1.5" />Ask a question
-            </Button>
-          </div>
+          {isVerified ? (
+            <div className="flex gap-3 mt-4">
+              <Button variant="primary" size="sm" onClick={() => setRecModal(true)}>
+                <PlusCircle className="w-4 h-4 mr-1.5" />Share a recommendation
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setQModal(true)}>
+                <MessageSquare className="w-4 h-4 mr-1.5" />Ask a question
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <VerificationGate mode="banner" action="Adding recommendations" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -424,9 +438,11 @@ export default function RecommendationsPage() {
               <div className="text-center py-12 space-y-3">
                 <MapPin className="w-10 h-10 text-gray-200 mx-auto" />
                 <p className="text-sm text-gray-500">{search ? `No recommendations for "${search}"` : 'No recommendations yet'}</p>
-                <Button variant="primary" size="sm" onClick={() => setRecModal(true)}>
-                  Be the first to share
-                </Button>
+                {isVerified && (
+                  <Button variant="primary" size="sm" onClick={() => setRecModal(true)}>
+                    Be the first to share
+                  </Button>
+                )}
               </div>
             )}
           </>
@@ -437,9 +453,11 @@ export default function RecommendationsPage() {
           <>
             <div className="flex items-center justify-between">
               <p className="text-xs text-gray-500">{qTotal} question{qTotal !== 1 ? 's' : ''}</p>
-              <Button variant="primary" size="sm" onClick={() => setQModal(true)}>
-                <PlusCircle className="w-3.5 h-3.5 mr-1" />Ask a question
-              </Button>
+              {isVerified && (
+                <Button variant="primary" size="sm" onClick={() => setQModal(true)}>
+                  <PlusCircle className="w-3.5 h-3.5 mr-1" />Ask a question
+                </Button>
+              )}
             </div>
             {loading && questions.length === 0 ? (
               <div className="space-y-3">
@@ -453,6 +471,7 @@ export default function RecommendationsPage() {
                       key={q._id}
                       question={q}
                       userId={userId}
+                      isVerified={isVerified}
                       onAnswered={() => setQuestions(prev => prev.map(pq => pq._id === q._id ? { ...pq, answersCount: (pq.answersCount ?? 0) + 1 } : pq))}
                     />
                   ))}
@@ -509,13 +528,13 @@ export default function RecommendationsPage() {
         )}
       </div>
 
-      {showRecModal && (
+      {showRecModal && isVerified && (
         <AddRecommendationModal
           onClose={() => setRecModal(false)}
           onCreated={rec => setRecs(prev => [rec, ...prev])}
         />
       )}
-      {showQModal && (
+      {showQModal && isVerified && (
         <AskQuestionModal
           onClose={() => setQModal(false)}
           onCreated={q => setQuestions(prev => [q, ...prev])}

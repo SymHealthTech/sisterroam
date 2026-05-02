@@ -87,7 +87,7 @@ function CommentItem({ comment }) {
 }
 
 /* ── Main card ─────────────────────────────────────────────── */
-export default function PostCard({ post: initialPost, currentUserId, onDelete }) {
+export default function PostCard({ post: initialPost, currentUserId, currentUserTier, onDelete }) {
   const [post,         setPost]         = useState(initialPost)
   const [expanded,     setExpanded]     = useState(false)
   const [showComments, setShowComments] = useState(false)
@@ -361,22 +361,28 @@ export default function PostCard({ post: initialPost, currentUserId, onDelete })
               View all {post.commentsCount} comments
             </button>
           )}
-          <form onSubmit={sendComment} className="flex gap-2 mt-2">
-            <input
-              value={commentInput}
-              onChange={e => setCommentInput(e.target.value)}
-              placeholder="Add a comment…"
-              maxLength={500}
-              className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand/30"
-            />
-            <button
-              type="submit"
-              disabled={!commentInput.trim() || sending}
-              className="px-3 py-1.5 bg-brand text-white text-xs rounded-full disabled:opacity-50 hover:bg-brand-dark transition-colors"
-            >
-              Send
-            </button>
-          </form>
+          {currentUserTier && currentUserTier === 'basic' ? (
+            <p className="text-xs text-brand/70 bg-brand-lighter rounded-full px-3 py-2 mt-2">
+              <a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to comment
+            </p>
+          ) : (
+            <form onSubmit={sendComment} className="flex gap-2 mt-2">
+              <input
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+                placeholder="Add a comment…"
+                maxLength={500}
+                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand/30"
+              />
+              <button
+                type="submit"
+                disabled={!commentInput.trim() || sending}
+                className="px-3 py-1.5 bg-brand text-white text-xs rounded-full disabled:opacity-50 hover:bg-brand-dark transition-colors"
+              >
+                Send
+              </button>
+            </form>
+          )}
         </div>
       )}
     </div>

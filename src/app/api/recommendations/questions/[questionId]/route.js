@@ -1,7 +1,7 @@
 import RecommendationQuestion from '@/models/RecommendationQuestion'
 import RecommendationAnswer from '@/models/RecommendationAnswer'
 import Notification from '@/models/Notification'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import { sendToUser } from '@/lib/sse'
@@ -49,6 +49,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const { questionId } = await params
     const userId = session.user.id
     const body = await request.json()

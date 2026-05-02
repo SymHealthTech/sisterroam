@@ -6,12 +6,22 @@ import { useSession } from 'next-auth/react'
 import AppLayout from '@/components/layout/AppLayout'
 import ConversationList from '@/components/messages/ConversationList'
 import ChatWindow from '@/components/messages/ChatWindow'
+import VerificationGate from '@/components/ui/VerificationGate'
 
 export default function ConversationPage({ params }) {
   const { requestId } = use(params)
   const { data: session } = useSession()
   const router = useRouter()
   const userId = session?.user?.id
+  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
+
+  if (session && !isVerified) {
+    return (
+      <AppLayout title="Messages">
+        <VerificationGate mode="page" />
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout title="">

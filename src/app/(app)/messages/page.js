@@ -3,10 +3,20 @@
 import { useSession } from 'next-auth/react'
 import AppLayout from '@/components/layout/AppLayout'
 import ConversationList from '@/components/messages/ConversationList'
+import VerificationGate from '@/components/ui/VerificationGate'
 
 export default function MessagesPage() {
   const { data: session } = useSession()
   const userId = session?.user?.id
+  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
+
+  if (session && !isVerified) {
+    return (
+      <AppLayout title="Messages">
+        <VerificationGate mode="page" />
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout title="Messages">

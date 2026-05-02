@@ -1,5 +1,5 @@
 import RecommendationQuestion from '@/models/RecommendationQuestion'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 
@@ -9,8 +9,6 @@ export async function GET(request) {
   try {
     await connectDB()
     const session = await auth()
-    if (!session?.user?.id) return fail('Login required', 401)
-
     const { searchParams } = new URL(request.url)
     const city     = searchParams.get('city')
     const country  = searchParams.get('country')
@@ -44,6 +42,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const userId  = session.user.id
     const body    = await request.json()
 

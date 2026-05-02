@@ -36,6 +36,14 @@ export function validateRequired(body, fields) {
   }
 }
 
+export function requireVerified(session) {
+  if (session.user.verificationTier === 'basic') {
+    const e = new Error('Verification required. Complete payment to unlock this feature.')
+    e.status = 403
+    throw e
+  }
+}
+
 export function handleError(e) {
   const status = e.status ?? 500
   if (status >= 500) console.error('[API]', e)

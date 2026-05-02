@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import AppLayout from '@/components/layout/AppLayout'
+import VerificationGate from '@/components/ui/VerificationGate'
 import Button from '@/components/ui/Button'
 import Textarea from '@/components/ui/Textarea'
 import Toggle from '@/components/ui/Toggle'
@@ -285,6 +286,14 @@ export default function HostListingPage() {
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
           {[1,2,3].map(i => <Skeleton key={i} variant="card" className="h-48" />)}
         </div>
+      </AppLayout>
+    )
+  }
+
+  if (tier === 'basic') {
+    return (
+      <AppLayout title="Become a Host">
+        <VerificationGate mode="page" />
       </AppLayout>
     )
   }

@@ -6,6 +6,7 @@ import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import PostCard from '@/components/community/PostCard'
 import PostComposer from '@/components/community/PostComposer'
 import Skeleton from '@/components/ui/Skeleton'
+import VerificationGate from '@/components/ui/VerificationGate'
 import { cn } from '@/lib/utils'
 
 const TABS = ['Feed', 'Circles', 'Stories']
@@ -64,9 +65,14 @@ function FeedTab({ user }) {
     setPosts(prev => prev.filter(p => p._id !== id))
   }
 
+  const isVerified = user?.verificationTier && user.verificationTier !== 'basic'
+
   return (
     <div className="space-y-4">
-      <PostComposer user={user} onPost={handleNewPost} />
+      {isVerified
+        ? <PostComposer user={user} onPost={handleNewPost} />
+        : <VerificationGate mode="banner" action="Posting" />
+      }
 
       {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -103,6 +109,7 @@ function FeedTab({ user }) {
               key={p._id}
               post={p}
               currentUserId={user?.id}
+              currentUserTier={user?.verificationTier}
               onDelete={handleDelete}
             />
           ))}
