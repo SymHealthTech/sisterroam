@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react'
+import { X, ArrowRight, ArrowLeft, Check, ShieldCheck } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { COUNTRIES } from '@/lib/countries'
 import toast from 'react-hot-toast'
 
 const TRAVELLER_CATEGORIES = [
@@ -80,6 +81,21 @@ function Textarea({ className, ...props }) {
         className
       )}
     />
+  )
+}
+
+function CountrySelect({ value, onChange, placeholder }) {
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition bg-white appearance-none"
+    >
+      <option value="">{placeholder ?? 'Select country'}</option>
+      {COUNTRIES.map(c => (
+        <option key={c.code} value={c.name}>{c.name}</option>
+      ))}
+    </select>
   )
 }
 
@@ -183,7 +199,14 @@ export default function PostTripModal({ onClose, onCreated }) {
                 </div>
                 <div>
                   <Label required>From country</Label>
-                  <Input placeholder="India" value={form.fromCountry} onChange={e => set('fromCountry', e.target.value)} />
+                  <CountrySelect
+                    value={form.fromCountry}
+                    placeholder="Select country"
+                    onChange={e => {
+                      const country = COUNTRIES.find(c => c.name === e.target.value)
+                      setForm(f => ({ ...f, fromCountry: e.target.value, fromCountryCode: country?.code ?? '' }))
+                    }}
+                  />
                 </div>
               </div>
               <div className="flex items-center justify-center">
@@ -196,7 +219,14 @@ export default function PostTripModal({ onClose, onCreated }) {
                 </div>
                 <div>
                   <Label required>To country</Label>
-                  <Input placeholder="India" value={form.toCountry} onChange={e => set('toCountry', e.target.value)} />
+                  <CountrySelect
+                    value={form.toCountry}
+                    placeholder="Select country"
+                    onChange={e => {
+                      const country = COUNTRIES.find(c => c.name === e.target.value)
+                      setForm(f => ({ ...f, toCountry: e.target.value, toCountryCode: country?.code ?? '' }))
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -310,13 +340,15 @@ export default function PostTripModal({ onClose, onCreated }) {
                   <button type="button" onClick={() => set('maxCoTravellers', Math.min(4, form.maxCoTravellers + 1))} className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-700 hover:border-brand hover:text-brand transition-colors">+</button>
                 </div>
               </div>
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={form.verifiedOnly} onChange={e => set('verifiedOnly', e.target.checked)} className="w-4 h-4 rounded accent-brand mt-0.5" />
+              <div className="flex items-start gap-2.5 rounded-xl bg-teal-50 border border-teal-100 p-3">
+                <div className="w-5 h-5 rounded-full bg-teal flex items-center justify-center shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Verified members only</p>
-                  <p className="text-xs text-gray-400">Only sisters who have completed ID verification can apply</p>
+                  <p className="text-xs text-gray-500">Only sisters who have completed ID verification can apply</p>
                 </div>
-              </label>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Min age (optional)</Label>

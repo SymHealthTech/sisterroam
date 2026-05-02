@@ -77,6 +77,8 @@ function SystemMessage({ content }) {
 }
 
 function StatusBanner({ request, otherParty }) {
+  if (request.requestType === 'direct') return null
+
   const name = otherParty?.fullName?.split(' ')[0] ?? 'them'
 
   if (request.status === 'pending') {
@@ -328,10 +330,13 @@ export default function ChatWindow({ requestId, currentUserId }) {
   // ── Real-time messages via SSE ──────────────────────────────────────────
 
   const { lastEvent } = useSSEContext()
+  // Track when SSE last delivered a new_message so polling can back off
+  const lastSseMessageAt = useRef(0)
 
   useEffect(() => {
     if (!lastEvent) return
     if (lastEvent.type === 'new_message' && lastEvent.data?.requestId === requestId) {
+      lastSseMessageAt.current = Date.now()
       const msg = lastEvent.data.message
       setMessages(prev => {
         if (prev.some(m => m._id?.toString() === msg._id?.toString())) return prev
@@ -340,15 +345,36 @@ export default function ChatWindow({ requestId, currentUserId }) {
     }
   }, [lastEvent, requestId])
 
-  // ── Polling fallback (4 s) ─────────────────────────────────────────────
+  // ── Polling fallback (8 s) ─────────────────────────────────────────────
   // SSE requires the connections Map to be shared in-process; on multi-instance
   // deployments (Vercel) each Lambda has its own process so SSE may not reach
-  // the client. Polling ensures messages always arrive within a few seconds.
+  // the client. Polling ensures messages always arrive. Skipped when:
+  //   • the tab is hidden
+  //   • SSE delivered an event within the last 20 s (SSE is working)
+  //   • the window has been idle (no typing/scrolling) for 2 minutes
+
+  const lastActivityAt = useRef(Date.now())
+
+  useEffect(() => {
+    const touch = () => { lastActivityAt.current = Date.now() }
+    window.addEventListener('mousemove', touch, { passive: true })
+    window.addEventListener('keydown', touch, { passive: true })
+    window.addEventListener('touchstart', touch, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', touch)
+      window.removeEventListener('keydown', touch)
+      window.removeEventListener('touchstart', touch)
+    }
+  }, [])
 
   useEffect(() => {
     if (!requestId) return
     const id = setInterval(async () => {
       if (document.hidden) return
+      // Back off if SSE is actively working
+      if (Date.now() - lastSseMessageAt.current < 20000) return
+      // Stop polling idle windows (no user activity for 2 minutes)
+      if (Date.now() - lastActivityAt.current > 120000) return
       try {
         const res = await fetch(`/api/messages/${requestId}`)
         const json = await res.json()
@@ -366,7 +392,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
           return [...json.data, ...pendingOptimistic]
         })
       } catch {}
-    }, 4000)
+    }, 8000)
     return () => clearInterval(id)
   }, [requestId])
 
@@ -524,12 +550,16 @@ export default function ChatWindow({ requestId, currentUserId }) {
   const otherParty = isGuest ? request.hostId : request.guestId
 
   const today = new Date()
-  const checkIn = new Date(request.checkInDate)
-  const checkOut = new Date(request.checkOutDate)
-  const stayActive = request.status === 'accepted' && today >= checkIn && today <= checkOut
+  const checkIn = request.checkInDate ? new Date(request.checkInDate) : null
+  const checkOut = request.checkOutDate ? new Date(request.checkOutDate) : null
+  const stayActive =
+    request.status === 'accepted' &&
+    checkIn && checkOut &&
+    today >= checkIn && today <= checkOut
 
   const showSafety = stayActive
   const showReviewBanner =
+    request.requestType !== 'direct' &&
     request.status === 'completed' &&
     ((isGuest && !request.guestReviewId) || (!isGuest && !request.hostReviewId))
 

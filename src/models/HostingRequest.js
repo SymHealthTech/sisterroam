@@ -5,11 +5,11 @@ const hostingRequestSchema = new mongoose.Schema(
     guestId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-    checkInDate: { type: Date, required: true },
-    checkOutDate: { type: Date, required: true },
+    checkInDate: { type: Date, required: function() { return this.requestType !== 'direct' } },
+    checkOutDate: { type: Date, required: function() { return this.requestType !== 'direct' } },
     nights: { type: Number },
 
-    message: { type: String, required: true, maxlength: 1000 },
+    message: { type: String, maxlength: 1000, required: function() { return this.requestType !== 'direct' } },
 
     status: {
       type: String,
@@ -33,7 +33,7 @@ const hostingRequestSchema = new mongoose.Schema(
 
     requestType: {
       type: String,
-      enum: ['hosting', 'cotraveller'],
+      enum: ['hosting', 'cotraveller', 'direct'],
       default: 'hosting',
     },
   },
@@ -52,4 +52,6 @@ hostingRequestSchema.pre('save', function () {
   }
 })
 
-export default mongoose.models.HostingRequest || mongoose.model('HostingRequest', hostingRequestSchema)
+// Delete cached model so schema changes are picked up after hot-reload
+delete mongoose.models['HostingRequest']
+export default mongoose.model('HostingRequest', hostingRequestSchema)

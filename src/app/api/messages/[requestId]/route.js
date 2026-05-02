@@ -3,7 +3,7 @@ import HostingRequest from '@/models/HostingRequest'
 import Message from '@/models/Message'
 import Notification from '@/models/Notification'
 import { sendToUser } from '@/lib/sse'
-import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
+import { ok, fail, getSession, requireVerified, handleError } from '@/lib/apiHelpers'
 
 async function getRequestAndVerify(requestId, userId) {
   const req = await HostingRequest.findById(requestId)
@@ -25,6 +25,7 @@ export async function GET(request, { params }) {
   try {
     await connectDB()
     const session = await getSession()
+    requireVerified(session)
     const { requestId } = await params
 
     await getRequestAndVerify(requestId, session.user.id)
@@ -50,6 +51,7 @@ export async function POST(request, { params }) {
   try {
     await connectDB()
     const session = await getSession()
+    requireVerified(session)
     const { requestId } = await params
 
     const req = await getRequestAndVerify(requestId, session.user.id)

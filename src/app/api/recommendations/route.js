@@ -101,7 +101,7 @@ export async function POST(request) {
       category,
       title: title.trim(),
       description: description.trim(),
-      priceRange,
+      priceRange: priceRange || undefined,
       currency,
       approximatePrice,
       address,

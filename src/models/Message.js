@@ -12,6 +12,6 @@ const messageSchema = new mongoose.Schema({
 
 messageSchema.index({ requestId: 1 })
 messageSchema.index({ senderId: 1 })
-messageSchema.index({ createdAt: 1 })
+messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 }) // auto-delete after 30 days
 
 export default mongoose.models.Message || mongoose.model('Message', messageSchema)

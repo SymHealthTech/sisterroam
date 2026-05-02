@@ -1,9 +1,10 @@
 import User from '@/models/User'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
 
 export async function GET(request) {
   try {
     const session = await connectAndAuth()
+    requireVerified(session)
     const { searchParams } = new URL(request.url)
     const q = searchParams.get('q')?.trim()
 

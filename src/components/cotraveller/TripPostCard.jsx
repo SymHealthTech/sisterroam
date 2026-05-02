@@ -56,8 +56,10 @@ function SpotDots({ max, filled }) {
   )
 }
 
-export default function TripPostCard({ post, currentUserTier, compact = false }) {
+export default function TripPostCard({ post, currentUserTier, currentUserId, compact = false }) {
   const author = post.authorId ?? post.author ?? {}
+  const authorId = author._id ?? author.id ?? post.authorId
+  const isOwnPost = currentUserId && authorId && authorId.toString() === currentUserId.toString()
   const spotsLeft = (post.maxCoTravellers ?? 1) - (post.currentCoTravellers ?? 0)
   const isFull    = spotsLeft <= 0
   const soon      = isSoon(post.departureDate)
@@ -158,7 +160,7 @@ export default function TripPostCard({ post, currentUserTier, compact = false })
               <Button href={`/cotraveller/${post._id}`} variant="ghost" size="sm">
                 View trip
               </Button>
-              {post.status === 'open' && !isFull && (
+              {post.status === 'open' && !isFull && !isOwnPost && (
                 currentUserTier === 'basic' ? (
                   <Button href="/profile/verification" variant="ghost" size="sm" className="text-brand">
                     Verify to apply

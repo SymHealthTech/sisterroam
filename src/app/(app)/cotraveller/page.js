@@ -11,7 +11,7 @@ import TripPostCard from '@/components/cotraveller/TripPostCard'
 import PostTripModal from '@/components/cotraveller/PostTripModal'
 import Badge from '@/components/ui/Badge'
 import VerificationGate from '@/components/ui/VerificationGate'
-import { Search, SlidersHorizontal, UserPlus, Users, Heart, X } from 'lucide-react'
+import { Search, SlidersHorizontal, UserPlus, Users, Heart, X, Check } from 'lucide-react'
 import { cn, formatRelativeTime } from '@/lib/utils'
 
 const TABS = ['Browse trips', 'My posts', 'My interests']
@@ -113,7 +113,7 @@ export default function CoTravellerPage() {
   const [filters, setFilters] = useState({
     search: '',
     travelStyle: '',
-    verifiedOnly: false,
+    verifiedOnly: true,
   })
 
   const fetchPosts = useCallback(async (p = 1, f = filters) => {
@@ -164,12 +164,12 @@ export default function CoTravellerPage() {
   }
 
   function clearFilters() {
-    const f = { search: '', travelStyle: '', verifiedOnly: false }
+    const f = { search: '', travelStyle: '', verifiedOnly: true }
     setFilters(f)
     fetchPosts(1, f)
   }
 
-  const hasFilters = filters.search || filters.travelStyle || filters.verifiedOnly
+  const hasFilters = filters.search || filters.travelStyle
 
   return (
     <AppLayout title="Find a co-traveller">
@@ -273,15 +273,12 @@ export default function CoTravellerPage() {
                     ))}
                   </div>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={filters.verifiedOnly}
-                    onChange={e => setFilters(f => ({ ...f, verifiedOnly: e.target.checked }))}
-                    className="w-4 h-4 rounded accent-brand"
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-teal flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5 text-white" />
+                  </div>
                   <span className="text-sm text-gray-700">Verified members only</span>
-                </label>
+                </div>
                 <div className="flex gap-2">
                   <Button variant="primary" size="sm" onClick={applyFilters}>Apply filters</Button>
                   {hasFilters && (
@@ -313,6 +310,7 @@ export default function CoTravellerPage() {
                       key={post._id}
                       post={post}
                       currentUserTier={userTier}
+                      currentUserId={session?.user?.id}
                     />
                   ))}
                 </div>

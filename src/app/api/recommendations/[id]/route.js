@@ -52,7 +52,7 @@ export async function PATCH(request, { params }) {
     if (isAdmin) editable.push('isFlagged')
 
     for (const key of editable) {
-      if (body[key] !== undefined) rec[key] = body[key]
+      if (body[key] !== undefined) rec[key] = body[key] || undefined
     }
 
     await rec.save()
