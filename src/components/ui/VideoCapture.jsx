@@ -32,6 +32,7 @@ export default function VideoCapture({ onUploadComplete }) {
   const streamRef        = useRef(null)
   const mediaRecorderRef = useRef(null)
   const chunksRef        = useRef([])
+  const mimeTypeRef      = useRef('')
   const previewVideoRef  = useRef(null)
   const timerRef         = useRef(null)
   const fileInputRef     = useRef(null)
@@ -66,14 +67,28 @@ export default function VideoCapture({ onUploadComplete }) {
     if (!streamRef.current) return
     chunksRef.current = []
 
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-      ? 'video/webm;codecs=vp9,opus'
-      : 'video/webm'
+    const supportedType = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/mp4',
+    ].find((t) => MediaRecorder.isTypeSupported(t)) ?? ''
+    mimeTypeRef.current = supportedType
 
-    const mr = new MediaRecorder(streamRef.current, { mimeType })
+    let mr
+    try {
+      mr = supportedType
+        ? new MediaRecorder(streamRef.current, { mimeType: supportedType })
+        : new MediaRecorder(streamRef.current)
+    } catch (err) {
+      toast.error('Recording is not supported in this browser. Please use the "Upload file" tab instead.')
+      setCamState('idle')
+      return
+    }
+
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+      const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current || 'video/webm' })
       setRecordedBlob(blob)
       setRecordedUrl(URL.createObjectURL(blob))
     }
