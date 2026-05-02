@@ -10,6 +10,7 @@ const ONBOARDING_FIELDS = [
   'fullName', 'age', 'gender', 'city', 'country', 'languages', 'education',
   'occupation', 'bio', 'travellerCategories', 'countriesVisited', 'hobbies',
   'instagramUrl', 'linkedinUrl', 'facebookUrl', 'profilePhotoUrl', 'profilePhotoPublicId',
+  'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship', 'emergencyContactEmail',
 ]
 
 export async function GET(request, { params }) {
