@@ -170,6 +170,7 @@ export default function CommunityStoriesPage() {
                   story={s}
                   variant="full"
                   currentUserId={session?.user?.id}
+                  basePath="/community/stories"
                 />
               ))}
             </div>

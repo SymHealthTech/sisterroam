@@ -16,8 +16,8 @@ const DEFAULT_FILTERS = {
   country:           '',
   city:              '',
   accommodationType: '',
-  femaleOnly:        false,
-  verifiedOnly:      false,
+  verifiedOnly:      true,
+  femaleOnly:        true,
   category:          '',
   sort:              'stays',
 }
@@ -30,8 +30,8 @@ function filtersFromParams(params) {
     country:           params.get('country')           ?? '',
     city:              params.get('city')              ?? '',
     accommodationType: params.get('accommodationType') ?? '',
-    femaleOnly:        params.get('femaleOnly')        === 'true',
-    verifiedOnly:      params.get('verifiedOnly')      === 'true',
+    femaleOnly:        true,
+    verifiedOnly:      true,
     category:          params.get('category')          ?? '',
     sort:              params.get('sort')              ?? 'stays',
   }
@@ -43,8 +43,6 @@ function toQueryString(filters, page = 1) {
   if (filters.country)           p.set('country',           filters.country)
   if (filters.city)              p.set('city',              filters.city)
   if (filters.accommodationType) p.set('accommodationType', filters.accommodationType)
-  if (filters.femaleOnly)        p.set('femaleOnly',        'true')
-  if (filters.verifiedOnly)      p.set('verifiedOnly',      'true')
   if (filters.category)          p.set('category',          filters.category)
   if (filters.sort && filters.sort !== 'stays') p.set('sort', filters.sort)
   if (page > 1)                  p.set('page',              String(page))
@@ -54,8 +52,7 @@ function toQueryString(filters, page = 1) {
 function isActive(filters) {
   return !!(
     filters.q || filters.country || filters.accommodationType ||
-    filters.femaleOnly || filters.verifiedOnly || filters.category ||
-    (filters.sort && filters.sort !== 'stays')
+    filters.category || (filters.sort && filters.sort !== 'stays')
   )
 }
 
@@ -64,8 +61,6 @@ function activeCount(filters) {
   if (filters.q)                 n++
   if (filters.country)           n++
   if (filters.accommodationType) n++
-  if (filters.femaleOnly)        n++
-  if (filters.verifiedOnly)      n++
   if (filters.category)          n++
   return n
 }
@@ -132,7 +127,7 @@ function ExploreContent() {
       <div className="flex min-h-full">
 
         {/* Desktop filter sidebar */}
-        <div className="hidden lg:block w-[280px] shrink-0 border-r border-gray-100 bg-white sticky top-14 self-start overflow-y-auto max-h-[calc(100vh-3.5rem)] px-5 py-5">
+        <div className="hidden lg:block w-[280px] shrink-0 border-r border-gray-100 bg-white sticky top-14 self-start overflow-y-auto max-h-[calc(100vh-3.5rem)] px-5 py-7">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">Filters</h2>
           <HostFilters
             filters={filters}

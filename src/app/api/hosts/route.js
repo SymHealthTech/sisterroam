@@ -19,6 +19,7 @@ export async function GET(request) {
     await connectDB()
     const { searchParams } = new URL(request.url)
 
+    const q                = searchParams.get('q')?.trim() ?? ''
     const country          = searchParams.get('country')
     const city             = searchParams.get('city')
     const femaleOnly       = searchParams.get('femaleOnly') === 'true'
@@ -44,6 +45,18 @@ export async function GET(request) {
     if (city)    userMatch['user.city']    = { $regex: city,    $options: 'i' }
     if (category)    userMatch['user.travellerCategories'] = category
     if (verifiedOnly) userMatch['user.verificationTier']  = { $in: ['verified', 'trusted'] }
+    if (q) {
+      const nameOr = [
+        { 'user.fullName': { $regex: q, $options: 'i' } },
+        { 'user.username': { $regex: q, $options: 'i' } },
+      ]
+      // Initials search: "JS" → matches names where each letter starts a word, e.g. "John Smith"
+      if (/^[a-z]{2,5}$/i.test(q)) {
+        const initialsPattern = q.split('').map(c => `\\b${c}`).join('.*')
+        nameOr.push({ 'user.fullName': { $regex: initialsPattern, $options: 'i' } })
+      }
+      userMatch.$or = nameOr
+    }
 
     const basePipeline = [
       { $match: baseMatch },

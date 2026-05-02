@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,11 +12,13 @@ export default function HostSearchBar({
   placeholder,
 }) {
   const [localValue, setLocalValue] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const timerRef = useRef(null)
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value)
     setLocalValue(value)
-  }, [value])
+  }
 
   function handleChange(e) {
     const v = e.target.value

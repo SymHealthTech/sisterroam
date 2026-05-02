@@ -57,14 +57,14 @@ const CATEGORY_COLORS = {
 const TIER_COLORS = { basic: 'gray', verified: 'teal', trusted: 'brand' }
 
 /* ── Full variant (grid card) ──────────────────────────────── */
-function FullCard({ story }) {
+function FullCard({ story, basePath }) {
   const CategoryIcon = CATEGORY_ICONS[story.category] ?? Globe
   const catColor     = CATEGORY_COLORS[story.category] ?? 'bg-brand-lighter'
   const author       = story.authorId
 
   return (
     <Link
-      href={`/stories/${story.slug}`}
+      href={`${basePath}/${story.slug}`}
       className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-brand-light hover:shadow-sm transition-all cursor-pointer"
     >
       {/* Image or placeholder */}
@@ -121,14 +121,14 @@ function FullCard({ story }) {
 }
 
 /* ── Compact variant (sidebar / related) ────────────────────── */
-function CompactCard({ story }) {
+function CompactCard({ story, basePath }) {
   const CategoryIcon = CATEGORY_ICONS[story.category] ?? Globe
   const catColor     = CATEGORY_COLORS[story.category] ?? 'bg-brand-lighter'
   const author       = story.authorId
 
   return (
     <Link
-      href={`/stories/${story.slug}`}
+      href={`${basePath}/${story.slug}`}
       className="flex gap-3 hover:bg-gray-50 rounded-xl p-2 transition-colors"
     >
       {story.coverImageUrl ? (
@@ -152,14 +152,14 @@ function CompactCard({ story }) {
 }
 
 /* ── Feed variant (home feed) ──────────────────────────────── */
-function FeedCard({ story }) {
+function FeedCard({ story, basePath }) {
   const CategoryIcon = CATEGORY_ICONS[story.category] ?? Globe
   const catColor     = CATEGORY_COLORS[story.category] ?? 'bg-brand-lighter'
   const author       = story.authorId
 
   return (
     <Link
-      href={`/stories/${story.slug}`}
+      href={`${basePath}/${story.slug}`}
       className="flex gap-3 bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-sm transition-shadow"
     >
       {/* Left icon area */}
@@ -193,12 +193,12 @@ function FeedCard({ story }) {
 }
 
 /* ── Featured variant (homepage / stories page) ─────────────── */
-function FeaturedCard({ story }) {
+function FeaturedCard({ story, basePath }) {
   const author = story.authorId
 
   return (
     <Link
-      href={`/stories/${story.slug}`}
+      href={`${basePath}/${story.slug}`}
       className="group block bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
     >
       <div className="flex flex-col lg:flex-row">
@@ -253,13 +253,13 @@ function FeaturedCard({ story }) {
 }
 
 /* ── Main export ────────────────────────────────────────────── */
-export default function StoryCard({ story, variant = 'full', showAuthor = true, currentUserId }) {
+export default function StoryCard({ story, variant = 'full', showAuthor = true, currentUserId, basePath = '/stories' }) {
   if (!story) return null
 
   switch (variant) {
-    case 'featured': return <FeaturedCard story={story} />
-    case 'compact':  return <CompactCard  story={story} />
-    case 'feed':     return <FeedCard     story={story} />
-    default:         return <FullCard     story={story} />
+    case 'featured': return <FeaturedCard story={story} basePath={basePath} />
+    case 'compact':  return <CompactCard  story={story} basePath={basePath} />
+    case 'feed':     return <FeedCard     story={story} basePath={basePath} />
+    default:         return <FullCard     story={story} basePath={basePath} />
   }
 }

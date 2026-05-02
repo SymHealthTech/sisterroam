@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AppLayout from '@/components/layout/AppLayout'
 import VerificationGate from '@/components/ui/VerificationGate'
 import Button from '@/components/ui/Button'
@@ -43,8 +43,10 @@ function ToolbarButton({ onClick, title, children }) {
 }
 
 export default function NewStoryPage() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const draftId = searchParams.get('draft')
 
   const [title,         setTitle]        = useState('')
   const [coverImageUrl, setCoverImageUrl] = useState('')
@@ -57,11 +59,43 @@ export default function NewStoryPage() {
   const [readTime,      setReadTime]     = useState('')
   const [saving,        setSaving]       = useState(false)
   const [publishing,    setPublishing]   = useState(false)
+  const [draftSlug,     setDraftSlug]    = useState(null)
+  const [draftReady,    setDraftReady]   = useState(false)
 
   const editorRef = useRef(null)
 
   const tier = session?.user?.verificationTier
   const isVerified = tier && tier !== 'basic'
+
+  // Load draft data once session is available
+  useEffect(() => {
+    if (!draftId || !session?.user?.id) return
+    fetch('/api/stories/my-stories')
+      .then(r => r.json())
+      .then(d => {
+        const draft = (d.data?.stories ?? []).find(s => s._id === draftId)
+        if (!draft) { toast.error('Draft not found'); return }
+        setTitle(draft.title ?? '')
+        setCoverImageUrl(draft.coverImageUrl ?? '')
+        setCoverPubId(draft.coverImagePublicId ?? '')
+        setCategory(draft.category ?? '')
+        setTags(draft.tags ?? [])
+        setContent(draft.content ?? '')
+        setDraftSlug(draft.slug)
+        setDraftReady(true)
+      })
+      .catch(() => toast.error('Failed to load draft'))
+  }, [draftId, session?.user?.id])
+
+  // Populate the contentEditable editor once draft content is loaded and editor is mounted
+  useEffect(() => {
+    if (!draftReady || !editorRef.current || !content) return
+    editorRef.current.innerHTML = content
+    const text = editorRef.current.innerText ?? ''
+    const words = text.trim().split(/\s+/).filter(Boolean).length
+    setWordCount(words)
+    setReadTime(words > 0 ? calculateReadTime(text) : '')
+  }, [draftReady])
 
   function handleEditorInput() {
     const text = editorRef.current?.innerText ?? ''
@@ -93,20 +127,29 @@ export default function NewStoryPage() {
     const setter = isPublished ? setPublishing : setSaving
     setter(true)
     try {
-      const res = await fetch('/api/stories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title:              title.trim(),
-          content,
-          coverImageUrl,
-          coverImagePublicId: coverPubId,
-          category:           category || undefined,
-          tags,
-          excerpt:            editorRef.current?.innerText?.slice(0, 200),
-          isPublished,
-        }),
-      })
+      const payload = {
+        title:              title.trim(),
+        content,
+        coverImageUrl,
+        coverImagePublicId: coverPubId,
+        category:           category || undefined,
+        tags,
+        excerpt:            editorRef.current?.innerText?.slice(0, 200),
+        isPublished,
+      }
+
+      const res = draftSlug
+        ? await fetch(`/api/stories/${draftSlug}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+        : await fetch('/api/stories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+
       const d = await res.json()
       if (!res.ok) { toast.error(d.error ?? 'Failed to save'); return }
       toast.success(isPublished ? 'Your story is published!' : 'Draft saved')
