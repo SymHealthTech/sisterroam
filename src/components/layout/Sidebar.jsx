@@ -142,7 +142,7 @@ export default function Sidebar({ user }) {
                 <p className="text-xs font-semibold text-gray-900 truncate max-w-full text-center leading-tight mt-0.5">
                   {user.fullName}
                 </p>
-                {user.verificationTier && user.verificationTier !== 'none' && (
+                {user.verificationTier && user.verificationTier !== 'basic' && (
                   <Badge
                     variant={user.verificationTier === 'trusted' ? 'trusted' : 'verified'}
                     size="sm"

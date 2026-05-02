@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
@@ -11,8 +11,9 @@ import Input from '@/components/ui/Input'
 import Toggle from '@/components/ui/Toggle'
 import Skeleton from '@/components/ui/Skeleton'
 import {
-  ChevronRight, ChevronDown, AlertTriangle, Check,
-  User, Bell, Lock, Eye, Globe, Briefcase, Trash2,
+  ChevronDown, AlertTriangle, Check,
+  User, Bell, Eye, Globe, Briefcase,
+  CreditCard, ShieldCheck, Lock,
 } from 'lucide-react'
 
 /* ── Section wrapper ─────────────────────────────────────── */
@@ -99,14 +100,19 @@ function ConfirmDialog({ title, message, confirmLabel, confirmVariant = 'danger'
 /* ── Main page ────────────────────────────────────────────── */
 
 export default function SettingsPage() {
-  const { data: session, update: updateSession } = useSession()
   const router = useRouter()
 
   const [loading,    setLoading]    = useState(true)
   const [userData,   setUserData]   = useState(null)
+  const [verif,      setVerif]      = useState(null)
   const [confirm,    setConfirm]    = useState(null) // { type: 'deactivate' | 'delete' }
 
+  // Phone
+  const [phoneInput,   setPhoneInput]   = useState('')
+  const [savingPhone,  setSavingPhone]  = useState(false)
+
   // Account form state
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword,     setNewPassword]     = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [savingPassword,  setSavingPassword]  = useState(false)
@@ -127,11 +133,13 @@ export default function SettingsPage() {
   })
   const [savingNotifs, setSavingNotifs] = useState(false)
 
-  // Language & currency (localStorage only)
-  const [displayLang, setDisplayLang]     = useState('English')
-  const [displayCurrency, setDisplayCurrency] = useState('USD')
+  // Language & currency
+  const [displayLang, setDisplayLang] = useState('English')
 
   useEffect(() => {
+    const lang = localStorage.getItem('sr_lang') ?? 'English'
+    setDisplayLang(lang)
+
     fetch('/api/users')
       .then(r => r.json())
       .then(d => {
@@ -140,13 +148,15 @@ export default function SettingsPage() {
         setUserData(u)
         setRole(u.role ?? 'guest')
         if (u.emailNotifications) setNotifs(n => ({ ...n, ...u.emailNotifications }))
+        // Derive & persist currency from country
+        const curr = u.country === 'India' ? 'INR' : 'USD'
+        localStorage.setItem('sr_currency', curr)
       })
       .finally(() => setLoading(false))
 
-    // Load localStorage prefs
-    const lang = localStorage.getItem('sr_lang') ?? 'English'
-    const curr = localStorage.getItem('sr_currency') ?? 'USD'
-    setDisplayLang(lang); setDisplayCurrency(curr)
+    fetch('/api/verification/status')
+      .then(r => r.json())
+      .then(d => { if (d.success) setVerif(d.data.verification) })
   }, [])
 
   async function patchUser(fields) {
@@ -158,14 +168,47 @@ export default function SettingsPage() {
     return res.json()
   }
 
+  const PHONE_RE = /^\+[1-9]\d{6,14}$/
+
+  async function handlePhoneChange() {
+    const phone = phoneInput.trim()
+    if (!phone) { toast.error('Please enter a phone number'); return }
+    if (!PHONE_RE.test(phone)) { toast.error('Include country code (e.g. +919876543210)'); return }
+    setSavingPhone(true)
+    try {
+      const d = await patchUser({ phone })
+      if (d.success) {
+        setUserData(prev => ({ ...prev, phone }))
+        setPhoneInput('')
+        toast.success('Phone number updated!')
+      } else {
+        toast.error(d.error ?? 'Failed to update phone')
+      }
+    } catch { toast.error('Network error') } finally { setSavingPhone(false) }
+  }
+
   async function handlePasswordChange() {
-    if (!newPassword || newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return }
+    if (!currentPassword) { toast.error('Enter your current password'); return }
+    if (!newPassword || newPassword.length < 8 || !/\d/.test(newPassword)) {
+      toast.error('New password must be at least 8 characters with a number')
+      return
+    }
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
     setSavingPassword(true)
-    await new Promise(r => setTimeout(r, 800)) // placeholder — real change-password route needed
-    toast('Password change coming soon — contact support if urgent.')
-    setNewPassword(''); setConfirmPassword('')
-    setSavingPassword(false)
+    try {
+      const res = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        toast.success('Password updated!')
+        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
+      } else {
+        toast.error(d.error ?? 'Failed to update password')
+      }
+    } catch { toast.error('Network error') } finally { setSavingPassword(false) }
   }
 
   async function handleRoleSave() {
@@ -190,7 +233,6 @@ export default function SettingsPage() {
 
   function handleDisplaySave() {
     localStorage.setItem('sr_lang', displayLang)
-    localStorage.setItem('sr_currency', displayCurrency)
     toast.success('Display preferences saved')
   }
 
@@ -240,34 +282,46 @@ export default function SettingsPage() {
           </AccountRow>
 
           <AccountRow label="Phone number" value={userData?.phone ? userData.phone.replace(/(\+\d{2})\d+(\d{4})/, '$1••••$2') : 'Not added'}>
-            <p className="text-sm text-gray-600 mb-3">Phone verification requires OTP confirmation.</p>
-            <Button size="sm" variant="secondary" onClick={() => toast('Phone OTP flow coming soon')}>
-              {userData?.phone ? 'Change phone' : 'Add phone number'}
+            <p className="text-xs text-gray-500 mb-3">Include country code, e.g. +919876543210</p>
+            <Input
+              label={userData?.phone ? 'New phone number' : 'Phone number'}
+              type="tel"
+              value={phoneInput}
+              onChange={e => setPhoneInput(e.target.value)}
+              placeholder="+919876543210"
+            />
+            <Button size="sm" loading={savingPhone} onClick={handlePhoneChange}>
+              {userData?.phone ? 'Change phone' : 'Save phone number'}
             </Button>
           </AccountRow>
 
           <AccountRow label="Password" value="••••••••">
-            {(
-              <div className="space-y-3">
-                <Input
-                  label="New password"
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                />
-                <Input
-                  label="Confirm password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
-                />
-                <Button size="sm" loading={savingPassword} onClick={handlePasswordChange}>
-                  Update password
-                </Button>
-              </div>
-            )}
+            <div className="space-y-3">
+              <Input
+                label="Current password"
+                type="password"
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="Your current password"
+              />
+              <Input
+                label="New password"
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters with a number"
+              />
+              <Input
+                label="Confirm new password"
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+              />
+              <Button size="sm" loading={savingPassword} onClick={handlePasswordChange}>
+                Update password
+              </Button>
+            </div>
           </AccountRow>
         </SettingsSection>
 
@@ -344,20 +398,70 @@ export default function SettingsPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1.5 block">Display currency</label>
-              <select
-                value={displayCurrency}
-                onChange={e => setDisplayCurrency(e.target.value)}
-                className="w-full h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="INR">INR (₹)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
+              <div className="w-full h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 flex items-center">
+                {userData?.country === 'India' ? 'INR (₹)' : 'USD ($)'}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Determined by your country ({userData?.country ?? 'not set'})</p>
             </div>
             <Button size="sm" variant="secondary" onClick={handleDisplaySave}>Save preferences</Button>
           </div>
         </SettingsSection>
+
+        {/* Payment gateway — visible only after admin approves KYC */}
+        {verif?.status === 'approved' && userData?.verificationTier === 'basic' && (
+          <SettingsSection title="Activate verified badge" icon={CreditCard}>
+            <div className="px-5 py-5 space-y-4">
+              <p className="text-xs text-gray-500">
+                Your identity has been verified by our team. Complete the one-time payment below to activate your verified badge.
+              </p>
+
+              {userData?.country === 'India' ? (
+                <div className="border-2 border-brand rounded-2xl p-4 space-y-3 bg-brand-lighter/20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🇮🇳</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">India</p>
+                      <p className="text-xs text-gray-500">UPI · Cards · Net Banking</p>
+                    </div>
+                    <p className="text-2xl font-bold text-brand ml-auto">₹199</p>
+                  </div>
+                  <p className="text-xs text-gray-500">One-time payment — never expires — unlocks full platform access</p>
+                  <Button fullWidth onClick={() => router.push('/profile/verification')}>
+                    Pay ₹199 &amp; activate badge
+                  </Button>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Lock className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-400">Secure payment via Dodo Payments</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-brand rounded-2xl p-4 space-y-3 bg-brand-lighter/20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🌍</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">International</p>
+                      <p className="text-xs text-gray-500">Cards · International</p>
+                    </div>
+                    <p className="text-2xl font-bold text-brand ml-auto">$5</p>
+                  </div>
+                  <p className="text-xs text-gray-500">One-time payment — never expires — unlocks full platform access</p>
+                  <Button fullWidth onClick={() => router.push('/profile/verification')}>
+                    Pay $5 &amp; activate badge
+                  </Button>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Lock className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-400">Secure payment via Dodo Payments</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 p-3 bg-teal-lighter/40 rounded-xl">
+                <ShieldCheck className="w-5 h-5 text-teal shrink-0" />
+                <p className="text-xs text-gray-700">Your verified badge lets you send and receive hosting requests</p>
+              </div>
+            </div>
+          </SettingsSection>
+        )}
 
         {/* Danger zone */}
         <div className="bg-white border border-danger/20 rounded-2xl overflow-hidden">
