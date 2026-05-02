@@ -157,6 +157,7 @@ export default function FeedPage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [verifPending, setVerifPending] = useState(false)
 
   useEffect(() => {
     if (!sessionUser?.id) return
@@ -172,13 +173,14 @@ export default function FeedPage() {
         const profile = userData.data ?? {}
         setUserProfile(profile)
 
-        const [hostsRes, postsRes, requestsRes, unreadRes, tripsRes, storiesRes] = await Promise.allSettled([
+        const [hostsRes, postsRes, requestsRes, unreadRes, tripsRes, storiesRes, verifRes] = await Promise.allSettled([
           fetch(`/api/hosts?country=${encodeURIComponent(profile.country ?? '')}&limit=4&sort=stays`),
           fetch('/api/community/posts?limit=2'),
           fetch('/api/requests'),
           fetch('/api/messages/unread-count'),
           fetch('/api/cotraveller?limit=2&status=open'),
           fetch('/api/stories?sort=newest&limit=2'),
+          fetch('/api/verification/status'),
         ])
 
         if (hostsRes.status === 'fulfilled' && hostsRes.value.ok) {
@@ -213,6 +215,10 @@ export default function FeedPage() {
         if (storiesRes.status === 'fulfilled' && storiesRes.value.ok) {
           const d = await storiesRes.value.json()
           setTravelStories(d.data?.stories ?? [])
+        }
+        if (verifRes.status === 'fulfilled' && verifRes.value.ok) {
+          const d = await verifRes.value.json()
+          setVerifPending(d.data?.verification?.status === 'pending')
         }
       }
     } finally {
@@ -255,7 +261,7 @@ export default function FeedPage() {
           </div>
 
           {/* Verification alert */}
-          {isBasicTier && (
+          {isBasicTier && !verifPending && (
             <div className="flex items-start gap-3 p-4 bg-amber-lighter border border-amber-light rounded-xl">
               <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
               <p className="flex-1 text-sm text-amber-dark font-medium">

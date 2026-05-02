@@ -368,38 +368,50 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Verification alert (only if basic and no approved verif) */}
+            {/* Verification alert */}
             {user.verificationTier === 'basic' && verif?.status !== 'approved' && (
-              <div className="bg-amber-lighter border border-amber/20 rounded-2xl p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-amber-dark">Get verified to unlock full access</p>
-                    <p className="text-xs text-amber-dark/80 mt-0.5">Verification unlocks hosting requests and full community access</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
-                      {[
-                        { label: 'Email',  done: verifData?.user?.emailVerified },
-                        { label: 'Phone',  done: verifData?.user?.phoneVerified },
-                        { label: 'ID',     done: verif?.idDocumentUrl },
-                        { label: 'Video',  done: verif?.selfieVideoUrl },
-                      ].map(step => (
-                        <div key={step.label} className="flex items-center gap-1 text-xs">
-                          {step.done
-                            ? <Check className="w-3 h-3 text-teal" />
-                            : <div className="w-3 h-3 rounded-full border border-amber/50" />}
-                          <span className={cn(step.done ? 'text-teal font-medium' : 'text-amber-dark/70')}>
-                            {step.label}
-                          </span>
-                        </div>
-                      ))}
+              verif?.status === 'pending' ? (
+                <div className="bg-teal-lighter/40 border border-teal/20 rounded-2xl p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-teal shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-teal-dark">Verification under review</p>
+                      <p className="text-xs text-teal-dark/80 mt-0.5">Our team is reviewing your documents. We'll notify you within 24–48 hours.</p>
                     </div>
-                    <Link href="/profile/verification"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-dark underline-offset-2 hover:underline mt-3">
-                      Continue verification <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-amber-lighter border border-amber/20 rounded-2xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-amber-dark">Get verified to unlock full access</p>
+                      <p className="text-xs text-amber-dark/80 mt-0.5">Verification unlocks hosting requests and full community access</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+                        {[
+                          { label: 'Email',  done: verifData?.user?.emailVerified },
+                          { label: 'Phone',  done: verifData?.user?.phoneVerified },
+                          { label: 'ID',     done: verif?.idDocumentUrl },
+                          { label: 'Video',  done: verif?.selfieVideoUrl },
+                        ].map(step => (
+                          <div key={step.label} className="flex items-center gap-1 text-xs">
+                            {step.done
+                              ? <Check className="w-3 h-3 text-teal" />
+                              : <div className="w-3 h-3 rounded-full border border-amber/50" />}
+                            <span className={cn(step.done ? 'text-teal font-medium' : 'text-amber-dark/70')}>
+                              {step.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <Link href="/profile/verification"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-amber-dark underline-offset-2 hover:underline mt-3">
+                        Continue verification <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )
             )}
 
             {/* Tabs */}
