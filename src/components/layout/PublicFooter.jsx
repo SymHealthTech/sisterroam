@@ -4,7 +4,6 @@ import Logo from '@/components/ui/Logo'
 const PLATFORM_LINKS = [
   { href: '/browse',        label: 'Find a Host'    },
   { href: '/about',         label: 'About us'       },
-  { href: '/about#contact', label: 'Contact us'     },
   { href: '/stories',       label: 'Travel Stories' },
   { href: '/signup',        label: 'Join Free'      },
 ]
@@ -18,11 +17,11 @@ const COMMUNITY_LINKS = [
 ]
 
 const SUPPORT_LINKS = [
-  { href: '/safety',   label: 'Safety Centre'   },
-  { href: '/about',    label: 'About Us'         },
-  { href: '/privacy',  label: 'Privacy Policy'   },
-  { href: '/terms',    label: 'Terms of Service' },
-  { href: '/cookies',  label: 'Cookie Policy'    },
+  { href: '/safety',         label: 'Safety Centre'   },
+  { href: '/about#contact',  label: 'Contact Us'      },
+  { href: '/privacy',        label: 'Privacy Policy'  },
+  { href: '/terms',          label: 'Terms of Service' },
+  { href: '/cookies',        label: 'Cookie Policy'   },
 ]
 
 const InstagramIcon = () => (

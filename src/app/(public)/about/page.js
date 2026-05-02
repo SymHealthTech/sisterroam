@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   Mountain, Heart, Globe, Users, Award, Star, Bike, Map,
-  ExternalLink, Trophy, Shield, Mail, Stethoscope, ArrowRight,
+  ExternalLink, Trophy, Mail, Stethoscope,
 } from 'lucide-react'
 import PublicNavbar from '@/components/layout/PublicNavbar'
 import PublicFooter from '@/components/layout/PublicFooter'
@@ -670,8 +670,7 @@ export default function AboutPage() {
               want to share your story, or need help — we are here.
             </p>
 
-            <div className="flex flex-wrap justify-center gap-4">
-              {/* General */}
+            <div className="flex justify-center">
               <a
                 href="mailto:hello@sisterroam.com"
                 className="border border-gray-100 rounded-2xl p-6 text-center min-w-[180px] hover:border-brand-light transition-colors group"
@@ -682,48 +681,10 @@ export default function AboutPage() {
                 <p className="text-sm font-medium text-gray-900">General enquiries</p>
                 <p className="text-xs text-brand mt-1">hello@sisterroam.com</p>
               </a>
-
-              {/* Safety */}
-              <a
-                href="mailto:safety@sisterroam.com"
-                className="border border-gray-100 rounded-2xl p-6 text-center min-w-[180px] hover:border-danger-light transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-danger-lighter flex items-center justify-center mx-auto mb-3">
-                  <Shield className="w-5 h-5 text-danger" aria-hidden="true" />
-                </div>
-                <p className="text-sm font-medium text-gray-900">Safety concerns</p>
-                <p className="text-xs text-danger mt-1">safety@sisterroam.com</p>
-                <p className="text-xs text-gray-400 mt-1">Reviewed within 24 hours</p>
-              </a>
-
-              {/* Partnerships */}
-              <a
-                href="mailto:partnerships@sisterroam.com"
-                className="border border-gray-100 rounded-2xl p-6 text-center min-w-[180px] hover:border-teal-light transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-teal-lighter flex items-center justify-center mx-auto mb-3">
-                  <Globe className="w-5 h-5 text-teal" aria-hidden="true" />
-                </div>
-                <p className="text-sm font-medium text-gray-900">Partnerships &amp; media</p>
-                <p className="text-xs text-teal mt-1">partnerships@sisterroam.com</p>
-                <p className="text-xs text-gray-400 mt-1">For collaborations and press</p>
-              </a>
             </div>
 
             <div className="mt-8">
-              <p className="text-sm text-gray-500">Follow Dr Manisha&apos;s journey:</p>
-              <div className="flex justify-center mt-2">
-                <a
-                  href="https://facebook.com/sisterroam"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
-                  aria-label="Facebook"
-                >
-                  <FacebookIcon className="w-5 h-5" />
-                </a>
-              </div>
-              <p className="text-xs text-gray-400 mt-3">
+              <p className="text-xs text-gray-400">
                 We typically respond within 48 hours
               </p>
             </div>
