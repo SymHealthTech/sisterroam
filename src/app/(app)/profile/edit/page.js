@@ -187,7 +187,7 @@ const RELATIONSHIP_OPTIONS = [
 const EDUCATION_OPTIONS = [
   { value: "high_school", label: "High School" },
   { value: "undergraduate", label: "Undergraduate" },
-  { value: "Graduate", label: "Graduate" },
+  { value: "graduate", label: "Graduate" },
   { value: "postgraduate", label: "Postgraduate" },
   { value: "doctorate", label: "Doctorate" },
   { value: "other", label: "Other" },
