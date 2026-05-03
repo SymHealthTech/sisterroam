@@ -33,6 +33,7 @@ const PaymentSchema = new mongoose.Schema({
   },
   paidAt: { type: Date },
   webhookPayload: { type: mongoose.Schema.Types.Mixed },
+  promoCode: { type: String },
   ipAddress: { type: String },
   userAgent: { type: String },
 }, { timestamps: true })

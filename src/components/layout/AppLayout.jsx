@@ -37,7 +37,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null })
+  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { lastEvent } = useSSEContext()
@@ -52,11 +52,26 @@ function AppLayoutInner({ children, title }) {
     if (status !== 'authenticated') return
     fetch('/api/users')
       .then(r => r.json())
-      .then(d => {
-        if (d.success) setFreshData({
-          profilePhotoUrl:  d.data.profilePhotoUrl  ?? null,
-          verificationTier: d.data.verificationTier ?? null,
-        })
+      .then(async d => {
+        if (!d.success) return
+        const tier = d.data.verificationTier ?? null
+        const update = {
+          profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
+          verificationTier: tier,
+          verifPending: false,
+        }
+        if (tier === 'basic') {
+          try {
+            const vRes = await fetch('/api/verification/status')
+            if (vRes.ok) {
+              const vd = await vRes.json()
+              const vs = vd.data?.verification?.status
+              update.verifPending  = vs === 'pending'
+              update.verifApproved = vs === 'approved'
+            }
+          } catch {}
+        }
+        setFreshData(update)
       })
       .catch(() => {})
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -86,6 +101,8 @@ function AppLayoutInner({ children, title }) {
     ...user,
     profilePhotoUrl:  avatarSrc,
     ...(freshData.verificationTier ? { verificationTier: freshData.verificationTier } : {}),
+    verifPending:  freshData.verifPending  ?? false,
+    verifApproved: freshData.verifApproved ?? false,
   }
 
   return (

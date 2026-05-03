@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import Button from '@/components/ui/Button'
 import VerificationGate from '@/components/ui/VerificationGate'
 import Avatar from '@/components/ui/Avatar'
@@ -31,7 +31,7 @@ const SORT_OPTIONS = [
   { value: 'verified_first', label: 'Verified first' },
 ]
 
-function QuestionCard({ question, userId, isVerified, onAnswered }) {
+function QuestionCard({ question, userId, isVerified, verifPending, verifApproved, onAnswered }) {
   const [expanded,   setExpanded]   = useState(false)
   const [answers,    setAnswers]    = useState(null)
   const [answerText, setAnswerText] = useState('')
@@ -207,6 +207,14 @@ function QuestionCard({ question, userId, isVerified, onAnswered }) {
                   </Button>
                 </div>
               </form>
+            ) : verifPending ? (
+              <p className="text-xs text-brand/70 bg-brand-lighter rounded-xl px-3 py-2">
+                Verification under review — you&apos;ll be able to answer once approved
+              </p>
+            ) : verifApproved ? (
+              <p className="text-xs text-teal bg-teal-lighter rounded-xl px-3 py-2">
+                Identity verified! <a href="/profile/verification" className="font-medium text-teal-dark hover:underline">Activate your badge</a> to post answers
+              </p>
             ) : (
               <p className="text-xs text-brand/70 bg-brand-lighter rounded-xl px-3 py-2">
                 <a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to post answers
@@ -221,8 +229,11 @@ function QuestionCard({ question, userId, isVerified, onAnswered }) {
 
 export default function RecommendationsPage() {
   const { data: session } = useSession()
+  const appUser = useAppUser()
   const userId = session?.user?.id
   const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
+  const verifPending  = appUser?.verifPending  ?? false
+  const verifApproved = appUser?.verifApproved ?? false
 
   const [activeTab,  setActiveTab]  = useState(0)
   const [showRecModal,  setRecModal]  = useState(false)
@@ -472,6 +483,8 @@ export default function RecommendationsPage() {
                       question={q}
                       userId={userId}
                       isVerified={isVerified}
+                      verifPending={verifPending}
+                      verifApproved={verifApproved}
                       onAnswered={() => setQuestions(prev => prev.map(pq => pq._id === q._id ? { ...pq, answersCount: (pq.answersCount ?? 0) + 1 } : pq))}
                     />
                   ))}

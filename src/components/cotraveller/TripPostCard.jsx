@@ -7,6 +7,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, formatRelativeTime } from '@/lib/utils'
+import { useAppUser } from '@/components/layout/AppLayout'
 
 const CATEGORY_LABELS = {
   solo_traveller: 'Solo traveller',
@@ -57,6 +58,9 @@ function SpotDots({ max, filled }) {
 }
 
 export default function TripPostCard({ post, currentUserTier, currentUserId, compact = false }) {
+  const appUser = useAppUser()
+  const verifPending  = appUser?.verifPending  ?? false
+  const verifApproved = appUser?.verifApproved ?? false
   const author = post.authorId ?? post.author ?? {}
   const authorId = author._id ?? author.id ?? post.authorId
   const isOwnPost = currentUserId && authorId && authorId.toString() === currentUserId.toString()
@@ -162,9 +166,19 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
               </Button>
               {post.status === 'open' && !isFull && !isOwnPost && (
                 currentUserTier === 'basic' ? (
-                  <Button href="/profile/verification" variant="ghost" size="sm" className="text-brand">
-                    Verify to apply
-                  </Button>
+                  verifPending ? (
+                    <Button variant="ghost" size="sm" disabled className="text-brand/50">
+                      Verification under review
+                    </Button>
+                  ) : verifApproved ? (
+                    <Button href="/profile/verification" variant="ghost" size="sm" className="text-teal">
+                      Activate badge to apply
+                    </Button>
+                  ) : (
+                    <Button href="/profile/verification" variant="ghost" size="sm" className="text-brand">
+                      Verify to apply
+                    </Button>
+                  )
                 ) : currentUserTier ? (
                   <Button href={`/cotraveller/${post._id}`} variant="primary" size="sm">
                     Express interest

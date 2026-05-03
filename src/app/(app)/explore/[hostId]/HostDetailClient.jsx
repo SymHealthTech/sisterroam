@@ -8,7 +8,7 @@ import {
   MapPin, Home, Star, Users, CheckCircle, Shield, Globe,
   ChevronDown, ChevronUp, ArrowLeft, ThumbsUp,
 } from 'lucide-react'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -462,6 +462,9 @@ function ReviewsTab({ host, reviews: initialReviews }) {
 
 function RequestCard({ host, className }) {
   const { data: session } = useSession()
+  const appUser = useAppUser()
+  const verifPending  = appUser?.verifPending  ?? false
+  const verifApproved = appUser?.verifApproved ?? false
   const user = host.userId ?? host.user ?? {}
   const accepting = host.isAcceptingGuests !== false && host.isListingActive !== false
   const rating = user.averageRating ?? 0
@@ -480,11 +483,24 @@ function RequestCard({ host, className }) {
           </p>
         </>
       ) : session.user.verificationTier === 'basic' ? (
-        <>
-          <h3 className="font-semibold text-gray-900">Verify your profile first</h3>
-          <p className="text-sm text-gray-500">Complete verification to send hosting requests.</p>
-          <Button href="/profile/verification" fullWidth>Get verified</Button>
-        </>
+        verifPending ? (
+          <>
+            <h3 className="font-semibold text-gray-900">Verification under review</h3>
+            <p className="text-sm text-gray-500">Our team is reviewing your documents. You&apos;ll be notified once approved.</p>
+          </>
+        ) : verifApproved ? (
+          <>
+            <h3 className="font-semibold text-gray-900">Identity verified!</h3>
+            <p className="text-sm text-gray-500">Activate your badge for ₹199 to send hosting requests.</p>
+            <Button href="/profile/verification" fullWidth>Activate badge — ₹199</Button>
+          </>
+        ) : (
+          <>
+            <h3 className="font-semibold text-gray-900">Verify your profile first</h3>
+            <p className="text-sm text-gray-500">Complete verification to send hosting requests.</p>
+            <Button href="/profile/verification" fullWidth>Get verified</Button>
+          </>
+        )
       ) : (
         <>
           {rating > 0 && (

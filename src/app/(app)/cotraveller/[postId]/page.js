@@ -5,14 +5,14 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import AppLayout from '@/components/layout/AppLayout'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
 import {
   ArrowLeft, Calendar, Eye, Users, Clock, MapPin, Globe,
-  CheckCircle, AlertCircle, MessageSquare,
+  CheckCircle, AlertCircle, MessageSquare, ShieldCheck,
 } from 'lucide-react'
 import { cn, formatRelativeTime } from '@/lib/utils'
 
@@ -57,9 +57,12 @@ function SpotDots({ max, filled }) {
 export default function TripDetailPage({ params }) {
   const { postId } = use(params)
   const { data: session } = useSession()
+  const appUser = useAppUser()
   const router = useRouter()
   const userId = session?.user?.id
   const userTier = session?.user?.verificationTier
+  const verifPending  = appUser?.verifPending  ?? false
+  const verifApproved = appUser?.verifApproved ?? false
 
   const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
@@ -310,14 +313,31 @@ export default function TripDetailPage({ params }) {
                 )}
               </div>
             ) : userTier === 'basic' && post.lookingFor?.verifiedOnly ? (
-              <div className="bg-amber-lighter rounded-2xl border border-amber-light p-5 space-y-3">
-                <AlertCircle className="w-5 h-5 text-amber" />
-                <p className="text-sm font-semibold text-amber-dark">Verification required</p>
-                <p className="text-xs text-amber-dark">This trip poster prefers verified members. Complete your verification to apply.</p>
-                <Button href="/profile/verification" variant="primary" fullWidth size="sm">
-                  Get verified
-                </Button>
-              </div>
+              verifPending ? (
+                <div className="bg-brand-lighter rounded-2xl border border-brand/20 p-5 space-y-2">
+                  <Clock className="w-5 h-5 text-brand" />
+                  <p className="text-sm font-semibold text-brand-dark">Verification under review</p>
+                  <p className="text-xs text-brand/70">Our team is reviewing your documents. You&apos;ll be notified once approved.</p>
+                </div>
+              ) : verifApproved ? (
+                <div className="bg-teal-lighter rounded-2xl border border-teal/20 p-5 space-y-2">
+                  <ShieldCheck className="w-5 h-5 text-teal" />
+                  <p className="text-sm font-semibold text-teal-dark">Identity verified!</p>
+                  <p className="text-xs text-teal">Activate your badge for ₹199 to apply for this trip.</p>
+                  <Button href="/profile/verification" variant="primary" fullWidth size="sm">
+                    Activate badge — ₹199
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-amber-lighter rounded-2xl border border-amber-light p-5 space-y-3">
+                  <AlertCircle className="w-5 h-5 text-amber" />
+                  <p className="text-sm font-semibold text-amber-dark">Verification required</p>
+                  <p className="text-xs text-amber-dark">This trip poster prefers verified members. Complete your verification to apply.</p>
+                  <Button href="/profile/verification" variant="primary" fullWidth size="sm">
+                    Get verified
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-gray-800">Join this trip</h3>

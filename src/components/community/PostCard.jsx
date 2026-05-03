@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { useAppUser } from '@/components/layout/AppLayout'
 import Image from 'next/image'
 import {
   Heart, MessageCircle, Share2, MoreHorizontal,
@@ -88,6 +89,9 @@ function CommentItem({ comment }) {
 
 /* ── Main card ─────────────────────────────────────────────── */
 export default function PostCard({ post: initialPost, currentUserId, currentUserTier, onDelete }) {
+  const appUser = useAppUser()
+  const verifPending  = appUser?.verifPending  ?? false
+  const verifApproved = appUser?.verifApproved ?? false
   const [post,         setPost]         = useState(initialPost)
   const [expanded,     setExpanded]     = useState(false)
   const [showComments, setShowComments] = useState(false)
@@ -363,7 +367,12 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
           )}
           {currentUserTier && currentUserTier === 'basic' ? (
             <p className="text-xs text-brand/70 bg-brand-lighter rounded-full px-3 py-2 mt-2">
-              <a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to comment
+              {verifPending
+                ? 'Verification under review — comments unlock once approved'
+                : verifApproved
+                ? <>Identity verified! <a href="/profile/verification" className="font-medium text-teal-dark hover:underline">Activate badge</a> to comment</>
+                : <><a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to comment</>
+              }
             </p>
           ) : (
             <form onSubmit={sendComment} className="flex gap-2 mt-2">

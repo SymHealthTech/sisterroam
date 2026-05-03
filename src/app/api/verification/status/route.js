@@ -7,7 +7,7 @@ export async function GET() {
     const session = await connectAndAuth()
     const [user, verification] = await Promise.all([
       User.findById(session.user.id)
-        .select('email phone emailVerified phoneVerified verificationTier')
+        .select('email phone emailVerified phoneVerified verificationTier country')
         .lean(),
       VerificationRequest.findOne({ userId: session.user.id })
         .sort({ createdAt: -1 })

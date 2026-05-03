@@ -98,6 +98,8 @@ export default function CoTravellerPage() {
   const userTier = (appUser ?? session?.user)?.verificationTier
 
   const isVerified = userTier && userTier !== 'basic'
+  const verifPending  = (appUser ?? session?.user)?.verifPending  ?? false
+  const verifApproved = (appUser ?? session?.user)?.verifApproved ?? false
 
   const [activeTab, setActiveTab] = useState(0)
   const [showModal,   setModal]   = useState(false)
@@ -184,6 +186,14 @@ export default function CoTravellerPage() {
           {isVerified ? (
             <Button variant="primary" size="sm" onClick={() => setModal(true)}>
               Post my trip
+            </Button>
+          ) : verifPending ? (
+            <Button variant="ghost" size="sm" disabled>
+              Verification under review
+            </Button>
+          ) : verifApproved ? (
+            <Button variant="primary" size="sm" href="/profile/verification">
+              Activate badge to post
             </Button>
           ) : (
             <Button variant="primary" size="sm" href="/profile/verification">
@@ -329,6 +339,10 @@ export default function CoTravellerPage() {
                 <p className="text-xs text-gray-400">Be the first to post your trip plan</p>
                 {isVerified
                   ? <Button variant="primary" size="sm" onClick={() => setModal(true)}>Post a trip</Button>
+                  : verifPending
+                  ? <Button variant="ghost" size="sm" disabled>Verification under review</Button>
+                  : verifApproved
+                  ? <Button variant="primary" size="sm" href="/profile/verification">Activate badge to post</Button>
                   : <Button variant="primary" size="sm" href="/profile/verification">Get verified to post</Button>
                 }
               </div>

@@ -27,6 +27,7 @@ import {
   RefreshCw,
   BookOpen,
   XCircle,
+  Tag,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -221,12 +222,79 @@ function PaymentFailedState({ onRetry }) {
 
 function PaymentOptionsState({
   user,
+  userCountry,
   selectedCurrency,
-  setSelectedCurrency,
   isCreatingPayment,
   paymentError,
   onPay,
+  onPromoActivate,
+  isActivatingPromo,
+  promoActivateError,
 }) {
+  const [promoInput, setPromoInput] = useState("");
+  const [promoState, setPromoState] = useState("idle"); // idle | validating | valid | invalid
+  const [promoType, setPromoType] = useState(null);
+  const [promoError, setPromoError] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  async function handleApplyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setIsValidating(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setPromoState("valid");
+        setPromoType(data.type);
+      } else {
+        setPromoState("invalid");
+        setPromoError(data.error);
+      }
+    } catch {
+      setPromoState("invalid");
+      setPromoError("Could not validate code. Try again.");
+    } finally {
+      setIsValidating(false);
+    }
+  }
+
+  function resetPromo() {
+    setPromoState("idle");
+    setPromoInput("");
+    setPromoType(null);
+    setPromoError(null);
+  }
+
+  const isPromoValid = promoState === "valid";
+
+  const allOptions = [
+    {
+      code: "INR",
+      emoji: "🇮🇳",
+      country: "India",
+      price: "₹199",
+      methods: "UPI · Cards · Net Banking",
+    },
+    {
+      code: "USD",
+      emoji: "🌍",
+      country: "International",
+      price: "$5",
+      methods: "Cards · International",
+    },
+  ];
+
+  const options =
+    userCountry === "India"
+      ? allOptions.filter((o) => o.code === "INR")
+      : allOptions.filter((o) => o.code === "USD");
+
   return (
     <div className="space-y-5">
       <div>
@@ -238,56 +306,13 @@ function PaymentOptionsState({
         </p>
       </div>
 
-      {/* What unlocks */}
-      <ul className="space-y-2">
-        {[
-          "Send hosting requests to verified sisters",
-          "Receive hosting requests as a host",
-          "Priority placement in search results",
-          "Share travel stories with the community",
-        ].map((item) => (
-          <li
-            key={item}
-            className="flex items-start gap-2 text-sm text-gray-700"
-          >
-            <CheckCircle className="w-4 h-4 text-teal shrink-0 mt-0.5" />
-            {item}
-          </li>
-        ))}
-      </ul>
-
-      {/* Currency selector */}
-      <div>
-        <p className="text-xs font-medium text-gray-500 mb-2">
-          Select your currency
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            {
-              code: "INR",
-              emoji: "🇮🇳",
-              country: "India",
-              price: "₹199",
-              methods: "UPI · Cards · Net Banking",
-            },
-            {
-              code: "USD",
-              emoji: "🌍",
-              country: "International",
-              price: "$5",
-              methods: "Cards · International",
-            },
-          ].map(({ code, emoji, country, price, methods }) => (
-            <button
+      {/* Currency card — hidden when promo is valid */}
+      {!isPromoValid && (
+        <div className="grid grid-cols-1 gap-3">
+          {options.map(({ code, emoji, country, price, methods }) => (
+            <div
               key={code}
-              type="button"
-              onClick={() => setSelectedCurrency(code)}
-              className={cn(
-                "flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-colors",
-                selectedCurrency === code
-                  ? "border-2 border-brand bg-brand-lighter/20"
-                  : "border border-gray-100 hover:border-gray-300 bg-white",
-              )}
+              className="flex flex-col items-center gap-1 p-3 rounded-xl text-center border-2 border-brand bg-brand-lighter/20"
             >
               <span className="text-2xl">{emoji}</span>
               <span className="text-xs font-medium text-gray-900">
@@ -295,10 +320,10 @@ function PaymentOptionsState({
               </span>
               <span className="text-base font-bold text-brand">{price}</span>
               <span className="text-[10px] text-gray-400">{methods}</span>
-            </button>
+            </div>
           ))}
         </div>
-      </div>
+      )}
 
       {/* Badge preview */}
       <div className="bg-gray-50 rounded-xl p-4">
@@ -319,31 +344,102 @@ function PaymentOptionsState({
         </p>
       </div>
 
-      {/* Pay button */}
+      {/* Promo code input */}
       <div className="space-y-2">
-        <Button fullWidth size="lg" loading={isCreatingPayment} onClick={onPay}>
-          {isCreatingPayment
-            ? "Creating secure payment…"
-            : `Activate badge — ${selectedCurrency === "INR" ? "₹199" : "$5"}`}
-        </Button>
+        <p className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5" />
+          Have a promo code?
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={promoInput}
+            onChange={(e) => {
+              setPromoInput(e.target.value.toUpperCase());
+              if (promoState !== "idle") resetPromo();
+            }}
+            onKeyDown={(e) => e.key === "Enter" && !isPromoValid && handleApplyPromo()}
+            placeholder="Enter code"
+            disabled={isPromoValid}
+            maxLength={20}
+            className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-brand disabled:bg-gray-50 disabled:text-gray-500 font-mono tracking-widest uppercase placeholder:font-sans placeholder:tracking-normal placeholder:normal-case"
+          />
+          {!isPromoValid ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleApplyPromo}
+              loading={isValidating}
+              disabled={!promoInput.trim()}
+            >
+              Apply
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={resetPromo}
+              className="text-xs text-gray-400 hover:text-danger px-2 transition-colors"
+            >
+              Remove
+            </button>
+          )}
+        </div>
 
-        {paymentError && (
-          <div className="flex items-center gap-2 p-3 bg-danger-lighter rounded-xl">
-            <XCircle className="w-4 h-4 text-danger shrink-0" />
-            <p className="text-xs text-danger">{paymentError}</p>
+        {isPromoValid && (
+          <div className="flex items-center gap-2 p-2.5 bg-teal-lighter/60 rounded-xl">
+            <CheckCircle className="w-4 h-4 text-teal shrink-0" />
+            <p className="text-xs text-teal font-medium">
+              {promoType === "brand_ambassador"
+                ? "Brand Ambassador code applied — badge is on us!"
+                : "Welcome code applied — your badge is free!"}
+            </p>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-1.5">
-          <Lock className="w-3 h-3 text-gray-400" />
-          <span className="text-xs text-gray-400">
-            Secure payment via Dodo Payments
-          </span>
-        </div>
+        {promoState === "invalid" && promoError && (
+          <p className="text-xs text-danger">{promoError}</p>
+        )}
+      </div>
 
-        <p className="text-xs text-gray-400 text-center">
-          Non-refundable once activated · Contact support for any issues
-        </p>
+      {/* Activate / Pay button */}
+      <div className="space-y-2">
+        {isPromoValid ? (
+          <Button
+            fullWidth
+            size="lg"
+            loading={isActivatingPromo}
+            onClick={() => onPromoActivate(promoInput)}
+          >
+            {isActivatingPromo ? "Activating…" : "Activate badge — Free"}
+          </Button>
+        ) : (
+          <Button fullWidth size="lg" loading={isCreatingPayment} onClick={onPay}>
+            {isCreatingPayment
+              ? "Creating secure payment…"
+              : `Activate badge — ${selectedCurrency === "INR" ? "₹199" : "$5"}`}
+          </Button>
+        )}
+
+        {(promoActivateError || paymentError) && (
+          <div className="flex items-center gap-2 p-3 bg-danger-lighter rounded-xl">
+            <XCircle className="w-4 h-4 text-danger shrink-0" />
+            <p className="text-xs text-danger">{promoActivateError || paymentError}</p>
+          </div>
+        )}
+
+        {!isPromoValid && (
+          <>
+            <div className="flex items-center justify-center gap-1.5">
+              <Lock className="w-3 h-3 text-gray-400" />
+              <span className="text-xs text-gray-400">
+                Secure payment via Dodo Payments
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 text-center">
+              Non-refundable once activated · Contact support for any issues
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -372,14 +468,13 @@ export default function VerificationPage() {
 
   // Payment state
   const [paymentStatus, setPaymentStatus] = useState("loading");
-  const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    if (typeof navigator === "undefined") return "INR";
-    const lang = navigator.language || "en-US";
-    return lang === "en-IN" || lang.includes("-IN") ? "INR" : "USD";
-  });
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [showRetryForm, setShowRetryForm] = useState(false);
+
+  // Promo code activation state
+  const [isActivatingPromo, setIsActivatingPromo] = useState(false);
+  const [promoActivateError, setPromoActivateError] = useState(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -504,6 +599,32 @@ export default function VerificationPage() {
     }
   }
 
+  async function handlePromoActivate(code) {
+    setIsActivatingPromo(true);
+    setPromoActivateError(null);
+    try {
+      const res = await fetch("/api/promo/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim().toUpperCase() }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      await updateSession({ verificationTier: "verified" });
+      setPaymentStatus("completed");
+      const fresh = await fetch("/api/verification/status").then((r) =>
+        r.json(),
+      );
+      if (fresh.success) setVerifData(fresh.data);
+    } catch (error) {
+      setPromoActivateError(
+        error.message || "Something went wrong. Please try again.",
+      );
+    } finally {
+      setIsActivatingPromo(false);
+    }
+  }
+
   function handleRetry() {
     setShowRetryForm(true);
     setPaymentError(null);
@@ -534,6 +655,8 @@ export default function VerificationPage() {
   const alreadyVerified =
     user?.verificationTier === "verified" ||
     user?.verificationTier === "trusted";
+
+  const selectedCurrency = user?.country === "India" ? "INR" : "USD";
 
   const canSubmit = !isPending && !isApproved && idFrontDone && idBackDone;
 
@@ -750,11 +873,14 @@ export default function VerificationPage() {
             ) : (
               <PaymentOptionsState
                 user={user}
+                userCountry={user?.country}
                 selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
                 isCreatingPayment={isCreatingPayment}
                 paymentError={paymentError}
                 onPay={handlePay}
+                onPromoActivate={handlePromoActivate}
+                isActivatingPromo={isActivatingPromo}
+                promoActivateError={promoActivateError}
               />
             )}
           </StepCard>
