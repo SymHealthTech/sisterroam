@@ -59,21 +59,27 @@ export async function POST(request) {
       return fail('hostId, checkInDate, checkOutDate, and message are required', 400)
     }
     if (!safetyAcknowledged) return fail('Safety acknowledgement is required', 400)
-    if (hostId === session.user.id) return fail('You cannot request to stay with yourself', 400)
 
     const checkIn  = new Date(checkInDate)
     const checkOut = new Date(checkOutDate)
     if (isNaN(checkIn) || isNaN(checkOut)) return fail('Invalid dates', 400)
     if (checkIn >= checkOut) return fail('Check-out must be after check-in', 400)
 
+    // hostId may be either the HostProfile._id or the host's User._id
+    const hostOid = new mongoose.Types.ObjectId(hostId)
     const hostProfile = await HostProfile.findOne({
-      userId: hostId, isAcceptingGuests: true, isListingActive: true,
+      $or: [{ _id: hostOid }, { userId: hostOid }],
     })
-    if (!hostProfile) return fail('Host is not currently accepting guests', 400)
+    if (!hostProfile || !hostProfile.isAcceptingGuests || !hostProfile.isListingActive) {
+      return fail('Host is not currently accepting guests', 400)
+    }
+
+    const hostUserId = hostProfile.userId.toString()
+    if (hostUserId === session.user.id) return fail('You cannot request to stay with yourself', 400)
 
     const overlap = await HostingRequest.findOne({
       guestId: session.user.id,
-      hostId,
+      hostId: hostUserId,
       status: { $in: ['pending', 'accepted'] },
       checkInDate:  { $lt: checkOut },
       checkOutDate: { $gt: checkIn },
@@ -86,7 +92,7 @@ export async function POST(request) {
 
     const hostingRequest = await HostingRequest.create({
       guestId: session.user.id,
-      hostId,
+      hostId: hostUserId,
       checkInDate: checkIn,
       checkOutDate: checkOut,
       message,
@@ -97,14 +103,14 @@ export async function POST(request) {
     })
 
     await Notification.create({
-      recipientId: hostId,
+      recipientId: hostUserId,
       type:        'new_request',
       title:       'New hosting request',
       body:        `${session.user.fullName} wants to stay with you`,
       link:        `/messages/${hostingRequest._id}`,
     })
 
-    const host = await User.findById(hostId).select('email fullName emailNotifications').lean()
+    const host = await User.findById(hostUserId).select('email fullName emailNotifications').lean()
     if (host?.emailNotifications?.newRequest !== false) {
       sendEmail({
         to:      host.email,

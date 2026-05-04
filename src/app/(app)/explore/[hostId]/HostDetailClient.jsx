@@ -683,7 +683,7 @@ export default function HostDetailClient({ host }) {
 
       {/* Mobile fixed bottom CTA */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        {host.isAcceptingGuests !== false ? (
+        {host.isAcceptingGuests !== false && host.isListingActive !== false ? (
           <Button href={`/request/${host._id}`} fullWidth size="lg">
             Request a stay with {user.fullName?.split(' ')[0]}
           </Button>

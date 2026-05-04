@@ -548,6 +548,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   const isGuest = request.guestId._id?.toString() === currentUserId
   const otherParty = isGuest ? request.hostId : request.guestId
+  // Only guests can view a host's explore profile; no public profile page exists for guests yet
+  const otherProfilePath = isGuest ? `/explore/${otherParty?._id}` : null
 
   const today = new Date()
   const checkIn = request.checkInDate ? new Date(request.checkInDate) : null
@@ -578,16 +580,26 @@ export default function ChatWindow({ requestId, currentUserId }) {
     <div className="flex-1 flex flex-col bg-white min-h-0 relative">
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
-        <Link href={`/profile/${otherParty?.username}`}>
-          <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link
-            href={`/profile/${otherParty?.username}`}
-            className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
-          >
-            {otherParty?.fullName ?? 'Unknown'}
+        {otherProfilePath ? (
+          <Link href={otherProfilePath}>
+            <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
           </Link>
+        ) : (
+          <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
+        )}
+        <div className="flex-1 min-w-0">
+          {otherProfilePath ? (
+            <Link
+              href={otherProfilePath}
+              className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
+            >
+              {otherParty?.fullName ?? 'Unknown'}
+            </Link>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900 truncate block">
+              {otherParty?.fullName ?? 'Unknown'}
+            </span>
+          )}
           <Badge
             variant={
               otherParty?.verificationTier === 'trusted' ? 'trusted' :
@@ -611,13 +623,15 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
           {showMenu && (
             <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
-              <Link
-                href={`/profile/${otherParty?.username}`}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                onClick={() => setShowMenu(false)}
-              >
-                View profile
-              </Link>
+              {otherProfilePath && (
+                <Link
+                  href={otherProfilePath}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  onClick={() => setShowMenu(false)}
+                >
+                  View profile
+                </Link>
+              )}
               <button
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
                 onClick={() => {

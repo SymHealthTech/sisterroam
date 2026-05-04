@@ -286,6 +286,20 @@ export default function RequestPage() {
     )
   }
 
+  const hostNotAccepting = host && (host.isAcceptingGuests === false || host.isListingActive === false)
+  if (hostNotAccepting) {
+    const hostFirstName = (host.userId ?? host.user ?? {}).fullName?.split(' ')[0] ?? 'This host'
+    return (
+      <AppLayout title="Not available">
+        <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">{hostFirstName} isn&apos;t accepting guests right now</h2>
+          <p className="text-sm text-gray-500">Check back later or browse other hosts near you.</p>
+          <Button href="/explore" variant="secondary">Browse hosts</Button>
+        </div>
+      </AppLayout>
+    )
+  }
+
   if (!isVerified) {
     return (
       <AppLayout title="Request a stay">

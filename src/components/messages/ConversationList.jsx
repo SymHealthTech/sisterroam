@@ -9,6 +9,7 @@ import { useSSEContext } from '@/context/SSEContext'
 import { cn, formatRelativeTime, formatDateRange, truncate } from '@/lib/utils'
 
 const STATUS_BADGE = {
+  pending:   { variant: 'warning', label: 'Pending' },
   accepted:  { variant: 'success', label: 'Accepted' },
   completed: { variant: 'basic',   label: 'Completed' },
 }
@@ -40,7 +41,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
     const json = await res.json()
     if (json.success) {
       const sorted = (json.data ?? [])
-        .filter(r => r.status === 'accepted' || r.status === 'completed')
+        .filter(r => r.status === 'pending' || r.status === 'accepted' || r.status === 'completed')
         .sort((a, b) => {
           const aTime = a.lastMessageAt ? new Date(a.lastMessageAt) : new Date(a.createdAt)
           const bTime = b.lastMessageAt ? new Date(b.lastMessageAt) : new Date(b.createdAt)
@@ -99,7 +100,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
       {/* Header */}
       <div className="px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
         <h2 className="text-base font-semibold text-gray-900">Messages</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Accepted trips &amp; stays</p>
+        <p className="text-xs text-gray-400 mt-0.5">Your trips &amp; stay requests</p>
       </div>
 
       {/* List */}
