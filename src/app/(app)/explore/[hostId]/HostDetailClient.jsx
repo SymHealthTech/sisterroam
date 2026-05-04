@@ -264,7 +264,7 @@ function ReviewCard({ review }) {
           />
           <div>
             <Link
-              href={`/profile/${review.reviewerId?.username}`}
+              href={`/user/${review.reviewerId?._id}`}
               className="text-sm font-semibold text-gray-900 hover:text-brand"
             >
               {review.reviewerId?.fullName ?? 'Member'}
@@ -647,14 +647,14 @@ export default function HostDetailClient({ host }) {
 
             {/* Tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="flex border-b border-gray-100 sticky top-[52px] lg:top-14 z-10 bg-white">
+              <div className="flex border-b border-gray-100 sticky top-[36px] lg:top-6 z-10 bg-white">
                 {TABS.filter((t) => t !== 'Hosting' || canShowHosting).map((tab) => (
                   <button
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
                     className={cn(
-                      'flex-1 py-3 text-sm font-medium transition-colors border-b-2',
+                      'flex-1 py-2 text-sm font-medium transition-colors border-b-2',
                       activeTab === tab
                         ? 'border-brand text-brand'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -665,7 +665,7 @@ export default function HostDetailClient({ host }) {
                 ))}
               </div>
 
-              <div className="p-5">
+              <div className="px-5 pb-5 pt-12">
                 {activeTab === 'About' && <AboutTab user={user} />}
                 {activeTab === 'Hosting' && canShowHosting && <HostingTab host={host} />}
                 {activeTab === 'Reviews' && <ReviewsTab host={host} reviews={reviews} />}
