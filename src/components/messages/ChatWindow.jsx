@@ -76,16 +76,24 @@ function SystemMessage({ content }) {
   )
 }
 
-function StatusBanner({ request, otherParty }) {
+function StatusBanner({ request, otherParty, isGuest }) {
   if (request.requestType === 'direct') return null
 
   const name = otherParty?.fullName?.split(' ')[0] ?? 'them'
 
   if (request.status === 'pending') {
+    if (!isGuest) {
+      return (
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-brand-lighter border-b border-brand/20 text-brand-dark text-sm shrink-0">
+          <Clock className="w-4 h-4 shrink-0" />
+          <span><strong>{name}</strong> sent you a hosting request</span>
+        </div>
+      )
+    }
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border-b border-amber-100 text-amber-800 text-sm shrink-0">
         <Clock className="w-4 h-4 shrink-0" />
-        <span>Waiting for <strong>{name}</strong> to accept</span>
+        <span>Waiting for <strong>{name}</strong> to accept your request</span>
       </div>
     )
   }
@@ -122,6 +130,106 @@ function StatusBanner({ request, otherParty }) {
   }
 
   return null
+}
+
+function HostRequestActions({ request, onStatusChange }) {
+  const [loading, setLoading] = useState(null)
+  const [showDecline, setShowDecline] = useState(false)
+  const [declineReason, setDeclineReason] = useState('')
+
+  async function respond(status) {
+    setLoading(status)
+    try {
+      const body = { status }
+      if (status === 'declined' && declineReason.trim()) body.declineReason = declineReason.trim()
+      const res = await fetch(`/api/requests/${request._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (json.success) {
+        onStatusChange(status)
+        toast.success(status === 'accepted' ? 'Request accepted!' : 'Request declined')
+        if (status === 'declined') setShowDecline(false)
+      } else {
+        toast.error(json.error ?? 'Something went wrong')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  return (
+    <div className="mx-4 mt-3 shrink-0">
+      {/* Request summary card */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+        {request.checkInDate && (
+          <p className="text-xs text-gray-500 mb-1.5">
+            <span className="font-medium text-gray-700">Dates:</span>{' '}
+            {formatDateRange(request.checkInDate, request.checkOutDate)}
+            {request.nights ? ` · ${request.nights} ${request.nights === 1 ? 'night' : 'nights'}` : ''}
+          </p>
+        )}
+        {request.message && (
+          <p className="text-sm text-gray-700 italic leading-relaxed">"{request.message}"</p>
+        )}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => respond('accepted')}
+          disabled={!!loading}
+          className="flex-1 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl
+                     hover:bg-teal-700 disabled:opacity-60 transition-colors"
+        >
+          {loading === 'accepted' ? 'Accepting…' : 'Accept request'}
+        </button>
+        <button
+          onClick={() => setShowDecline(true)}
+          disabled={!!loading}
+          className="flex-1 py-2.5 bg-white border border-gray-200 text-danger text-sm font-medium rounded-xl
+                     hover:bg-red-50 disabled:opacity-60 transition-colors"
+        >
+          Decline
+        </button>
+      </div>
+
+      {/* Inline decline reason */}
+      {showDecline && (
+        <div className="mt-3 p-4 bg-red-50 border border-red-100 rounded-xl space-y-3">
+          <p className="text-sm text-gray-700 font-medium">Decline this request?</p>
+          <textarea
+            value={declineReason}
+            onChange={e => setDeclineReason(e.target.value)}
+            placeholder="Optional: let her know why (e.g. fully booked, away those dates…)"
+            rows={2}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none
+                       focus:outline-none focus:ring-2 focus:ring-danger/30 focus:border-danger bg-white"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowDecline(false)}
+              className="flex-1 py-2 text-sm text-gray-600 border border-gray-200 bg-white rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => respond('declined')}
+              disabled={loading === 'declined'}
+              className="flex-1 py-2 bg-danger text-white text-sm font-medium rounded-lg
+                         hover:bg-red-600 disabled:opacity-60 transition-colors"
+            >
+              {loading === 'declined' ? 'Declining…' : 'Confirm decline'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SafetyCheckinPrompt({ requestId }) {
@@ -548,8 +656,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   const isGuest = request.guestId._id?.toString() === currentUserId
   const otherParty = isGuest ? request.hostId : request.guestId
-  // Only guests can view a host's explore profile; no public profile page exists for guests yet
-  const otherProfilePath = isGuest ? `/explore/${otherParty?._id}` : null
+  const otherProfilePath = `/user/${otherParty?._id}`
 
   const today = new Date()
   const checkIn = request.checkInDate ? new Date(request.checkInDate) : null
@@ -580,26 +687,16 @@ export default function ChatWindow({ requestId, currentUserId }) {
     <div className="flex-1 flex flex-col bg-white min-h-0 relative">
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
-        {otherProfilePath ? (
-          <Link href={otherProfilePath}>
-            <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
-          </Link>
-        ) : (
+        <Link href={otherProfilePath}>
           <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
-        )}
+        </Link>
         <div className="flex-1 min-w-0">
-          {otherProfilePath ? (
-            <Link
-              href={otherProfilePath}
-              className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
-            >
-              {otherParty?.fullName ?? 'Unknown'}
-            </Link>
-          ) : (
-            <span className="text-sm font-semibold text-gray-900 truncate block">
-              {otherParty?.fullName ?? 'Unknown'}
-            </span>
-          )}
+          <Link
+            href={otherProfilePath}
+            className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
+          >
+            {otherParty?.fullName ?? 'Unknown'}
+          </Link>
           <Badge
             variant={
               otherParty?.verificationTier === 'trusted' ? 'trusted' :
@@ -623,15 +720,13 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
           {showMenu && (
             <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
-              {otherProfilePath && (
-                <Link
-                  href={otherProfilePath}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={() => setShowMenu(false)}
-                >
-                  View profile
-                </Link>
-              )}
+              <Link
+                href={otherProfilePath}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                onClick={() => setShowMenu(false)}
+              >
+                View profile
+              </Link>
               <button
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
                 onClick={() => {
@@ -657,7 +752,15 @@ export default function ChatWindow({ requestId, currentUserId }) {
       </div>
 
       {/* ── Status banner ── */}
-      <StatusBanner request={request} otherParty={otherParty} />
+      <StatusBanner request={request} otherParty={otherParty} isGuest={isGuest} />
+
+      {/* ── Host accept/decline actions ── */}
+      {!isGuest && request.status === 'pending' && (
+        <HostRequestActions
+          request={request}
+          onStatusChange={(status) => setRequest(prev => ({ ...prev, status }))}
+        />
+      )}
 
       {/* ── Safety checkin prompt ── */}
       {showSafety && <SafetyCheckinPrompt requestId={requestId} />}
