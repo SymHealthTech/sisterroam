@@ -20,35 +20,37 @@ export default function CommunityStoriesPage() {
   const { data: session } = useSession()
   const [stories,     setStories]     = useState([])
   const [drafts,      setDrafts]      = useState([])
-  const [loading,     setLoading]     = useState(true)
+  const [fetchedCat,  setFetchedCat]  = useState(null)  // null = initial load not done yet
   const [category,    setCategory]    = useState('')
   const [page,        setPage]        = useState(1)
   const [hasMore,     setHasMore]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+
+  // Derived: true while awaiting first fetch or after a category switch
+  const loading = fetchedCat !== category
 
   const appUser = useAppUser()
   const isVerified = ['verified', 'trusted'].includes(session?.user?.verificationTier)
   const verifPending  = appUser?.verifPending  ?? false
   const verifApproved = appUser?.verifApproved ?? false
 
-  async function loadStories(cat, pg, reset) {
-    const params = new URLSearchParams({ sort: 'newest', limit: '9', page: String(pg) })
-    if (cat) params.set('category', cat)
-    const res = await fetch(`/api/stories?${params}`)
-    if (res.ok) {
-      const d = await res.json()
-      const list = d.data?.stories ?? []
-      setStories(prev => reset ? list : [...prev, ...list])
-      setHasMore(pg < (d.data?.totalPages ?? 1))
-    }
-    setLoading(false)
-    setLoadingMore(false)
-  }
-
   useEffect(() => {
-    setLoading(true)
-    setPage(1)
-    loadStories(category, 1, true)
+    let cancelled = false
+    ;(async () => {
+      const params = new URLSearchParams({ sort: 'newest', limit: '9', page: '1' })
+      if (category) params.set('category', category)
+      const res = await fetch(`/api/stories?${params}`)
+      if (!cancelled) {
+        if (res.ok) {
+          const d = await res.json()
+          setStories(d.data?.stories ?? [])
+          setHasMore(1 < (d.data?.totalPages ?? 1))
+          setPage(1)
+        }
+        setFetchedCat(category)
+      }
+    })()
+    return () => { cancelled = true }
   }, [category])
 
   useEffect(() => {
@@ -61,11 +63,19 @@ export default function CommunityStoriesPage() {
       })
   }, [session?.user?.id])
 
-  function handleLoadMore() {
+  async function handleLoadMore() {
     const next = page + 1
     setPage(next)
     setLoadingMore(true)
-    loadStories(category, next, false)
+    const params = new URLSearchParams({ sort: 'newest', limit: '9', page: String(next) })
+    if (category) params.set('category', category)
+    const res = await fetch(`/api/stories?${params}`)
+    if (res.ok) {
+      const d = await res.json()
+      setStories(prev => [...prev, ...(d.data?.stories ?? [])])
+      setHasMore(next < (d.data?.totalPages ?? 1))
+    }
+    setLoadingMore(false)
   }
 
   return (

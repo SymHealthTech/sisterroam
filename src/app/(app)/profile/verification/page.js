@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
@@ -12,7 +11,12 @@ import Skeleton from "@/components/ui/Skeleton";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DocumentUpload from "@/components/ui/DocumentUpload";
-import VideoCapture from "@/components/ui/VideoCapture";
+import dynamic from "next/dynamic";
+
+const VideoCapture = dynamic(
+  () => import("@/components/ui/VideoCapture"),
+  { loading: () => null, ssr: false }
+);
 import {
   CheckCircle,
   Circle,
@@ -131,12 +135,14 @@ function BadgeSuccessCard({ user, verif }) {
 
 function PaymentSuccessState({ router }) {
   useEffect(() => {
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      colors: ["#5D1A8B", "#D4537E", "#1D9E75", "#F4C0D1"],
-      origin: { y: 0.6 },
-    });
+    import('canvas-confetti').then(({ default: confetti }) => {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        colors: ["#5D1A8B", "#D4537E", "#1D9E75", "#F4C0D1"],
+        origin: { y: 0.6 },
+      })
+    })
   }, []);
 
   return (
@@ -590,7 +596,7 @@ export default function VerificationPage() {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      window.location.href = data.paymentUrl;
+      window.location.assign(data.paymentUrl);
     } catch (error) {
       setPaymentError(
         error.message || "Something went wrong. Please try again.",

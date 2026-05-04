@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   ArrowUp, MoreVertical, Clock, CheckCircle, XCircle, Shield,
@@ -11,6 +11,7 @@ import Badge from '@/components/ui/Badge'
 import Spinner from '@/components/ui/Spinner'
 import Skeleton from '@/components/ui/Skeleton'
 import Modal from '@/components/ui/Modal'
+import ReviewModal from '@/components/reviews/ReviewModal'
 import { useSSEContext } from '@/context/SSEContext'
 import { cn, formatDateRange, formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -174,7 +175,7 @@ function HostRequestActions({ request, onStatusChange }) {
           </p>
         )}
         {request.message && (
-          <p className="text-sm text-gray-700 italic leading-relaxed">"{request.message}"</p>
+          <p className="text-sm text-gray-700 italic leading-relaxed">&quot;{request.message}&quot;</p>
         )}
       </div>
 
@@ -274,93 +275,6 @@ function SafetyCheckinPrompt({ requestId }) {
   )
 }
 
-function ReviewModal({ isOpen, onClose, requestId, otherParty }) {
-  const [rating, setRating] = useState(0)
-  const [hovered, setHovered] = useState(0)
-  const [comment, setComment] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-
-  async function submit() {
-    if (rating === 0) { toast.error('Please select a rating'); return }
-    if (comment.trim().length < 20) { toast.error('Please write at least 20 characters'); return }
-
-    setSubmitting(true)
-    try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, rating, comment: comment.trim() }),
-      })
-      const json = await res.json()
-      if (json.success) {
-        toast.success('Review submitted!')
-        onClose()
-      } else {
-        toast.error(json.error ?? 'Could not submit review')
-      }
-    } catch {
-      toast.error('Network error')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Review ${otherParty?.fullName ?? 'stay'}`}>
-      <div className="space-y-4">
-        {/* Star rating */}
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Overall rating</p>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map(n => (
-              <button
-                key={n}
-                onMouseEnter={() => setHovered(n)}
-                onMouseLeave={() => setHovered(0)}
-                onClick={() => setRating(n)}
-                className="transition-transform hover:scale-110"
-              >
-                <Star
-                  className={cn(
-                    'w-8 h-8 transition-colors',
-                    n <= (hovered || rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                  )}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Comment */}
-        <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1.5">
-            Your experience
-          </label>
-          <textarea
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            placeholder="Share your experience with the community…"
-            rows={4}
-            maxLength={1000}
-            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl resize-none
-                       focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
-          />
-          <p className="text-xs text-gray-400 text-right mt-1">{comment.length}/1000</p>
-        </div>
-
-        <button
-          onClick={submit}
-          disabled={submitting}
-          className="w-full py-2.5 bg-brand text-white text-sm font-medium rounded-xl
-                     hover:bg-brand-dark disabled:opacity-60 transition-colors"
-        >
-          {submitting ? 'Submitting…' : 'Submit review'}
-        </button>
-      </div>
-    </Modal>
-  )
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ChatWindow({ requestId, currentUserId }) {
@@ -370,7 +284,9 @@ export default function ChatWindow({ requestId, currentUserId }) {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [isAtBottom, setIsAtBottom] = useState(true)
-  const [offline, setOffline] = useState(false)
+  const [offline, setOffline] = useState(() =>
+    typeof window !== 'undefined' ? !navigator.onLine : false
+  )
   const [queuedMessages, setQueuedMessages] = useState([])
   const [showMenu, setShowMenu] = useState(false)
   const [showReview, setShowReview] = useState(false)
@@ -383,30 +299,36 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   // ── Data fetching ───────────────────────────────────────────────────────
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
     if (!requestId) return
-    setLoading(true)
-    try {
-      const [reqRes, msgRes] = await Promise.all([
-        fetch(`/api/requests/${requestId}`),
-        fetch(`/api/messages/${requestId}`),
-      ])
-      const [reqJson, msgJson] = await Promise.all([reqRes.json(), msgRes.json()])
-      if (reqJson.success) setRequest(reqJson.data)
-      if (msgJson.success) setMessages(msgJson.data ?? [])
-    } catch {
-      toast.error('Could not load conversation')
-    } finally {
-      setLoading(false)
-    }
-  }, [requestId])
+    let cancelled = false
 
-  useEffect(() => { fetchData() }, [fetchData])
+    async function load() {
+      setLoading(true)
+      try {
+        const [reqRes, msgRes] = await Promise.all([
+          fetch(`/api/requests/${requestId}`),
+          fetch(`/api/messages/${requestId}`),
+        ])
+        const [reqJson, msgJson] = await Promise.all([reqRes.json(), msgRes.json()])
+        if (cancelled) return
+        if (reqJson.success) setRequest(reqJson.data)
+        if (msgJson.success) setMessages(msgJson.data ?? [])
+      } catch {
+        if (!cancelled) toast.error('Could not load conversation')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [requestId])
 
   // ── Offline detection ───────────────────────────────────────────────────
 
   const queuedRef = useRef([])
-  queuedRef.current = queuedMessages
+  useEffect(() => { queuedRef.current = queuedMessages }, [queuedMessages])
 
   useEffect(() => {
     const onOnline = () => {
@@ -427,7 +349,6 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
     window.addEventListener('online', onOnline)
     window.addEventListener('offline', onOffline)
-    setOffline(!navigator.onLine)
 
     return () => {
       window.removeEventListener('online', onOnline)
@@ -443,14 +364,16 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   useEffect(() => {
     if (!lastEvent) return
-    if (lastEvent.type === 'new_message' && lastEvent.data?.requestId === requestId) {
-      lastSseMessageAt.current = Date.now()
-      const msg = lastEvent.data.message
+    if (lastEvent.type !== 'new_message' || lastEvent.data?.requestId !== requestId) return
+    lastSseMessageAt.current = Date.now()
+    const msg = lastEvent.data.message
+    // Defer so setState is called in a callback, not synchronously in the effect body
+    Promise.resolve().then(() => {
       setMessages(prev => {
         if (prev.some(m => m._id?.toString() === msg._id?.toString())) return prev
         return [...prev, msg]
       })
-    }
+    })
   }, [lastEvent, requestId])
 
   // ── Polling fallback (8 s) ─────────────────────────────────────────────
@@ -461,7 +384,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
   //   • SSE delivered an event within the last 20 s (SSE is working)
   //   • the window has been idle (no typing/scrolling) for 2 minutes
 
-  const lastActivityAt = useRef(Date.now())
+  const lastActivityAt = useRef(0)
 
   useEffect(() => {
     const touch = () => { lastActivityAt.current = Date.now() }
@@ -507,12 +430,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
   // ── Auto-scroll ─────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isAtBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    } else {
-      setShowScrollButton(true)
-    }
-  }, [messages])
+    if (isAtBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [isAtBottom, messages])
 
   useEffect(() => {
     // Scroll to bottom on initial load
@@ -889,7 +808,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
         isOpen={showReview}
         onClose={() => setShowReview(false)}
         requestId={requestId}
-        otherParty={otherParty}
+        revieweeId={otherParty?._id}
+        revieweeName={otherParty?.fullName}
       />
     </div>
   )

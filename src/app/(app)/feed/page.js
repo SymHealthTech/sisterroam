@@ -24,6 +24,16 @@ import TripPostCard from "@/components/cotraveller/TripPostCard";
 import StoryCard from "@/components/stories/StoryCard";
 import { formatDateRange, formatRelativeTime } from "@/lib/utils";
 
+const QUICK_ACTIONS = [
+  { label: "Browse all hosts",         href: "/explore" },
+  { label: "Female hosts only",        href: "/explore?femaleOnly=true" },
+  { label: "Find cyclists",            href: "/explore?category=cyclist" },
+  { label: "Find trekkers",            href: "/explore?category=trekker" },
+  { label: "Community feed",           href: "/community" },
+  { label: "Find co-traveller",        href: "/cotraveller" },
+  { label: "Place recommendations",    href: "/recommendations" },
+]
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -186,13 +196,7 @@ export default function FeedPage() {
   const [verifPending, setVerifPending] = useState(false);
   const [verifApproved, setVerifApproved] = useState(false);
 
-  useEffect(() => {
-    if (!sessionUser?.id) return;
-    loadFeedData();
-  }, [sessionUser?.id]);
-
   async function loadFeedData() {
-    setLoading(true);
     try {
       const userRes = await fetch("/api/users");
       if (userRes.ok) {
@@ -264,6 +268,11 @@ export default function FeedPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!sessionUser?.id) return;
+    loadFeedData();
+  }, [sessionUser?.id]);
 
   function handleSearch(e) {
     e.preventDefault();
@@ -376,15 +385,7 @@ export default function FeedPage() {
 
           {/* Quick actions */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap scrollbar-hide">
-            {[
-              { label: "Browse all hosts", href: "/explore" },
-              { label: "Female hosts only", href: "/explore?femaleOnly=true" },
-              { label: "Find cyclists", href: "/explore?category=cyclist" },
-              { label: "Find trekkers", href: "/explore?category=trekker" },
-              { label: "Community feed", href: "/community" },
-              { label: "Find co-traveller", href: "/cotraveller" },
-              { label: "Place recommendations", href: "/recommendations" },
-            ].map(({ label, href }) => (
+            {QUICK_ACTIONS.map(({ label, href }) => (
               <Button
                 key={label}
                 href={href}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -51,39 +51,44 @@ export default function UserManagementPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  const [users,   setUsers]   = useState([])
-  const [total,   setTotal]   = useState(0)
-  const [pages,   setPages]   = useState(1)
-  const [page,    setPage]    = useState(1)
-  const [query,   setQuery]   = useState('')
-  const [loading, setLoading] = useState(true)
-
-  const fetchUsers = useCallback(async (q, p) => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams({ page: p, ...(q ? { q } : {}) })
-      const res  = await fetch(`/api/admin/users?${params}`)
-      const data = await res.json()
-      if (data.success) {
-        setUsers(data.data.users)
-        setTotal(data.data.total)
-        setPages(data.data.pages)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const [users,      setUsers]      = useState([])
+  const [total,      setTotal]      = useState(0)
+  const [pages,      setPages]      = useState(1)
+  const [page,       setPage]       = useState(1)
+  const [inputValue, setInputValue] = useState('')
+  const [query,      setQuery]      = useState('')
+  const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
-    if (status === 'unauthenticated') { router.push('/login'); return }
-    if (status === 'authenticated' && !session?.user?.isAdmin) { router.push('/feed'); return }
-    if (status === 'authenticated') fetchUsers(query, page)
-  }, [status, session, query, page, fetchUsers, router])
+    if (status === 'unauthenticated') router.push('/login')
+    else if (status === 'authenticated' && !session?.user?.isAdmin) router.push('/feed')
+  }, [status, session, router])
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user?.isAdmin) return
+    let active = true
+    ;(async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({ page, ...(query ? { q: query } : {}) })
+        const res  = await fetch(`/api/admin/users?${params}`)
+        const data = await res.json()
+        if (active && data.success) {
+          setUsers(data.data.users)
+          setTotal(data.data.total)
+          setPages(data.data.pages)
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+    return () => { active = false }
+  }, [status, session?.user?.isAdmin, query, page])
 
   function handleSearch(e) {
     e.preventDefault()
+    setQuery(inputValue)
     setPage(1)
-    fetchUsers(query, 1)
   }
 
   if (status === 'loading') {
@@ -106,8 +111,8 @@ export default function UserManagementPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
           placeholder="Search by name or email…"
           className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
         />

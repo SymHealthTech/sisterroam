@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '@/components/layout/AdminLayout'
 import Skeleton from '@/components/ui/Skeleton'
 import Avatar from '@/components/ui/Avatar'
@@ -203,18 +203,19 @@ export default function KYCQueuePage() {
   const [loading,   setLoading]   = useState(true)
   const [activeIdx, setActiveIdx] = useState(0)
 
-  const fetchVerifs = useCallback(async (status) => {
-    setLoading(true)
-    const res = await fetch(`/api/verification?status=${status}&limit=50`)
-    if (res.ok) {
-      const d = await res.json()
-      setVerifs(d.data?.verifications ?? d.data ?? [])
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const res = await fetch(`/api/verification?status=${tab}&limit=50`)
+      if (res.ok) {
+        const d = await res.json()
+        setVerifs(d.data?.verifications ?? d.data ?? [])
+      }
+      setLoading(false)
+      setActiveIdx(0)
     }
-    setLoading(false)
-    setActiveIdx(0)
-  }, [])
-
-  useEffect(() => { fetchVerifs(tab) }, [tab, fetchVerifs])
+    void load()
+  }, [tab])
 
   function handleUpdate(id, status) {
     setVerifs(prev => {

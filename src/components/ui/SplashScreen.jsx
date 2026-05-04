@@ -1,15 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Logo from './Logo'
 
 export default function SplashScreen() {
-  const [show,   setShow]   = useState(false)
+  const isStandalone = useRef(
+    typeof window !== 'undefined' &&
+    window.matchMedia('(display-mode: standalone)').matches
+  )
+
+  const [show,   setShow]   = useState(isStandalone.current)
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
-    if (!window.matchMedia('(display-mode: standalone)').matches) return
-    setShow(true)
+    if (!isStandalone.current) return
     const fadeTimer = setTimeout(() => setFading(true), 1400)
     const hideTimer = setTimeout(() => setShow(false), 1800)
     return () => {

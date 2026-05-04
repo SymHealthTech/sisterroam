@@ -3,13 +3,6 @@ import OtpRecord from '@/models/OtpRecord'
 import { sendOtpEmail } from '@/lib/resend'
 import bcrypt from 'bcryptjs'
 
-// TODO: When budget allows, add WhatsApp OTP via WATI (wati.io)
-// WATI free tier: 1,000 messages. After that ~$0.005 per message.
-// Indian users strongly prefer WhatsApp over email for OTP.
-// To implement: replace sendOtpEmail with a WATI API call.
-// WATI endpoint: POST https://live-server-xxxx.wati.io/api/v1/sendTemplateMessage
-// Template must be pre-approved by WhatsApp Business.
-
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000))
 }

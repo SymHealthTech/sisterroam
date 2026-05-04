@@ -16,32 +16,27 @@ const PlayIcon = () => (
 
 export default function PWAInstallButtons() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [platform, setPlatform] = useState(null); // null | "ios" | "android" | "other"
+  const [platform] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const ua = navigator.userAgent;
+    if (/iphone|ipad|ipod/i.test(ua) && !window.MSStream) return "ios";
+    if (/android/i.test(ua)) return "android";
+    return "other";
+  });
   const [showIOSTip, setShowIOSTip] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches
+  );
 
   useEffect(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-      return;
-    }
-
-    const ua = navigator.userAgent;
-    if (/iphone|ipad|ipod/i.test(ua) && !(window).MSStream) {
-      setPlatform("ios");
-    } else if (/android/i.test(ua)) {
-      setPlatform("android");
-    } else {
-      setPlatform("other");
-    }
-
+    if (isInstalled) return;
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [isInstalled]);
 
   const handleAndroidInstall = async () => {
     if (!deferredPrompt) return;

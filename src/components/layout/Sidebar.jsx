@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Logo from '@/components/ui/Logo'
+import { useUnreadCount } from '@/hooks/useUnreadCount'
 
 const NAV_ITEMS = [
   { href: '/feed',              icon: Home,          label: 'Home'            },
@@ -53,27 +54,12 @@ function NavItem({ href, icon: Icon, label, active, collapsed, badge }) {
 }
 
 export default function Sidebar({ user }) {
-  const pathname                    = usePathname()
-  const [collapsed,   setCollapsed] = useState(false)
-  const [unreadCount, setUnread]    = useState(0)
+  const pathname     = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
+  const unreadCount  = useUnreadCount()
 
   useEffect(() => {
     if (localStorage.getItem('sidebar-collapsed') === 'true') setCollapsed(true)
-  }, [])
-
-  useEffect(() => {
-    async function fetchUnread() {
-      try {
-        const res = await fetch('/api/messages/unread-count')
-        if (res.ok) {
-          const data = await res.json()
-          setUnread(data.count ?? 0)
-        }
-      } catch {}
-    }
-    fetchUnread()
-    const id = setInterval(fetchUnread, 30_000)
-    return () => clearInterval(id)
   }, [])
 
   function toggleCollapsed() {

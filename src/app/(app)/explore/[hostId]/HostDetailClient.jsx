@@ -537,13 +537,14 @@ function RequestCard({ host, className }) {
 export default function HostDetailClient({ host }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('About')
+  const [now] = useState(() => Date.now())
 
   const user = host.userId ?? host.user ?? {}
   const reviews = host.reviews ?? []
   const rating = user.averageRating ?? 0
   const totalReviews = user.totalReviews ?? 0
   const categories = user.travellerCategories ?? []
-  const isActive = user.lastActive && (Date.now() - new Date(user.lastActive).getTime()) < 86_400_000
+  const isActive = user.lastActive && (now - new Date(user.lastActive).getTime()) < 86_400_000
 
   const canShowHosting = user.role === 'host' || user.role === 'both'
 

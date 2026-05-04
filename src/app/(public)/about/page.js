@@ -439,7 +439,7 @@ export default function AboutPage() {
                           <div
                             className={`w-9 h-9 rounded-xl ${item.iconBg} flex items-center justify-center shrink-0`}
                           >
-                            <Icon className={`w-4.5 h-4.5 ${item.iconColor}`} style={{ width: 18, height: 18 }} aria-hidden="true" />
+                            <Icon className={`w-[18px] h-[18px] ${item.iconColor}`} aria-hidden="true" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-xs font-medium text-brand">{item.year}</span>

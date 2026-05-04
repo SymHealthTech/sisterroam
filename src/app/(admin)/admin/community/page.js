@@ -114,34 +114,33 @@ export default function AdminCommunityPage() {
   const [loading,       setLoading] = useState(false)
 
   useEffect(() => {
-    loadContent()
-  }, [])
+    async function load() {
+      setLoading(true)
+      try {
+        const [coRes, recRes, qRes] = await Promise.allSettled([
+          fetch('/api/cotraveller?limit=50&status=open'),
+          fetch('/api/recommendations?limit=50'),
+          fetch('/api/recommendations/questions?limit=50'),
+        ])
 
-  async function loadContent() {
-    setLoading(true)
-    try {
-      const [coRes, recRes, qRes] = await Promise.allSettled([
-        fetch('/api/cotraveller?limit=50&status=open'),
-        fetch('/api/recommendations?limit=50'),
-        fetch('/api/recommendations/questions?limit=50'),
-      ])
-
-      if (coRes.status === 'fulfilled' && coRes.value.ok) {
-        const d = await coRes.value.json()
-        setCoPosts(d.data?.posts ?? [])
+        if (coRes.status === 'fulfilled' && coRes.value.ok) {
+          const d = await coRes.value.json()
+          setCoPosts(d.data?.posts ?? [])
+        }
+        if (recRes.status === 'fulfilled' && recRes.value.ok) {
+          const d = await recRes.value.json()
+          setRecs(d.data?.recommendations ?? [])
+        }
+        if (qRes.status === 'fulfilled' && qRes.value.ok) {
+          const d = await qRes.value.json()
+          setQs(d.data?.questions ?? [])
+        }
+      } finally {
+        setLoading(false)
       }
-      if (recRes.status === 'fulfilled' && recRes.value.ok) {
-        const d = await recRes.value.json()
-        setRecs(d.data?.recommendations ?? [])
-      }
-      if (qRes.status === 'fulfilled' && qRes.value.ok) {
-        const d = await qRes.value.json()
-        setQs(d.data?.questions ?? [])
-      }
-    } finally {
-      setLoading(false)
     }
-  }
+    load()
+  }, [])
 
   const tabData = [coTravelPosts, recs, questions]
   const tabTypes = ['cotraveller', 'recommendation', 'question']

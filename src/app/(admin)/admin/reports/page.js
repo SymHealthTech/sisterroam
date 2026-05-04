@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import AdminLayout from '@/components/layout/AdminLayout'
 import Skeleton from '@/components/ui/Skeleton'
 import Avatar from '@/components/ui/Avatar'
@@ -209,17 +209,20 @@ export default function ReportsPage() {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchReports = useCallback(async (status) => {
-    setLoading(true)
-    const res = await fetch(`/api/safety/reports?status=${status}&limit=50`)
-    if (res.ok) {
-      const d = await res.json()
-      setReports(d.data?.reports ?? d.data ?? [])
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      const res = await fetch(`/api/safety/reports?status=${tab}&limit=50`)
+      if (res.ok && !cancelled) {
+        const d = await res.json()
+        setReports(d.data?.reports ?? d.data ?? [])
+      }
+      if (!cancelled) setLoading(false)
     }
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { fetchReports(tab) }, [tab, fetchReports])
+    load()
+    return () => { cancelled = true }
+  }, [tab])
 
   function handleUpdate(id, status) {
     if (tab !== status) setReports(prev => prev.filter(r => r._id !== id))

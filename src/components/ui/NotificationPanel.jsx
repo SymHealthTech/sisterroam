@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Bell, Check, ShieldCheck, MessageCircle,
@@ -27,6 +27,35 @@ const TYPE_ICON = {
   new_recommendation_answer: MessageCircle,
   answer_accepted:           Star,
 }
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true }
+    case 'FETCH_SUCCESS': {
+      const list = action.list
+      return { ...state, loading: false, loaded: true, notifs: list, unread: list.filter(n => !n.isRead).length }
+    }
+    case 'FETCH_DONE':
+      return { ...state, loading: false }
+    case 'NEW_NOTIFICATION':
+      return { ...state, notifs: [action.notif, ...state.notifs], unread: state.unread + 1 }
+    case 'PENDING_NOTIFICATIONS':
+      return { ...state, notifs: action.notifications, unread: action.unreadCount ?? 0, loaded: true }
+    case 'MARK_READ':
+      return {
+        ...state,
+        notifs: state.notifs.map(n => n._id === action.id ? { ...n, isRead: true } : n),
+        unread: Math.max(0, state.unread - 1),
+      }
+    case 'MARK_ALL_READ':
+      return { ...state, notifs: state.notifs.map(n => ({ ...n, isRead: true })), unread: 0 }
+    default:
+      return state
+  }
+}
+
+const INIT = { notifs: [], unread: 0, loading: false, loaded: false }
 
 function NotifItem({ notif, onRead }) {
   const Icon = TYPE_ICON[notif.type] ?? Bell
@@ -62,34 +91,30 @@ function NotifItem({ notif, onRead }) {
 
 export default function NotificationPanel({ userId }) {
   const router = useRouter()
-  const [open,        setOpen]        = useState(false)
-  const [notifs,      setNotifs]      = useState([])
-  const [unread,      setUnread]      = useState(0)
-  const [loading,     setLoading]     = useState(false)
-  const [loaded,      setLoaded]      = useState(false)
+  const [open, setOpen] = useState(false)
+  const [{ notifs, unread, loading, loaded }, dispatch] = useReducer(reducer, INIT)
   const panelRef = useRef(null)
 
   /* ── Fetch ───────────────────────────────────────────────── */
   const fetchNotifs = useCallback(async () => {
-    setLoading(true)
+    dispatch({ type: 'FETCH_START' })
     try {
       const res = await fetch('/api/notifications?limit=15')
       if (res.ok) {
         const d = await res.json()
         const list = d.data?.notifications ?? d.data ?? []
-        setNotifs(list)
-        setUnread(list.filter(n => !n.isRead).length)
-        setLoaded(true)
+        dispatch({ type: 'FETCH_SUCCESS', list })
       }
     } finally {
-      setLoading(false)
+      dispatch({ type: 'FETCH_DONE' })
     }
   }, [])
 
-  /* Load on first open */
-  useEffect(() => {
-    if (open && !loaded) fetchNotifs()
-  }, [open, loaded, fetchNotifs])
+  function handleBellClick() {
+    const willOpen = !open
+    setOpen(willOpen)
+    if (willOpen && !loaded) fetchNotifs()
+  }
 
   /* ── SSE real-time ───────────────────────────────────────── */
   const { lastEvent } = useSSEContext()
@@ -98,27 +123,18 @@ export default function NotificationPanel({ userId }) {
     if (!lastEvent) return
     if (lastEvent.type === 'new_notification') {
       const n = lastEvent.data?.notification
-      if (n) {
-        setNotifs(prev => [n, ...prev])
-        setUnread(c => c + 1)
-      }
+      if (n) dispatch({ type: 'NEW_NOTIFICATION', notif: n })
     }
     if (lastEvent.type === 'pending_notifications') {
       const { notifications, unreadCount } = lastEvent.data ?? {}
-      if (notifications) {
-        setNotifs(notifications)
-        setUnread(unreadCount ?? 0)
-        setLoaded(true)
-      }
+      if (notifications) dispatch({ type: 'PENDING_NOTIFICATIONS', notifications, unreadCount })
     }
   }, [lastEvent])
 
   /* ── Close on outside click ─────────────────────────────── */
   useEffect(() => {
     function handler(e) {
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
-        setOpen(false)
-      }
+      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -127,8 +143,7 @@ export default function NotificationPanel({ userId }) {
   /* ── Mark read ───────────────────────────────────────────── */
   async function markRead(notif) {
     if (!notif.isRead) {
-      setNotifs(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n))
-      setUnread(n => Math.max(0, n - 1))
+      dispatch({ type: 'MARK_READ', id: notif._id })
       fetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -144,8 +159,7 @@ export default function NotificationPanel({ userId }) {
   async function markAllRead() {
     const ids = notifs.filter(n => !n.isRead).map(n => n._id)
     if (!ids.length) return
-    setNotifs(prev => prev.map(n => ({ ...n, isRead: true })))
-    setUnread(0)
+    dispatch({ type: 'MARK_ALL_READ' })
     fetch('/api/notifications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -157,7 +171,7 @@ export default function NotificationPanel({ userId }) {
     <div className="relative" ref={panelRef}>
       {/* Bell button */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={handleBellClick}
         className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
         aria-label="Notifications"
       >

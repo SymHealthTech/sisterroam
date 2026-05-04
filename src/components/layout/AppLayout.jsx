@@ -50,10 +50,14 @@ function AppLayoutInner({ children, title }) {
 
   useEffect(() => {
     if (status !== 'authenticated') return
-    fetch('/api/users')
-      .then(r => r.json())
-      .then(async d => {
-        if (!d.success) return
+    const controller = new AbortController()
+    const signal = controller.signal
+
+    async function loadFreshUser() {
+      try {
+        const r = await fetch('/api/users', { signal })
+        const d = await r.json()
+        if (!d.success || signal.aborted) return
         const tier = d.data.verificationTier ?? null
         const update = {
           profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
@@ -62,8 +66,8 @@ function AppLayoutInner({ children, title }) {
         }
         if (tier === 'basic') {
           try {
-            const vRes = await fetch('/api/verification/status')
-            if (vRes.ok) {
+            const vRes = await fetch('/api/verification/status', { signal })
+            if (vRes.ok && !signal.aborted) {
               const vd = await vRes.json()
               const vs = vd.data?.verification?.status
               update.verifPending  = vs === 'pending'
@@ -71,10 +75,15 @@ function AppLayoutInner({ children, title }) {
             }
           } catch {}
         }
-        setFreshData(update)
-      })
-      .catch(() => {})
-  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
+        if (!signal.aborted) setFreshData(update)
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('[AppLayout] loadFreshUser:', err.message)
+      }
+    }
+
+    loadFreshUser()
+    return () => controller.abort()
+  }, [status])  
 
   useEffect(() => {
     if (!lastEvent) return

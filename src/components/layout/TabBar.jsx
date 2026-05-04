@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, X, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUnreadCount } from '@/hooks/useUnreadCount'
 
 const TABS = [
   { href: '/feed',      icon: Home,          label: 'Home'      },
@@ -20,24 +21,9 @@ const MORE_ITEMS = [
 ]
 
 export default function TabBar() {
-  const pathname            = usePathname()
-  const [unread, setUnread] = useState(0)
+  const pathname   = usePathname()
+  const unread     = useUnreadCount()
   const [showMore, setMore] = useState(false)
-
-  useEffect(() => {
-    async function fetchUnread() {
-      try {
-        const res = await fetch('/api/messages/unread-count')
-        if (res.ok) {
-          const data = await res.json()
-          setUnread(data.count ?? 0)
-        }
-      } catch {}
-    }
-    fetchUnread()
-    const id = setInterval(fetchUnread, 30_000)
-    return () => clearInterval(id)
-  }, [])
 
   const isMoreActive = MORE_ITEMS.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
 

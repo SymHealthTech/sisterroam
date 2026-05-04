@@ -19,7 +19,20 @@ export function useNotifications(userId) {
     }
   }, [])
 
-  useEffect(() => { if (userId) fetchNotifications() }, [userId, fetchNotifications])
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    fetch('/api/notifications')
+      .then(res => res.json())
+      .then(json => {
+        if (cancelled) return
+        const list = json.data?.notifications ?? []
+        setNotifications(list)
+        setUnreadCount(list.filter(n => !n.isRead).length)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [userId])
 
   useSocket(userId ? `user-${userId}` : null, 'notification', (notification) => {
     setNotifications(prev => [notification, ...prev])
