@@ -50,6 +50,9 @@ html {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  /* Prevent pull-to-refresh / overscroll page-reload on iOS & Android when
+     html is the scroll root (happens when html has h-full set via Tailwind) */
+  overscroll-behavior: none;
 }
 
 body {

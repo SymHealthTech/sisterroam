@@ -26,6 +26,7 @@ export default function PublicNavbar() {
   const dropdownRef = useRef(null)
 
   useEffect(() => {
+    window.scrollTo(0, 0)
     function onScroll() { setScrolled(window.scrollY > 20) }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
