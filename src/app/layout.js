@@ -119,6 +119,8 @@ export default async function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SisterRoam" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Prevent browser from restoring mid-page scroll on refresh */}
+        <script dangerouslySetInnerHTML={{ __html: 'history.scrollRestoration="manual"' }} />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 antialiased">
         <SessionProvider session={session}>

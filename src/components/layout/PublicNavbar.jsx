@@ -27,6 +27,7 @@ export default function PublicNavbar() {
 
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 20) }
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -37,7 +38,7 @@ export default function PublicNavbar() {
       .then(r => r.json())
       .then(d => { if (d.success) setFreshPhotoUrl(d.data.profilePhotoUrl ?? null) })
       .catch(() => {})
-  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status])  
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''

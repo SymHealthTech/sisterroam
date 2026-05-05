@@ -10,7 +10,6 @@ const PLATFORM_LINKS = [
 
 const COMMUNITY_LINKS = [
   { href: '/community',          label: 'Community Feed'      },
-  { href: '/community/circles',  label: 'Circles'             },
   { href: '/cotraveller',        label: 'Find a Co-Traveller' },
   { href: '/stories',            label: 'Travel Stories'      },
   { href: '/explore',            label: 'Explore Hosts'       },
@@ -45,8 +44,8 @@ const FacebookIcon = () => (
 )
 
 const SOCIAL_LINKS = [
-  { href: 'https://instagram.com/sisterroam', label: 'Instagram', Icon: InstagramIcon },
-  { href: '',   label: 'Twitter',   Icon: TwitterIcon   },
+  { href: null, label: 'Instagram', Icon: InstagramIcon },
+  { href: null,   label: 'Twitter',   Icon: TwitterIcon   },
   { href: 'https://www.facebook.com/profile.php?id=61589220085163',  label: 'Facebook',  Icon: FacebookIcon  },
 ]
 
@@ -141,9 +140,9 @@ export default function PublicFooter() {
 
           {/* Social links */}
           <div className="flex items-center gap-4">
-            {SOCIAL_LINKS.map((s) => (
+            {SOCIAL_LINKS.filter((s) => s.href).map((s) => (
               <a
-                key={s.href}
+                key={s.label}
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"

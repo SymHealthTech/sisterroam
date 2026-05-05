@@ -16,17 +16,18 @@ const PlayIcon = () => (
 
 export default function PWAInstallButtons() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [platform] = useState(() => {
-    if (typeof window === "undefined") return null;
-    const ua = navigator.userAgent;
-    if (/iphone|ipad|ipod/i.test(ua) && !window.MSStream) return "ios";
-    if (/android/i.test(ua)) return "android";
-    return "other";
-  });
+  const [platform, setPlatform] = useState(null);
   const [showIOSTip, setShowIOSTip] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches
-  );
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    if (/iphone|ipad|ipod/i.test(ua) && !window.MSStream) setPlatform("ios");
+    else if (/android/i.test(ua)) setPlatform("android");
+    else setPlatform("other");
+
+    setIsInstalled(window.matchMedia("(display-mode: standalone)").matches);
+  }, []);
 
   useEffect(() => {
     if (isInstalled) return;
