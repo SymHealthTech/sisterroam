@@ -267,36 +267,31 @@ export default function SafetyPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  /* ── Request geolocation once on mount ── */
+  /* ── Pre-fetch geolocation on mount for faster SOS ── */
   useEffect(() => {
     if (geoRequestedRef.current) return
-    if (typeof window === 'undefined') return
-    const already = localStorage.getItem('sr-geo-requested')
-    if (already) return
-
+    if (typeof window === 'undefined' || !navigator.geolocation) return
     geoRequestedRef.current = true
-    localStorage.setItem('sr-geo-requested', '1')
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => setSosCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setSosCoords(null)
-      )
-    }
+    navigator.geolocation.getCurrentPosition(
+      pos => setSosCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setSosCoords(null),
+      { enableHighAccuracy: true, maximumAge: 30000 }
+    )
   }, [])
 
   /* ── SOS handler ── */
   async function handleSosActivate() {
-    let coords = sosCoords
-    if (!coords && navigator.geolocation) {
+    let coords = null
+    if (navigator.geolocation) {
       await new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
           pos => { coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; resolve() },
           () => resolve(),
-          { timeout: 5000 }
+          { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
         )
       })
     }
+    if (!coords) coords = sosCoords
 
     try {
       const res  = await fetch('/api/safety/sos', {

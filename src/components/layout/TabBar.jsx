@@ -3,23 +3,24 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal } from 'lucide-react'
+import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal, Shield } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 
 const TABS = [
-  { href: '/feed',      icon: Home,          label: 'Home'      },
-  { href: '/explore',   icon: Search,        label: 'Explore'   },
-  { href: '/community', icon: Users,         label: 'Community' },
-  { href: '/messages',  icon: MessageCircle, label: 'Messages'  },
+  { href: '/feed',      icon: Home,   label: 'Home'      },
+  { href: '/explore',   icon: Search, label: 'Explore'   },
+  { href: '/community', icon: Users,  label: 'Community' },
+  { href: '/safety',    icon: Shield, label: 'SOS', isSos: true },
 ]
 
 const MORE_ITEMS = [
-  { href: '/cotraveller',       icon: UserPlus,  label: 'Co-traveller',    description: 'Find travel companions'   },
-  { href: '/recommendations',   icon: MapPin,    label: 'Recommendations', description: 'Community travel guide'   },
-  { href: '/community/stories', icon: BookOpen,  label: 'Travel Stories',  description: 'Stories from the community' },
-  { href: '/profile',           icon: User,      label: 'Profile',         description: 'Your profile & settings'  },
+  { href: '/messages',          icon: MessageCircle, label: 'Messages',        description: 'Your conversations'        },
+  { href: '/cotraveller',       icon: UserPlus,      label: 'Co-traveller',    description: 'Find travel companions'    },
+  { href: '/recommendations',   icon: MapPin,        label: 'Recommendations', description: 'Community travel guide'    },
+  { href: '/community/stories', icon: BookOpen,      label: 'Travel Stories',  description: 'Stories from the community'},
+  { href: '/profile',           icon: User,          label: 'Profile',         description: 'Your profile & settings'  },
 ]
 
 export default function TabBar() {
@@ -27,7 +28,7 @@ export default function TabBar() {
   const unread     = useUnreadCount()
   const [showMore, setMore] = useState(false)
 
-  const isMoreActive = MORE_ITEMS.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
+  const isMoreActive = MORE_ITEMS.some(item => pathname === item.href || (item.href !== '/community' && pathname.startsWith(item.href + '/')))
 
   return (
     <>
@@ -37,9 +38,32 @@ export default function TabBar() {
         aria-label="Main navigation"
       >
         <div className="flex items-stretch h-16 max-w-lg mx-auto">
-          {TABS.map(({ href, icon: Icon, label }) => {
-            const active     = pathname === href || (href !== '/feed' && pathname.startsWith(href))
-            const isMessages = label === 'Messages'
+          {TABS.map(({ href, icon: Icon, label, isSos }) => {
+            const active = pathname === href || (href !== '/feed' && pathname.startsWith(href))
+
+            if (isSos) {
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors"
+                  aria-current={active ? 'page' : undefined}
+                  aria-label="SOS Emergency"
+                >
+                  <span
+                    className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                      active
+                        ? 'bg-danger shadow-lg shadow-danger/40'
+                        : 'bg-danger/90 shadow-md shadow-danger/30 active:scale-95',
+                    )}
+                  >
+                    <Icon className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden="true" />
+                  </span>
+                  <span className="text-[10px] font-bold text-danger">SOS</span>
+                </Link>
+              )
+            }
 
             return (
               <Link
@@ -53,11 +77,6 @@ export default function TabBar() {
               >
                 <span className="relative">
                   <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 1.8} aria-hidden="true" />
-                  {isMessages && unread > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
                 </span>
                 <span className="text-[10px] font-medium">{label}</span>
               </Link>
@@ -97,7 +116,8 @@ export default function TabBar() {
             </div>
             <div className="px-4 py-3 space-y-1">
               {MORE_ITEMS.map(({ href, icon: Icon, label, description }) => {
-                const active = pathname === href || pathname.startsWith(href + '/')
+                const active      = pathname === href || pathname.startsWith(href + '/')
+                const isMessages  = href === '/messages'
                 return (
                   <Link
                     key={href}
@@ -108,13 +128,21 @@ export default function TabBar() {
                       active ? 'bg-brand-lighter text-brand' : 'text-gray-700 hover:bg-gray-50'
                     )}
                   >
-                    <div className={cn('p-2 rounded-xl shrink-0', active ? 'bg-brand/10' : 'bg-gray-100')}>
+                    <div className={cn('p-2 rounded-xl shrink-0 relative', active ? 'bg-brand/10' : 'bg-gray-100')}>
                       <Icon className={cn('w-5 h-5', active ? 'text-brand' : 'text-gray-500')} />
+                      {isMessages && unread > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
+                          {unread > 9 ? '9+' : unread}
+                        </span>
+                      )}
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{label}</p>
                       <p className="text-xs text-gray-400">{description}</p>
                     </div>
+                    {isMessages && unread > 0 && (
+                      <span className="text-xs font-semibold text-danger">{unread > 9 ? '9+' : unread} new</span>
+                    )}
                   </Link>
                 )
               })}
