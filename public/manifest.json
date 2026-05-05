@@ -2,7 +2,7 @@
   "name": "SisterRoam",
   "short_name": "SisterRoam",
   "description": "The verified hosting community for female solo travellers. Find a host, a co-traveller, or local recommendations — all from sisters you can trust.",
-  "start_url": "/",
+  "start_url": "/feed",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

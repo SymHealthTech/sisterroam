@@ -40,7 +40,7 @@ export default function SplashScreen() {
         opacity: fading ? 0 : 1,
       }}
     >
-      <Logo variant="stacked" theme="purple" size="xl" />
+      <Logo variant="stacked" theme="purple" size="lg" />
 
       <div style={{ display: 'flex', gap: '6px', marginTop: '24px' }}>
         {[0, 1, 2].map(i => (
