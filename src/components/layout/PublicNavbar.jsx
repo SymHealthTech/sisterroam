@@ -61,6 +61,7 @@ export default function PublicNavbar() {
   const avatarSrc = freshPhotoUrl ?? user?.profilePhotoUrl ?? null
 
   return (
+    <>
     <header className={cn(
       'fixed top-0 left-0 right-0 z-50 h-[60px] transition-[background-color,border-color,box-shadow] duration-150',
       scrolled ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm' : 'bg-transparent',
@@ -161,7 +162,9 @@ export default function PublicNavbar() {
         </button>
       </nav>
 
-      {/* Mobile fullscreen overlay */}
+    </header>
+
+      {/* Mobile fullscreen overlay — must be outside <header> so backdrop-blur on the header doesn't clip it */}
       <div className={cn(
         'fixed inset-0 z-50 bg-white flex flex-col transition-transform duration-300 md:hidden',
         mobileOpen ? 'translate-x-0' : 'translate-x-full',
@@ -220,6 +223,6 @@ export default function PublicNavbar() {
           )}
         </div>
       </div>
-    </header>
+    </>
   )
 }
