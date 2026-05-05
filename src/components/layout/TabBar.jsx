@@ -52,15 +52,15 @@ export default function TabBar() {
                 >
                   <span
                     className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                      'w-7 h-7 rounded-full flex items-center justify-center transition-all',
                       active
                         ? 'bg-danger shadow-lg shadow-danger/40'
                         : 'bg-danger/90 shadow-md shadow-danger/30 active:scale-95',
                     )}
                   >
-                    <Icon className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden="true" />
+                    <Icon className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden="true" />
                   </span>
-                  <span className="text-[10px] font-bold text-danger">SOS</span>
+                  <span className="text-[9px] font-bold text-danger">SOS</span>
                 </Link>
               )
             }
