@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import PostCard from '@/components/community/PostCard'
@@ -26,35 +26,43 @@ function FeedTab({ user }) {
   const [posts,    setPosts]    = useState([])
   const [loading,  setLoading]  = useState(true)
   const [category, setCategory] = useState('')
-  const [page,     setPage]     = useState(1)
+  const pageRef = useRef(1)
   const [hasMore,  setHasMore]  = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  const fetchPosts = useCallback(async (cat, pg, reset) => {
-    if (reset) setLoading(true)
+  const fetchPosts = useCallback(async (cat, pg) => {
     const params = new URLSearchParams({ page: pg, limit: 10 })
     if (cat) params.set('category', cat)
     const res = await fetch(`/api/community/posts?${params}`)
-    if (res.ok) {
-      const d = await res.json()
-      const list = d.data?.posts ?? []
-      setPosts(prev => reset ? list : [...prev, ...list])
-      setHasMore(pg < (d.data?.totalPages ?? 1))
-    }
-    setLoading(false)
-    setLoadingMore(false)
+    if (!res.ok) return null
+    return await res.json()
   }, [])
 
   useEffect(() => {
-    setPage(1)
-    fetchPosts(category, 1, true)
+    fetchPosts(category, 1).then(d => {
+      const list = d?.data?.posts ?? []
+      setPosts(list)
+      setHasMore(1 < (d?.data?.totalPages ?? 1))
+      setLoading(false)
+    })
   }, [category, fetchPosts])
 
+  function selectCategory(value) {
+    pageRef.current = 1
+    setLoading(true)
+    setCategory(value)
+  }
+
   function loadMore() {
-    const next = page + 1
-    setPage(next)
+    const next = pageRef.current + 1
+    pageRef.current = next
     setLoadingMore(true)
-    fetchPosts(category, next, false)
+    fetchPosts(category, next).then(d => {
+      const list = d?.data?.posts ?? []
+      setPosts(prev => [...prev, ...list])
+      setHasMore(next < (d?.data?.totalPages ?? 1))
+      setLoadingMore(false)
+    })
   }
 
   function handleNewPost(post) {
@@ -79,7 +87,7 @@ function FeedTab({ user }) {
         {CATEGORIES.map(c => (
           <button
             key={c.value}
-            onClick={() => setCategory(c.value)}
+            onClick={() => selectCategory(c.value)}
             className={cn(
               'px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0',
               category === c.value
