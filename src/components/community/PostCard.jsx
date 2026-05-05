@@ -281,7 +281,7 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
           <textarea
             value={editContent}
             onChange={e => setEditContent(e.target.value)}
-            className="w-full text-sm text-gray-700 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="w-full text-sm text-gray-700 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-brand focus:ring-0/30"
             rows={4}
             maxLength={500}
           />
@@ -381,7 +381,7 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
                 onChange={e => setCommentInput(e.target.value)}
                 placeholder="Add a comment…"
                 maxLength={500}
-                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand/30"
+                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:border-brand focus:ring-0/20 focus:border-brand/30"
               />
               <button
                 type="submit"

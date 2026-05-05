@@ -17,7 +17,7 @@ const CATEGORIES = [
 
 function Input({ className, ...props }) {
   return (
-    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition', className)} />
+    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition', className)} />
   )
 }
 
@@ -108,7 +108,7 @@ export default function AskQuestionModal({ onClose, onCreated }) {
                 value={form.question}
                 onChange={e => set('question', e.target.value)}
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition resize-none"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition resize-none"
               />
               {form.question.length > 0 && form.question.length < 20 && (
                 <p className="text-xs text-danger mt-1">At least 20 characters required</p>

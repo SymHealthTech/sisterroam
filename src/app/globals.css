@@ -50,9 +50,6 @@ html {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  /* Prevent pull-to-refresh / overscroll page-reload on iOS & Android when
-     html is the scroll root (happens when html has h-full set via Tailwind) */
-  overscroll-behavior: none;
 }
 
 body {
@@ -61,8 +58,6 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent pull-to-refresh and overscroll glow in PWA */
-  overscroll-behavior: none;
 }
 
 /* ── PWA standalone mode ──────────────────────────────────── */
@@ -70,6 +65,8 @@ body {
   body {
     /* Reserve space at bottom for iPhone home indicator */
     padding-bottom: env(safe-area-inset-bottom);
+    /* Block pull-to-refresh in installed PWA — feels wrong in an app shell */
+    overscroll-behavior: none;
   }
 }
 

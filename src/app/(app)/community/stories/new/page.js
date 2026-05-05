@@ -198,7 +198,7 @@ export default function NewStoryPage() {
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-brand focus:ring-0/30"
             >
               <option value="">Select…</option>
               {CATEGORIES.map(c => (
@@ -216,7 +216,7 @@ export default function NewStoryPage() {
               onChange={e => setTagInput(e.target.value)}
               onKeyDown={addTag}
               placeholder="Type + Enter"
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-brand focus:ring-0/30"
             />
           </div>
         </div>

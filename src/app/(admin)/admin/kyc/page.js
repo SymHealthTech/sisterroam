@@ -147,7 +147,7 @@ function KycCardFull({ verif, onUpdate, isActive, onSelect }) {
               onClick={e => e.stopPropagation()}
               rows={2}
               placeholder="Optional — shown to user if rejected"
-              className="w-full text-xs border border-gray-200 rounded-xl p-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand/20 placeholder:text-gray-300"
+              className="w-full text-xs border border-gray-200 rounded-xl p-2.5 resize-none focus:outline-none focus:border-brand focus:ring-0/20 placeholder:text-gray-300"
             />
           </div>
         )}

@@ -148,7 +148,7 @@ function ReportCardFull({ report, onUpdate }) {
                 <select
                   value={actionTaken}
                   onChange={e => setActionTaken(e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-brand focus:ring-0/20"
                 >
                   <option value="">Select action…</option>
                   {ACTION_OPTIONS.map(o => (
@@ -163,7 +163,7 @@ function ReportCardFull({ report, onUpdate }) {
                   onChange={e => setAdminNotes(e.target.value)}
                   rows={2}
                   placeholder="Internal notes…"
-                  className="w-full text-sm border border-gray-200 rounded-lg p-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-brand/20"
+                  className="w-full text-sm border border-gray-200 rounded-lg p-2.5 resize-none focus:outline-none focus:border-brand focus:ring-0/20"
                 />
               </div>
               <div className="flex gap-2">

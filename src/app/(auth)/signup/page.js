@@ -464,14 +464,14 @@ export default function SignUpPage() {
                       (optional)
                     </span>
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 min-w-0">
                     <DialCodePicker value={dialCode} onChange={setDialCode} />
                     <input
                       type="tel"
                       placeholder="9876543210"
                       className={cn(
-                        "flex-1 h-[44px] sm:h-[40px] px-3 rounded-lg border bg-white text-sm",
-                        "placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-colors",
+                        "flex-1 min-w-0 h-[44px] sm:h-[40px] px-3 rounded-lg border bg-white text-sm",
+                        "placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-0 transition-colors",
                         errors.phone ? "border-danger" : "border-gray-200",
                       )}
                       {...register("phone", {
@@ -506,7 +506,7 @@ export default function SignUpPage() {
                       placeholder="Min 8 chars with a number"
                       className={cn(
                         "w-full h-[44px] sm:h-[40px] px-3 pr-10 rounded-lg border bg-white text-sm",
-                        "placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-colors",
+                        "placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-0 transition-colors",
                         errors.password ? "border-danger" : "border-gray-200",
                       )}
                       {...register("password", {

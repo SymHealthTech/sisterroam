@@ -56,7 +56,7 @@ export default function HostFilters({ filters, onChange, onClear, hasActiveFilte
         <select
           value={filters.country ?? ''}
           onChange={(e) => onChange({ ...filters, country: e.target.value, city: '' })}
-          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand"
         >
           <option value="">All countries</option>
           {COUNTRIES.map((c) => (
@@ -69,7 +69,7 @@ export default function HostFilters({ filters, onChange, onClear, hasActiveFilte
             value={filters.city ?? ''}
             onChange={(e) => set('city', e.target.value)}
             placeholder="City (optional)"
-            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand mt-2"
+            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand mt-2"
           />
         )}
       </Section>

@@ -4,7 +4,7 @@ import { forwardRef } from 'react'
 const inputBase =
   'w-full h-[44px] sm:h-[40px] px-3 rounded-lg border bg-white text-sm text-gray-900 ' +
   'placeholder:text-gray-400 ' +
-  'focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent ' +
+  'focus:outline-none focus:border-brand focus:ring-0 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 
 const Input = forwardRef(function Input(

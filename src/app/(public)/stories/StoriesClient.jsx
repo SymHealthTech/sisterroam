@@ -83,7 +83,7 @@ export default function StoriesClient() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search stories..."
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:border-brand focus:ring-0/30"
             />
           </div>
         </div>

@@ -46,7 +46,7 @@ export default function HostSearchBar({
         value={localValue}
         onChange={handleChange}
         placeholder={placeholder ?? 'Search for a host in any city...'}
-        className="w-full pl-11 pr-10 py-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
+        className="w-full pl-11 pr-10 py-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition"
       />
       {localValue && (
         <button

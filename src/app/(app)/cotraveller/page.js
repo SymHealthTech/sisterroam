@@ -324,7 +324,7 @@ export default function CoTravellerPage() {
                     setFilters((f) => ({ ...f, search: e.target.value }))
                   }
                   onKeyDown={(e) => e.key === "Enter" && fetchPosts(1, filters)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand"
                 />
               </div>
               <button

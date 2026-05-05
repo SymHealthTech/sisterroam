@@ -322,7 +322,7 @@ function QuestionCard({
                   value={answerText}
                   onChange={(e) => setAnswerText(e.target.value)}
                   placeholder={`Share what you know about ${question.city}...`}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand resize-none"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand resize-none"
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">
@@ -554,7 +554,7 @@ export default function RecommendationsPage() {
                 placeholder="Search city or country..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand"
               />
             </form>
 

@@ -517,7 +517,7 @@ export default function SettingsPage() {
               <select
                 value={displayLang}
                 onChange={(e) => setDisplayLang(e.target.value)}
-                className="w-full h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                className="w-full h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:border-brand focus:ring-0"
               >
                 {[
                   "English",

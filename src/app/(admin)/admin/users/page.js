@@ -114,7 +114,7 @@ export default function UserManagementPage() {
           value={inputValue}
           onChange={e => setInputValue(e.target.value)}
           placeholder="Search by name or email…"
-          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand focus:ring-0/30"
         />
       </form>
 

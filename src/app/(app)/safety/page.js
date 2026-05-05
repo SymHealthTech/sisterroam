@@ -497,7 +497,7 @@ export default function SafetyPage() {
                   onChange={e => setContactForm(p => ({ ...p, name: e.target.value }))}
                   placeholder="Jane Smith"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                             focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
                 />
               </div>
               <div>
@@ -508,7 +508,7 @@ export default function SafetyPage() {
                   onChange={e => setContactForm(p => ({ ...p, phone: e.target.value }))}
                   placeholder="+919876543210"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                             focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
                 />
               </div>
               <div>
@@ -521,7 +521,7 @@ export default function SafetyPage() {
                   onChange={e => setContactForm(p => ({ ...p, email: e.target.value }))}
                   placeholder="jane@example.com"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                             focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
                 />
               </div>
               <div>
@@ -531,7 +531,7 @@ export default function SafetyPage() {
                   value={contactForm.relationship}
                   onChange={e => setContactForm(p => ({ ...p, relationship: e.target.value }))}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand
+                             focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand
                              transition-colors bg-white"
                 >
                   <option value="">Select relationship</option>

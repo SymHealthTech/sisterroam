@@ -134,7 +134,7 @@ function EmergencyContactForm({ register, errors, watch }) {
           {...register('emergencyContactRelationship', { required: 'Relationship is required' })}
           className={cn(
             'w-full h-[44px] sm:h-[40px] px-3 rounded-lg border bg-white text-sm text-gray-900',
-            'focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-colors',
+            'focus:outline-none focus:border-brand focus:ring-0 transition-colors',
             errors.emergencyContactRelationship ? 'border-danger' : 'border-gray-200'
           )}
         >
@@ -380,7 +380,7 @@ export default function RequestPage() {
                 placeholder={`Tell ${firstName} a bit about yourself, why you chose her profile, and what you're looking forward to...`}
                 className={cn(
                   'w-full px-3 py-2.5 rounded-lg border bg-white text-sm text-gray-900 placeholder:text-gray-400 resize-none',
-                  'focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-colors',
+                  'focus:outline-none focus:border-brand focus:ring-0 transition-colors',
                   errors.message ? 'border-danger' : 'border-gray-200'
                 )}
               />
@@ -445,7 +445,7 @@ export default function RequestPage() {
                   {...register('specialNotes')}
                   rows={3}
                   placeholder="Dietary requirements, accessibility needs, anything else..."
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-colors"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:border-brand focus:ring-0 transition-colors"
                 />
               </div>
             )}

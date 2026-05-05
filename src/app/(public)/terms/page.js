@@ -19,11 +19,16 @@ export default function TermsPage() {
   return (
     <>
       <PublicNavbar />
-      <main className="pt-[60px]">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-          <p className="text-sm text-gray-400 mb-10">Last updated: 1 May 2026</p>
+      <main>
+        {/* Coloured hero — covers the transparent navbar */}
+        <div className="bg-brand-lighter pt-[60px]">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+            <h1 className="text-3xl font-bold text-brand-darker mb-2">Terms of Service</h1>
+            <p className="text-sm text-brand/60">Last updated: 1 May 2026</p>
+          </div>
+        </div>
 
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14">
           <div className="space-y-10">
             <Section title="1. Acceptance">
               <p>

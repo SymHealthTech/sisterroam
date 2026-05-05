@@ -91,7 +91,7 @@ export default function ComingSoonPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Enter your email address"
-                className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/40"
+                className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand/40"
               />
               <button
                 type="submit"

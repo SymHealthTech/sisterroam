@@ -205,7 +205,7 @@ export default function SafetyReportPage() {
               <select
                 {...register('reportedUserId', { required: 'Please select a person' })}
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white
-                           focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                           focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
               >
                 <option value="">Select a person from your requests…</option>
                 {requestPartners.map(p => (
@@ -217,7 +217,7 @@ export default function SafetyReportPage() {
                 {...register('reportedUserId', { required: 'Please enter a name or user ID' })}
                 placeholder="Person's name or user ID"
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl
-                           focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                           focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
               />
             )}
             {errors.reportedUserId && (
@@ -271,7 +271,7 @@ export default function SafetyReportPage() {
               rows={5}
               placeholder="Describe what happened in as much detail as you're comfortable sharing…"
               className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl resize-none
-                         focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                         focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
             />
             {errors.details && (
               <p className="mt-1 text-xs text-danger">{errors.details.message}</p>
@@ -288,7 +288,7 @@ export default function SafetyReportPage() {
               max={new Date().toISOString().split('T')[0]}
               {...register('incidentDate')}
               className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                         focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition-colors"
             />
           </div>
 

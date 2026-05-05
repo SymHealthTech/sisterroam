@@ -352,7 +352,7 @@ function SearchableSelect({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search…"
-              className="w-full text-sm px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+              className="w-full text-sm px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-brand focus:ring-0"
             />
           </div>
           <div className="max-h-48 overflow-y-auto">

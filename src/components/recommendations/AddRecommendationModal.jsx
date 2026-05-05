@@ -32,7 +32,7 @@ const EMPTY = {
 
 function Input({ className, ...props }) {
   return (
-    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition', className)} />
+    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition', className)} />
   )
 }
 
@@ -146,7 +146,7 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition resize-none"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition resize-none"
               />
             </div>
 

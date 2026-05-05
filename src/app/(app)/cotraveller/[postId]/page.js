@@ -352,7 +352,7 @@ export default function TripDetailPage({ params }) {
                       onChange={e => setMessage(e.target.value)}
                       maxLength={500}
                       placeholder={`Tell ${author.fullName?.split(' ')[0] ?? 'her'} about yourself, your travel experience, and what you are hoping to experience on this journey...`}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition resize-none"
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition resize-none"
                     />
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-gray-400">Min 50 characters</span>
