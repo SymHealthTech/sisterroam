@@ -42,11 +42,11 @@ export default function HostSearchBar({
     <form onSubmit={handleSubmit} className={cn('relative', className)}>
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
       <input
-        type="search"
+        type="text"
         value={localValue}
         onChange={handleChange}
-        placeholder={placeholder ?? 'Search for a host in any city...'}
-        className="w-full pl-11 pr-10 py-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition"
+        placeholder={placeholder ?? 'Search host by name'}
+        className="w-full pl-11 pr-10 py-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 transition"
       />
       {localValue && (
         <button

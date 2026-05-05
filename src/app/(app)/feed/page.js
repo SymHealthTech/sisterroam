@@ -25,14 +25,13 @@ import StoryCard from "@/components/stories/StoryCard";
 import { formatDateRange, formatRelativeTime } from "@/lib/utils";
 
 const QUICK_ACTIONS = [
-  { label: "Browse all hosts",         href: "/explore" },
-  { label: "Female hosts only",        href: "/explore?femaleOnly=true" },
-  { label: "Find cyclists",            href: "/explore?category=cyclist" },
-  { label: "Find trekkers",            href: "/explore?category=trekker" },
-  { label: "Community feed",           href: "/community" },
-  { label: "Find co-traveller",        href: "/cotraveller" },
-  { label: "Place recommendations",    href: "/recommendations" },
-]
+  { label: "Browse all hosts", href: "/explore" },
+  { label: "Community feed", href: "/community" },
+  { label: "Find co-traveller", href: "/cotraveller" },
+  { label: "Place recommendations", href: "/recommendations" },
+  { label: "Find cyclists", href: "/explore?category=cyclist" },
+  { label: "Find trekkers", href: "/explore?category=trekker" },
+];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -292,12 +291,12 @@ export default function FeedPage() {
   const hostCity = activeStay?.hostId?.city ?? "";
 
   return (
-    <AppLayout title={`${getGreeting()}, ${firstName}!`}>
+    <AppLayout title="">
       <div className="lg:flex lg:gap-0 max-w-5xl mx-auto">
         {/* ── Main feed ── */}
         <div className="flex-1 min-w-0 px-4 py-5 lg:px-8 space-y-6">
-          {/* Greeting (mobile) */}
-          <div className="lg:hidden flex items-center justify-between">
+          {/* Greeting */}
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">
                 {getGreeting()}, {firstName}!
@@ -308,8 +307,10 @@ export default function FeedPage() {
             </div>
             <div className="relative">
               <Avatar
-                src={sessionUser?.profilePhotoUrl}
-                name={sessionUser?.fullName}
+                src={
+                  userProfile?.profilePhotoUrl ?? sessionUser?.profilePhotoUrl
+                }
+                name={userProfile?.fullName ?? sessionUser?.fullName}
                 size="md"
               />
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-teal rounded-full border-2 border-white" />
@@ -321,9 +322,12 @@ export default function FeedPage() {
             <div className="flex items-start gap-3 p-4 bg-teal-lighter border border-teal/30 rounded-xl">
               <ShieldCheck className="w-5 h-5 text-teal shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-teal-dark">Identity verified!</p>
+                <p className="text-sm font-semibold text-teal-dark">
+                  Identity verified!
+                </p>
                 <p className="text-xs text-teal mt-0.5">
-                  Activate your verified badge for ₹199 to unlock hosting, messaging and more.
+                  Activate your verified badge for ₹199 to unlock hosting,
+                  messaging and more.
                 </p>
               </div>
               <Button
@@ -379,7 +383,7 @@ export default function FeedPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for a host in any city..."
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-[14px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand shadow-sm transition"
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-[14px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 shadow-sm transition"
             />
           </form>
 

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, X, MoreHorizontal } from 'lucide-react'
+import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 
@@ -15,9 +16,10 @@ const TABS = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/cotraveller',     icon: UserPlus, label: 'Co-traveller',    description: 'Find travel companions' },
-  { href: '/recommendations', icon: MapPin,   label: 'Recommendations', description: 'Community travel guide' },
-  { href: '/profile',         icon: User,     label: 'Profile',         description: 'Your profile & settings' },
+  { href: '/cotraveller',       icon: UserPlus,  label: 'Co-traveller',    description: 'Find travel companions'   },
+  { href: '/recommendations',   icon: MapPin,    label: 'Recommendations', description: 'Community travel guide'   },
+  { href: '/community/stories', icon: BookOpen,  label: 'Travel Stories',  description: 'Stories from the community' },
+  { href: '/profile',           icon: User,      label: 'Profile',         description: 'Your profile & settings'  },
 ]
 
 export default function TabBar() {
@@ -116,6 +118,21 @@ export default function TabBar() {
                   </Link>
                 )
               })}
+            </div>
+            <div className="px-4 pb-3 border-t border-gray-100 pt-2">
+              <button
+                type="button"
+                onClick={() => { setMore(false); signOut({ callbackUrl: '/' }) }}
+                className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <div className="p-2 rounded-xl bg-red-50 shrink-0">
+                  <LogOut className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Sign out</p>
+                  <p className="text-xs text-red-300">Log out of your account</p>
+                </div>
+              </button>
             </div>
           </div>
         </div>

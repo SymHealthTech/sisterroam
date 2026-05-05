@@ -851,7 +851,7 @@ export default function ProfileEditPage() {
       </div>
 
       {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2.5 z-10">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2.5 z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             Cancel
