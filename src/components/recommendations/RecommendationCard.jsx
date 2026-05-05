@@ -135,6 +135,7 @@ export default function RecommendationCard({ rec, onUpvote, canEdit, onEdit, onD
         {rec.imageUrls?.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {rec.imageUrls.slice(0, 3).map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={i}
                 src={url}

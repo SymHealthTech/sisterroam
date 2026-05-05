@@ -65,7 +65,7 @@ function Input({ className, ...props }) {
     <input
       {...props}
       className={cn(
-        'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition',
+        'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition',
         className
       )}
     />
@@ -77,7 +77,7 @@ function Textarea({ className, ...props }) {
     <textarea
       {...props}
       className={cn(
-        'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition resize-none',
+        'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition resize-none',
         className
       )}
     />
@@ -89,7 +89,7 @@ function CountrySelect({ value, onChange, placeholder }) {
     <select
       value={value}
       onChange={onChange}
-      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition bg-white appearance-none"
+      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition bg-white appearance-none"
     >
       <option value="">{placeholder ?? 'Select country'}</option>
       {COUNTRIES.map(c => (
@@ -398,7 +398,7 @@ export default function PostTripModal({ onClose, onCreated }) {
                 </div>
               </div>
               <p className="text-xs text-gray-400 text-center">
-                Your post will be visible to all logged-in members. Sisters will be able to express interest and you'll receive a notification.
+                Your post will be visible to all logged-in members. Sisters will be able to express interest and you&apos;ll receive a notification.
               </p>
             </div>
           )}

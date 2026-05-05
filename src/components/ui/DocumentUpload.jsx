@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useState, useRef } from 'react'
@@ -103,6 +104,8 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
           {preview ? (
             <div className="space-y-3">
               <div className="relative">
+               
+              
                 <img
                   src={preview.url}
                   alt={`${label} preview`}

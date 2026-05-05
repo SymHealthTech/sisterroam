@@ -202,7 +202,7 @@ export default function ReviewModal({ isOpen, onClose, requestId, revieweeId, re
               placeholder={`Share your honest experience with ${revieweeName}…`}
               rows={5}
               maxLength={1000}
-              className="w-full text-sm text-gray-800 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-brand focus:ring-0/30 placeholder:text-gray-400"
+              className="w-full text-sm text-gray-800 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 placeholder:text-gray-400"
             />
             <div className="flex justify-between text-xs text-gray-400">
               <span>Minimum 50 characters</span>
@@ -224,7 +224,7 @@ export default function ReviewModal({ isOpen, onClose, requestId, revieweeId, re
                 ))}
                 <span className="text-xs text-gray-500 ml-2">Overall {overall}/5</span>
               </div>
-              <p className="text-sm text-gray-700 italic">"{content.slice(0, 120)}{content.length > 120 ? '…' : ''}"</p>
+              <p className="text-sm text-gray-700 italic">&quot;{content.slice(0, 120)}{content.length > 120 ? '…' : ''}&quot;</p>
             </div>
             <p className="text-xs text-gray-400 text-center">
               Your review will be published after {revieweeName} submits theirs, or automatically in 14 days.

@@ -1,42 +1,46 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import Link from 'next/link'
-import { CheckCircle } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import Link from "next/link";
+import { CheckCircle } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 export default function ForgotPasswordPage() {
-  const [sent,    setSent]    = useState(false)
-  const [email,   setEmail]   = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const { register, handleSubmit, formState: { errors } } = useForm()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   async function onSubmit(data) {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const res  = await fetch('/api/auth/forgot-password', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: data.email }),
-      })
-      const json = await res.json()
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+      const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error ?? 'Something went wrong. Please try again.')
-        return
+        setError(json.error ?? "Something went wrong. Please try again.");
+        return;
       }
 
-      setEmail(data.email)
-      setSent(true)
+      setEmail(data.email);
+      setSent(true);
     } catch {
-      setError('Network error. Please try again.')
+      setError("Network error. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -48,7 +52,9 @@ export default function ForgotPasswordPage() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2">
               <span className="text-2xl font-bold text-brand">SisterRoam</span>
-              <span className="text-pink text-xl" aria-hidden="true">♀</span>
+              <span className="text-pink text-xl" aria-hidden="true">
+                ♀
+              </span>
             </Link>
           </div>
 
@@ -58,14 +64,16 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 rounded-full bg-teal-lighter flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8 text-teal" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Check your inbox</h1>
+              <h1 className="text-xl font-bold text-gray-900">
+                Check your inbox
+              </h1>
               <p className="text-sm text-gray-500 leading-relaxed">
-                We sent a password reset link to{' '}
-                <span className="font-medium text-gray-700">{email}</span>.
-                The link expires in 1 hour.
+                We sent a password reset link to{" "}
+                <span className="font-medium text-gray-700">{email}</span>. The
+                link expires in 1 hour.
               </p>
               <p className="text-xs text-gray-400">
-                Can't find it? Check your spam or junk folder.
+                Can&apos;t find it? Check your spam or junk folder.
               </p>
               <Button variant="ghost" fullWidth href="/login" className="mt-2">
                 Back to login
@@ -74,9 +82,11 @@ export default function ForgotPasswordPage() {
           ) : (
             /* Form state */
             <>
-              <h1 className="text-xl font-bold text-gray-900 mb-1">Forgot password?</h1>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">
+                Forgot password?
+              </h1>
               <p className="text-sm text-gray-500 mb-6">
-                Enter your email and we'll send you a reset link.
+                Enter your email and we&apos;ll send you a reset link.
               </p>
 
               {error && (
@@ -93,9 +103,12 @@ export default function ForgotPasswordPage() {
                   required
                   placeholder="you@example.com"
                   error={errors.email?.message}
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern:  { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email address' },
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: "Invalid email address",
+                    },
                   })}
                 />
 
@@ -105,7 +118,10 @@ export default function ForgotPasswordPage() {
               </form>
 
               <p className="text-center text-sm text-gray-500 mt-5">
-                <Link href="/login" className="text-brand font-medium hover:underline">
+                <Link
+                  href="/login"
+                  className="text-brand font-medium hover:underline"
+                >
                   Back to login
                 </Link>
               </p>
@@ -114,5 +130,5 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

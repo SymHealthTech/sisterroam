@@ -46,7 +46,7 @@ export default function CheckInPrompt({ prompt, onConfirm, onSnooze }) {
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
               Confirm you {label} at{' '}
-              <span className="font-medium text-gray-700">{prompt.otherPartyName}</span>'s place
+              <span className="font-medium text-gray-700">{prompt.otherPartyName}</span>&apos;s place
             </p>
             <div className="mt-3 flex items-center gap-2">
               <button
