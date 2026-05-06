@@ -40,7 +40,7 @@ function AppLayoutInner({ children, title, scrollable = true }) {
   const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
-  const { lastEvent } = useSSEContext()
+  const { subscribe } = useSSEContext()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -86,20 +86,17 @@ function AppLayoutInner({ children, title, scrollable = true }) {
   }, [status])  
 
   useEffect(() => {
-    if (!lastEvent) return
-    if (lastEvent.type === 'new_cotraveller_interest') {
-      const d = lastEvent.data ?? {}
+    const u1 = subscribe('new_cotraveller_interest', (d) => {
       toast(`${d.interestedUser?.fullName ?? 'Someone'} wants to join your trip to ${d.toCity ?? 'your destination'}!`, { icon: '✈️' })
-    }
-    if (lastEvent.type === 'cotraveller_accepted') {
-      const d = lastEvent.data ?? {}
+    })
+    const u2 = subscribe('cotraveller_accepted', (d) => {
       toast.success(`You are matched for ${d.toCity ?? 'your trip'}! Open chat to plan.`)
-    }
-    if (lastEvent.type === 'new_recommendation_answer') {
-      const d = lastEvent.data ?? {}
+    })
+    const u3 = subscribe('new_recommendation_answer', (d) => {
       toast(`${d.answererName ?? 'Someone'} answered your question about ${d.city ?? 'a city'}`, { icon: '💬' })
-    }
-  }, [lastEvent])
+    })
+    return () => { u1(); u2(); u3() }
+  }, [subscribe])
 
   if (status === 'loading') return <LoadingSkeleton />
   if (!session) return null

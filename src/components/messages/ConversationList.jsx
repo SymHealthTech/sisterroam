@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
@@ -36,43 +36,46 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchRequests = useCallback(async () => {
-    const res = await fetch('/api/requests')
-    const json = await res.json()
-    if (json.success) {
-      const sorted = (json.data ?? [])
-        .filter(r => r.status === 'pending' || r.status === 'accepted' || r.status === 'completed')
-        .sort((a, b) => {
-          const aTime = a.lastMessageAt ? new Date(a.lastMessageAt) : new Date(a.createdAt)
-          const bTime = b.lastMessageAt ? new Date(b.lastMessageAt) : new Date(b.createdAt)
-          return bTime - aTime
-        })
-      setRequests(sorted)
-    }
-    setLoading(false)
-  }, [])
-
-  const { lastEvent } = useSSEContext()
-
-  useEffect(() => { fetchRequests() }, [fetchRequests])
+  const { subscribe } = useSSEContext()
 
   useEffect(() => {
-    if (!lastEvent || lastEvent.type !== 'conversation_update') return
-    const { requestId, lastMessage: preview, lastMessageAt: at } = lastEvent.data
-    setRequests(prev => {
-      const updated = prev.map(r =>
-        r._id === requestId
-          ? { ...r, lastMessagePreview: preview, lastMessageAt: at }
-          : r
-      )
-      const idx = updated.findIndex(r => r._id === requestId)
-      if (idx > 0) {
-        const [item] = updated.splice(idx, 1)
-        updated.unshift(item)
+    let cancelled = false
+    ;(async () => {
+      const res = await fetch('/api/requests')
+      const json = await res.json()
+      if (cancelled) return
+      if (json.success) {
+        const sorted = (json.data ?? [])
+          .filter(r => r.status === 'pending' || r.status === 'accepted' || r.status === 'completed')
+          .sort((a, b) => {
+            const aTime = a.lastMessageAt ? new Date(a.lastMessageAt) : new Date(a.createdAt)
+            const bTime = b.lastMessageAt ? new Date(b.lastMessageAt) : new Date(b.createdAt)
+            return bTime - aTime
+          })
+        setRequests(sorted)
       }
-      return [...updated]
+      setLoading(false)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    return subscribe('conversation_update', ({ requestId, lastMessage: preview, lastMessageAt: at }) => {
+      setRequests(prev => {
+        const updated = prev.map(r =>
+          r._id === requestId
+            ? { ...r, lastMessagePreview: preview, lastMessageAt: at }
+            : r
+        )
+        const idx = updated.findIndex(r => r._id === requestId)
+        if (idx > 0) {
+          const [item] = updated.splice(idx, 1)
+          updated.unshift(item)
+        }
+        return [...updated]
+      })
     })
-  }, [lastEvent])
+  }, [subscribe])
 
   function getOtherParty(req) {
     return req.guestId?._id?.toString() === currentUserId
@@ -104,7 +107,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+      <div className="flex-1 overflow-y-auto pb-20 lg:pb-0">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <ConversationItemSkeleton key={i} />)
         ) : requests.length === 0 ? (

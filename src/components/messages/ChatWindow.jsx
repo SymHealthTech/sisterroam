@@ -358,23 +358,21 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   // ── Real-time messages via SSE ──────────────────────────────────────────
 
-  const { lastEvent } = useSSEContext()
+  const { subscribe } = useSSEContext()
   // Track when SSE last delivered a new_message so polling can back off
   const lastSseMessageAt = useRef(0)
 
   useEffect(() => {
-    if (!lastEvent) return
-    if (lastEvent.type !== 'new_message' || lastEvent.data?.requestId !== requestId) return
-    lastSseMessageAt.current = Date.now()
-    const msg = lastEvent.data.message
-    // Defer so setState is called in a callback, not synchronously in the effect body
-    Promise.resolve().then(() => {
+    return subscribe('new_message', (data) => {
+      if (data?.requestId !== requestId) return
+      lastSseMessageAt.current = Date.now()
+      const msg = data.message
       setMessages(prev => {
         if (prev.some(m => m._id?.toString() === msg._id?.toString())) return prev
         return [...prev, msg]
       })
     })
-  }, [lastEvent, requestId])
+  }, [subscribe, requestId])
 
   // ── Polling fallback (8 s) ─────────────────────────────────────────────
   // SSE requires the connections Map to be shared in-process; on multi-instance
@@ -780,7 +778,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
             placeholder="Type a message…"
             className="flex-1 resize-none px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-2xl
                        placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-0/30
-                       focus:border-brand transition-colors overflow-hidden leading-relaxed"
+                        transition-colors overflow-hidden leading-relaxed"
             style={{ minHeight: '44px', maxHeight: '96px' }}
           />
           <button

@@ -3,12 +3,12 @@
 import { createContext, useContext } from 'react'
 import { useSSE } from '@/hooks/useSSE'
 
-const SSEContext = createContext({ isConnected: false, lastEvent: null })
+const SSEContext = createContext({ isConnected: false, subscribe: () => () => {} })
 
 export function SSEProvider({ children }) {
-  const { isConnected, lastEvent } = useSSE()
+  const { isConnected, subscribe } = useSSE()
   return (
-    <SSEContext.Provider value={{ isConnected, lastEvent }}>
+    <SSEContext.Provider value={{ isConnected, subscribe }}>
       {children}
     </SSEContext.Provider>
   )

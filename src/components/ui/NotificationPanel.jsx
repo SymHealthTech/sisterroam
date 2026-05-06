@@ -117,19 +117,18 @@ export default function NotificationPanel({ userId }) {
   }
 
   /* ── SSE real-time ───────────────────────────────────────── */
-  const { lastEvent } = useSSEContext()
+  const { subscribe } = useSSEContext()
 
   useEffect(() => {
-    if (!lastEvent) return
-    if (lastEvent.type === 'new_notification') {
-      const n = lastEvent.data?.notification
+    const u1 = subscribe('new_notification', (data) => {
+      const n = data?.notification
       if (n) dispatch({ type: 'NEW_NOTIFICATION', notif: n })
-    }
-    if (lastEvent.type === 'pending_notifications') {
-      const { notifications, unreadCount } = lastEvent.data ?? {}
+    })
+    const u2 = subscribe('pending_notifications', ({ notifications, unreadCount } = {}) => {
       if (notifications) dispatch({ type: 'PENDING_NOTIFICATIONS', notifications, unreadCount })
-    }
-  }, [lastEvent])
+    })
+    return () => { u1(); u2() }
+  }, [subscribe])
 
   /* ── Close on outside click ─────────────────────────────── */
   useEffect(() => {

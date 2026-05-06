@@ -1,12 +1,18 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 export function useSSE() {
   const [isConnected, setIsConnected] = useState(false)
-  const [lastEvent, setLastEvent]     = useState(null)
-  const esRef      = useRef(null)
-  const retryDelay = useRef(3000)
+  const esRef       = useRef(null)
+  const retryDelay  = useRef(3000)
+  const subscribers = useRef({})
+
+  const subscribe = useCallback((eventType, handler) => {
+    if (!subscribers.current[eventType]) subscribers.current[eventType] = new Set()
+    subscribers.current[eventType].add(handler)
+    return () => subscribers.current[eventType]?.delete(handler)
+  }, [])
 
   useEffect(() => {
     let destroyed = false
@@ -37,7 +43,8 @@ export function useSSE() {
         return (e) => {
           if (destroyed) return
           try {
-            setLastEvent({ type, data: JSON.parse(e.data) })
+            const data = JSON.parse(e.data)
+            subscribers.current[type]?.forEach(fn => fn(data))
           } catch {}
         }
       }
@@ -68,5 +75,5 @@ export function useSSE() {
     }
   }, [])
 
-  return { isConnected, lastEvent }
+  return { isConnected, subscribe }
 }
