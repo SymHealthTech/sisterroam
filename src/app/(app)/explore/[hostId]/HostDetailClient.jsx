@@ -469,6 +469,9 @@ function RequestCard({ host, className }) {
   const accepting = host.isAcceptingGuests !== false && host.isListingActive !== false
   const rating = user.averageRating ?? 0
   const total = user.totalReviews ?? 0
+  const isOwnProfile = !!(session && user._id && session.user.id === String(user._id))
+
+  if (isOwnProfile) return null
 
   return (
     <div className={cn('bg-white rounded-2xl border border-gray-100 p-5 space-y-4', className)}>

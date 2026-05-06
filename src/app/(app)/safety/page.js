@@ -423,10 +423,27 @@ export default function SafetyPage() {
             <Shield className="w-5 h-5 text-danger" />
             <h2 className="text-sm font-semibold text-gray-900">Emergency SOS Button</h2>
           </div>
-          <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+          <p className="text-xs text-gray-500 mb-3 leading-relaxed">
             Hold the button for 3 seconds to send your location and an emergency alert to your
             emergency contact and the SisterRoam safety team.
           </p>
+
+          {!loading && user && !user.emergencyContactEmail && (
+            <div className="flex items-start gap-2.5 bg-amber-lighter rounded-xl p-3 mb-4">
+              <AlertTriangle className="w-4 h-4 text-amber shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-dark leading-relaxed">
+                No emergency contact email set — SOS will only notify the SisterRoam safety team.{' '}
+                <button
+                  onClick={() => { setEmergencyOpen(true); document.getElementById('emergency-contact-section')?.scrollIntoView({ behavior: 'smooth' }) }}
+                  className="underline font-medium"
+                >
+                  Add one below
+                </button>
+                {' '}for full protection.
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col items-center gap-3">
             <SosButton onActivate={handleSosActivate} />
             <p className="text-xs text-gray-400 text-center">Hold for 3 seconds to activate</p>
@@ -434,7 +451,7 @@ export default function SafetyPage() {
         </div>
 
         {/* ── Emergency Contact ─────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div id="emergency-contact-section" className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Phone className="w-5 h-5 text-brand" />
