@@ -34,7 +34,7 @@ function LoadingSkeleton() {
   )
 }
 
-function AppLayoutInner({ children, title }) {
+function AppLayoutInner({ children, title, scrollable = true }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
@@ -154,7 +154,7 @@ function AppLayoutInner({ children, title }) {
         </div>
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
+        <main className={scrollable ? "flex-1 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden"}>
           {children}
         </main>
       </div>
@@ -173,10 +173,10 @@ function AppLayoutInner({ children, title }) {
   )
 }
 
-export default function AppLayout({ children, title }) {
+export default function AppLayout({ children, title, scrollable = true }) {
   return (
     <SSEProvider>
-      <AppLayoutInner title={title}>{children}</AppLayoutInner>
+      <AppLayoutInner title={title} scrollable={scrollable}>{children}</AppLayoutInner>
     </SSEProvider>
   )
 }

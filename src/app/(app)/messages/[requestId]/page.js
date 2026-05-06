@@ -24,8 +24,8 @@ export default function ConversationPage({ params }) {
   }
 
   return (
-    <AppLayout title="">
-      <div className="flex h-full" style={{ height: 'calc(100vh - 56px)' }}>
+    <AppLayout title="" scrollable={false}>
+      <div className="flex h-full">
 
         {/* Left panel: hidden on mobile, shown on desktop */}
         <div className="hidden lg:block lg:w-[360px] lg:max-w-[360px] shrink-0 h-full">
@@ -37,7 +37,7 @@ export default function ConversationPage({ params }) {
         </div>
 
         {/* Right panel: full width on mobile, flex-1 on desktop */}
-        <div className="flex-1 relative flex flex-col min-h-0">
+        <div className="flex-1 relative flex flex-col min-h-0 pb-16 lg:pb-0">
           <ChatWindow
             requestId={requestId}
             currentUserId={userId}

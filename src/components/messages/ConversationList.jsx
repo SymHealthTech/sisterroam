@@ -104,7 +104,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <ConversationItemSkeleton key={i} />)
         ) : requests.length === 0 ? (

@@ -35,6 +35,27 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
+/* ── PWA payment bridge helpers ───────────────────────────── */
+
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
+  return match ? match.split("=")[1] : null;
+}
+function setCookie(name, value, maxAge) {
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+function deleteCookie(name) {
+  document.cookie = `${name}=; path=/; max-age=0`;
+}
+function isPwaStandalone() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
 /* ── Step card wrapper ────────────────────────────────────── */
 
 function StepCard({ number, title, status, children }) {
@@ -477,6 +498,9 @@ export default function VerificationPage() {
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [showRetryForm, setShowRetryForm] = useState(false);
+  // PWA bridge: payment completed in browser but initiated from PWA standalone window
+  const [isPwaReturnInBrowser, setIsPwaReturnInBrowser] = useState(false);
+  const [shouldActivate, setShouldActivate] = useState(false);
 
   // Promo code activation state
   const [isActivatingPromo, setIsActivatingPromo] = useState(false);
@@ -510,11 +534,11 @@ export default function VerificationPage() {
     checkStatus();
   }, []);
 
-  // When Dodo redirects back with ?payment=success, immediately activate the
-  // badge in the DB (don't wait for the webhook) and refresh the session JWT
-  // so every page instantly sees verificationTier = 'verified'.
+  // Immediately activate the badge when Dodo redirects back with ?payment=success
+  // OR when the PWA re-opens after a cross-context payment (shouldActivate from cookie).
+  // Don't wait for the webhook — refresh the session JWT so pages instantly see 'verified'.
   useEffect(() => {
-    if (paymentResult !== "success") return;
+    if (paymentResult !== "success" && !shouldActivate) return;
     async function activate() {
       try {
         const res = await fetch("/api/payments/activate", { method: "POST" });
@@ -527,11 +551,35 @@ export default function VerificationPage() {
           if (fresh.success) setVerifData(fresh.data);
         }
       } catch {
-        // Success UI is still visible via paymentResult param — ignore silently
+        // Success UI is still visible — ignore silently
       }
     }
     activate();
-  }, [paymentResult]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [paymentResult, shouldActivate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // PWA bridge: detect when the user returns from a payment that was initiated
+  // inside the PWA standalone window but redirected back into the system browser.
+  useEffect(() => {
+    const pwa = isPwaStandalone();
+    // Case 1: browser received the Dodo redirect, but checkout started from PWA
+    if (
+      (paymentResult === "success" || paymentResult === "cancelled") &&
+      !pwa &&
+      getCookie("sr_pwa_checkout")
+    ) {
+      deleteCookie("sr_pwa_checkout");
+      if (paymentResult === "success") {
+        setCookie("sr_payment_result", "success", 3600);
+      }
+      setIsPwaReturnInBrowser(true);
+      return;
+    }
+    // Case 2: PWA reopened and found the result cookie from case 1
+    if (pwa && getCookie("sr_payment_result") === "success") {
+      deleteCookie("sr_payment_result");
+      setShouldActivate(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUpload({ documentType, url, publicId }) {
     if (documentType === "id_front") {
@@ -596,6 +644,11 @@ export default function VerificationPage() {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
+      // Mark that this checkout started from the PWA so the bridge can detect it
+      // when Dodo's redirect lands in the system browser instead of the standalone window.
+      if (isPwaStandalone()) {
+        setCookie("sr_pwa_checkout", "1", 600);
+      }
       window.location.assign(data.paymentUrl);
     } catch (error) {
       setPaymentError(
@@ -635,6 +688,36 @@ export default function VerificationPage() {
     setShowRetryForm(true);
     setPaymentError(null);
     router.replace("/profile/verification");
+  }
+
+  // Bridge screen: payment completed in the system browser after PWA-initiated checkout.
+  // User needs to return to the standalone app window to see the verified state.
+  if (isPwaReturnInBrowser) {
+    return (
+      <AppLayout title="Payment Complete">
+        <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center space-y-6">
+          <div className="w-20 h-20 bg-teal-lighter rounded-full flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-teal" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xl font-bold text-gray-900">Payment successful!</p>
+            <p className="text-sm text-gray-500 max-w-xs">
+              Return to the SisterRoam app to activate your verified badge.
+            </p>
+          </div>
+          <a
+            href="/profile/verification"
+            className="w-full max-w-xs block bg-brand text-white text-sm font-semibold py-3.5 px-6 rounded-2xl text-center active:opacity-80 transition-opacity"
+          >
+            Open SisterRoam app
+          </a>
+          <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
+            <span className="font-medium">On iPhone:</span> press the Home button and tap the SisterRoam icon.{" "}
+            <span className="font-medium">On Android:</span> tap the button above.
+          </p>
+        </div>
+      </AppLayout>
+    );
   }
 
   if (loading) {
