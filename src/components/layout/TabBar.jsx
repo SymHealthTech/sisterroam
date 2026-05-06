@@ -60,7 +60,7 @@ export default function TabBar() {
                   >
                     <Icon className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden="true" />
                   </span>
-                  <span className="text-[9px] font-bold text-danger">SOS</span>
+                  <span className="text-[8px] font-bold text-danger">SOS</span>
                 </Link>
               )
             }

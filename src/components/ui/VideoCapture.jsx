@@ -17,6 +17,7 @@ export default function VideoCapture({ onUploadComplete }) {
 
   // Record tab
   const [camState,     setCamState]     = useState('idle') // idle | requesting | denied | granted
+  const [camError,     setCamError]     = useState('')
   const [recording,    setRecording]    = useState(false)
   const [elapsed,      setElapsed]      = useState(0)
   const [recordedBlob, setRecordedBlob] = useState(null)
@@ -43,7 +44,7 @@ export default function VideoCapture({ onUploadComplete }) {
       clearInterval(timerRef.current)
       if (recordedUrl) URL.revokeObjectURL(recordedUrl)
     }
-  }, [])
+  }, [recordedUrl])
 
   // Attach live stream to preview video element
   useEffect(() => {
@@ -54,11 +55,32 @@ export default function VideoCapture({ onUploadComplete }) {
 
   async function startCamera() {
     setCamState('requesting')
+    setCamError('')
+
+    // getUserMedia requires HTTPS (or localhost) — unavailable on plain HTTP
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamError('Camera is not available. Make sure the site is loaded over HTTPS, then try again. Alternatively, use the "Upload file" tab.')
+      setCamState('denied')
+      return
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       streamRef.current = stream
       setCamState('granted')
-    } catch {
+    } catch (err) {
+      const name = err?.name ?? ''
+      let msg
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        msg = 'Camera access was blocked. Open your browser or device settings, allow camera and microphone for this site, then try again.'
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        msg = 'No camera was found on this device. Use the "Upload file" tab to submit a pre-recorded video instead.'
+      } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+        msg = 'Your camera is already in use by another app. Close it and try again.'
+      } else {
+        msg = `Could not access camera (${name || 'unknown error'}). Try the "Upload file" tab instead.`
+      }
+      setCamError(msg)
       setCamState('denied')
     }
   }
@@ -113,6 +135,7 @@ export default function VideoCapture({ onUploadComplete }) {
     setRecordedUrl(null)
     setElapsed(0)
     setCamState('idle')
+    setCamError('')
   }
 
   // Upload blob/file directly to Cloudinary (bypasses Next.js body size limit)
@@ -242,12 +265,16 @@ export default function VideoCapture({ onUploadComplete }) {
           )}
 
           {camState === 'denied' && (
-            <div className="rounded-xl bg-danger-lighter p-4 text-center space-y-1">
+            <div className="rounded-xl bg-danger-lighter p-4 text-center space-y-2">
               <AlertCircle className="w-6 h-6 text-danger mx-auto" aria-hidden="true" />
               <p className="text-sm font-medium text-danger">Camera access denied</p>
-              <p className="text-xs text-gray-500">
-                Enable camera and microphone access in your browser settings, then try again.
-              </p>
+              <p className="text-xs text-gray-500">{camError}</p>
+              <button
+                className="text-xs text-brand underline mt-1"
+                onClick={() => { setCamState('idle'); setCamError('') }}
+              >
+                Try again
+              </button>
             </div>
           )}
 
