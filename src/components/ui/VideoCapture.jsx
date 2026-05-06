@@ -63,21 +63,6 @@ export default function VideoCapture({ onUploadComplete }) {
       return
     }
 
-    // Check if Chrome has already hard-blocked the permission
-    try {
-      const [camPerm, micPerm] = await Promise.all([
-        navigator.permissions.query({ name: 'camera' }),
-        navigator.permissions.query({ name: 'microphone' }),
-      ])
-      if (camPerm.state === 'denied' || micPerm.state === 'denied') {
-        setCamError('hard-blocked')
-        setCamState('denied')
-        return
-      }
-    } catch {
-      // permissions API not supported — fall through to getUserMedia
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       streamRef.current = stream
@@ -86,6 +71,18 @@ export default function VideoCapture({ onUploadComplete }) {
       const name = err?.name ?? ''
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         setCamError('hard-blocked')
+        // Watch for the user fixing permissions in Chrome settings — auto-reset when granted
+        try {
+          const camPerm = await navigator.permissions.query({ name: 'camera' })
+          const onChange = () => {
+            if (camPerm.state === 'granted' || camPerm.state === 'prompt') {
+              setCamState('idle')
+              setCamError('')
+              camPerm.removeEventListener('change', onChange)
+            }
+          }
+          camPerm.addEventListener('change', onChange)
+        } catch { /* permissions API unsupported */ }
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
         setCamError('no-device')
       } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -285,13 +282,15 @@ export default function VideoCapture({ onUploadComplete }) {
 
               {camError === 'hard-blocked' && (
                 <div className="text-xs text-gray-600 space-y-2">
-                  <p>Chrome has blocked camera access for this site. To fix it:</p>
-                  <ol className="list-decimal list-inside space-y-1 pl-1">
-                    <li>Click the <strong>lock icon 🔒</strong> in the address bar</li>
-                    <li>Click <strong>Site settings</strong></li>
-                    <li>Set <strong>Camera</strong> and <strong>Microphone</strong> to <strong>Allow</strong></li>
-                    <li>Reload the page, then come back here</li>
+                  <p>Chrome is blocking camera access for this site. Fix it in <strong>2 steps</strong>:</p>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-1">
+                    <li>Click the <strong>🔒 lock icon</strong> in the address bar → <strong>Site settings</strong> → set <strong>Camera</strong> and <strong>Microphone</strong> to <strong>Allow</strong></li>
+                    <li>Come back here and click <strong>Try again</strong> below (no reload needed)</li>
                   </ol>
+                  <p className="text-gray-400">
+                    If Camera still shows &quot;Allow&quot; but nothing happens, also check{' '}
+                    <strong>Windows Settings → Privacy → Camera</strong> and make sure Chrome is allowed.
+                  </p>
                 </div>
               )}
 
@@ -311,14 +310,12 @@ export default function VideoCapture({ onUploadComplete }) {
                 <p className="text-xs text-gray-600">Could not access camera ({camError || 'unknown error'}). Use the <strong>&quot;Upload file&quot;</strong> tab instead.</p>
               )}
 
-              {camError !== 'hard-blocked' && (
-                <button
-                  className="text-xs text-brand underline"
-                  onClick={() => { setCamState('idle'); setCamError('') }}
-                >
-                  Try again
-                </button>
-              )}
+              <button
+                className="text-xs font-medium text-brand underline"
+                onClick={() => { setCamState('idle'); setCamError('') }}
+              >
+                Try again
+              </button>
             </div>
           )}
 
