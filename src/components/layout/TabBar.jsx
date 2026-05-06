@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal, Shield } from 'lucide-react'
+import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal, Shield, Settings } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
@@ -21,6 +21,7 @@ const MORE_ITEMS = [
   { href: '/recommendations',   icon: MapPin,        label: 'Recommendations', description: 'Community travel guide'    },
   { href: '/community/stories', icon: BookOpen,      label: 'Travel Stories',  description: 'Stories from the community'},
   { href: '/profile',           icon: User,          label: 'Profile',         description: 'Your profile & settings'  },
+  { href: '/settings',          icon: Settings,      label: 'Settings',        description: 'App preferences'           },
 ]
 
 export default function TabBar() {
