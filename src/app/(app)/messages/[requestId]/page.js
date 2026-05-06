@@ -25,7 +25,7 @@ export default function ConversationPage({ params }) {
 
   return (
     <AppLayout title="" scrollable={false}>
-      <div className="flex h-full">
+      <div className="flex flex-1 min-h-0">
 
         {/* Left panel: hidden on mobile, shown on desktop */}
         <div className="hidden lg:block lg:w-[360px] lg:max-w-[360px] shrink-0 h-full">

@@ -154,7 +154,7 @@ function AppLayoutInner({ children, title, scrollable = true }) {
         </div>
 
         {/* Scrollable content */}
-        <main className={scrollable ? "flex-1 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden"}>
+        <main className={scrollable ? "flex-1 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden flex flex-col"}>
           {children}
         </main>
       </div>

@@ -20,7 +20,7 @@ export default function MessagesPage() {
 
   return (
     <AppLayout title="Messages" scrollable={false}>
-      <div className="flex h-full">
+      <div className="flex flex-1 min-h-0">
 
         {/* Left panel: conversation list — full width on mobile, fixed 360px on desktop */}
         <div className="w-full lg:w-[360px] lg:max-w-[360px] shrink-0 h-full">
