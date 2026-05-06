@@ -57,9 +57,9 @@ export default function VideoCapture({ onUploadComplete }) {
     setCamState('requesting')
     setCamError('')
 
-    // getUserMedia requires HTTPS (or localhost) — unavailable on plain HTTP
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCamError('Camera is not available. Make sure the site is loaded over HTTPS, then try again. Alternatively, use the "Upload file" tab.')
+    // getUserMedia requires a secure context (HTTPS or localhost)
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      setCamError('Camera requires a secure HTTPS connection. If you\'re testing on a phone over your local network (e.g. http://192.168.x.x), open the site via its public HTTPS URL instead. Use the "Upload file" tab to continue now.')
       setCamState('denied')
       return
     }
@@ -70,15 +70,20 @@ export default function VideoCapture({ onUploadComplete }) {
       setCamState('granted')
     } catch (err) {
       const name = err?.name ?? ''
+      const message = err?.message ?? ''
       let msg
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        msg = 'Camera access was blocked. Open your browser or device settings, allow camera and microphone for this site, then try again.'
+        if (message.toLowerCase().includes('secure') || message.toLowerCase().includes('https')) {
+          msg = 'Camera requires a secure HTTPS connection. Open the site via its public HTTPS URL. Use the "Upload file" tab to continue now.'
+        } else {
+          msg = 'Camera access was blocked by your browser or device. To fix: tap the lock/camera icon in your browser address bar and allow camera & microphone, then tap "Try again".'
+        }
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
         msg = 'No camera was found on this device. Use the "Upload file" tab to submit a pre-recorded video instead.'
       } else if (name === 'NotReadableError' || name === 'TrackStartError') {
-        msg = 'Your camera is already in use by another app. Close it and try again.'
+        msg = 'Your camera is already in use by another app. Close that app and tap "Try again".'
       } else {
-        msg = `Could not access camera (${name || 'unknown error'}). Try the "Upload file" tab instead.`
+        msg = `Could not access camera (${name || 'unknown error'}). Use the "Upload file" tab instead.`
       }
       setCamError(msg)
       setCamState('denied')
