@@ -143,10 +143,10 @@ export default function CookiesPage() {
               <p>
                 Questions about our use of cookies? Email us at{" "}
                 <a
-                  href="mailto:privacy@sisterroam.com"
+                  href="mailto:admin.sisterroam@gmail.com"
                   className="text-brand hover:underline"
                 >
-                  privacy@sisterroam.com
+                  admin.sisterroam@gmail.com
                 </a>
                 .
               </p>

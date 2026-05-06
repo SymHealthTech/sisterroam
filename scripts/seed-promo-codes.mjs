@@ -89,7 +89,7 @@ async function main() {
     const result = await PromoCode.findOneAndUpdate(
       { code: entry.code },
       { $setOnInsert: entry },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: "after" },
     );
     const wasInserted =
       result.usedCount === 0 && result.createdAt >= new Date(Date.now() - 5000);

@@ -215,8 +215,8 @@ export default function AboutPage() {
                 description: 'The verified hosting community for female solo travellers',
                 founder: { '@id': 'https://sisterroam.com/#founder' },
                 contactPoint: [
-                  { '@type': 'ContactPoint', email: 'hello@sisterroam.com', contactType: 'customer service' },
-                  { '@type': 'ContactPoint', email: 'safety@sisterroam.com', contactType: 'technical support' },
+                  { '@type': 'ContactPoint', email: 'admin.sisterroam@gmail.com', contactType: 'customer service' },
+                  { '@type': 'ContactPoint', email: 'admin.sisterroam@gmail.com', contactType: 'technical support' },
                 ],
                 sameAs: ['https://nutracare360.ca'],
               },
@@ -672,14 +672,14 @@ export default function AboutPage() {
 
             <div className="flex justify-center">
               <a
-                href="mailto:hello@sisterroam.com"
+                href="mailto:admin.sisterroam@gmail.com"
                 className="border border-gray-100 rounded-2xl p-6 text-center min-w-[180px] hover:border-brand-light transition-colors group"
               >
                 <div className="w-10 h-10 rounded-xl bg-brand-lighter flex items-center justify-center mx-auto mb-3">
                   <Mail className="w-5 h-5 text-brand" aria-hidden="true" />
                 </div>
                 <p className="text-sm font-medium text-gray-900">General enquiries</p>
-                <p className="text-xs text-brand mt-1">hello@sisterroam.com</p>
+                <p className="text-xs text-brand mt-1">admin.sisterroam@gmail.com</p>
               </a>
             </div>
 

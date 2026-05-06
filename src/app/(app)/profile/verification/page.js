@@ -213,8 +213,8 @@ function PaymentFailedState({ onRetry }) {
           </p>
           <p className="text-xs text-danger/80 mt-0.5">
             Please try again. If the issue continues, contact{" "}
-            <a href="mailto:hello@sisterroam.com" className="underline">
-              hello@sisterroam.com
+            <a href="mailto:admin.sisterroam@gmail.com" className="underline">
+              admin.sisterroam@gmail.com
             </a>
           </p>
         </div>

@@ -360,7 +360,7 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-600">
               To change your email address please contact{" "}
               <span className="text-brand font-medium">
-                hello@sisterroam.com
+                admin.sisterroam@gmail.com
               </span>
             </p>
           </AccountRow>

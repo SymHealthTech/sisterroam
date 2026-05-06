@@ -471,8 +471,8 @@ export default function HostListingPage() {
         </Section>
       </div>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-10">
+      {/* Sticky save bar — .above-tab-bar lifts it above the mobile TabBar (z-40) */}
+      <div className="above-tab-bar fixed left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-50">
         <div className="max-w-2xl mx-auto">
           <Button fullWidth loading={saving} onClick={handleSave}>
             {hostId ? 'Save listing' : 'Create listing'}

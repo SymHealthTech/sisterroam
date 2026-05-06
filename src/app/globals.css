@@ -75,6 +75,17 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
 }
 
+/* ── Utility: fixed bar that sits above the mobile TabBar ─── */
+/* On mobile the TabBar is h-16 (4rem) + safe-area-inset-bottom */
+.above-tab-bar {
+  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .above-tab-bar {
+    bottom: 0;
+  }
+}
+
 /* ── Scrollbar (desktop) ──────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 5px;

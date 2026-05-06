@@ -174,10 +174,10 @@ export default function TermsPage() {
               <p>
                 Questions? Email{" "}
                 <a
-                  href="mailto:hello@sisterroam.com"
+                  href="mailto:admin.sisterroam@gmail.com"
                   className="text-brand hover:underline"
                 >
-                  hello@sisterroam.com
+                  admin.sisterroam@gmail.com
                 </a>
                 .
               </p>
