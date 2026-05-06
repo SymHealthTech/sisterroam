@@ -73,7 +73,10 @@ function getCompleteness(user, verifData) {
     },
     {
       label: "Record video intro",
-      done: !!verif?.selfieVideoUrl,
+      done:
+        !!verif?.selfieVideoUrl ||
+        verif?.status === "approved" ||
+        user.verificationTier !== "basic",
       href: "/profile/verification",
     },
   ];
