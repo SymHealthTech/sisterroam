@@ -57,11 +57,25 @@ export default function VideoCapture({ onUploadComplete }) {
     setCamState('requesting')
     setCamError('')
 
-    // getUserMedia requires a secure context (HTTPS or localhost)
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setCamError('Camera requires a secure HTTPS connection. If you\'re testing on a phone over your local network (e.g. http://192.168.x.x), open the site via its public HTTPS URL instead. Use the "Upload file" tab to continue now.')
+      setCamError('insecure')
       setCamState('denied')
       return
+    }
+
+    // Check if Chrome has already hard-blocked the permission
+    try {
+      const [camPerm, micPerm] = await Promise.all([
+        navigator.permissions.query({ name: 'camera' }),
+        navigator.permissions.query({ name: 'microphone' }),
+      ])
+      if (camPerm.state === 'denied' || micPerm.state === 'denied') {
+        setCamError('hard-blocked')
+        setCamState('denied')
+        return
+      }
+    } catch {
+      // permissions API not supported — fall through to getUserMedia
     }
 
     try {
@@ -70,22 +84,15 @@ export default function VideoCapture({ onUploadComplete }) {
       setCamState('granted')
     } catch (err) {
       const name = err?.name ?? ''
-      const message = err?.message ?? ''
-      let msg
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        if (message.toLowerCase().includes('secure') || message.toLowerCase().includes('https')) {
-          msg = 'Camera requires a secure HTTPS connection. Open the site via its public HTTPS URL. Use the "Upload file" tab to continue now.'
-        } else {
-          msg = 'Camera access was blocked by your browser or device. To fix: tap the lock/camera icon in your browser address bar and allow camera & microphone, then tap "Try again".'
-        }
+        setCamError('hard-blocked')
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-        msg = 'No camera was found on this device. Use the "Upload file" tab to submit a pre-recorded video instead.'
+        setCamError('no-device')
       } else if (name === 'NotReadableError' || name === 'TrackStartError') {
-        msg = 'Your camera is already in use by another app. Close that app and tap "Try again".'
+        setCamError('in-use')
       } else {
-        msg = `Could not access camera (${name || 'unknown error'}). Use the "Upload file" tab instead.`
+        setCamError(name || 'unknown')
       }
-      setCamError(msg)
       setCamState('denied')
     }
   }
@@ -270,16 +277,48 @@ export default function VideoCapture({ onUploadComplete }) {
           )}
 
           {camState === 'denied' && (
-            <div className="rounded-xl bg-danger-lighter p-4 text-center space-y-2">
-              <AlertCircle className="w-6 h-6 text-danger mx-auto" aria-hidden="true" />
-              <p className="text-sm font-medium text-danger">Camera access denied</p>
-              <p className="text-xs text-gray-500">{camError}</p>
-              <button
-                className="text-xs text-brand underline mt-1"
-                onClick={() => { setCamState('idle'); setCamError('') }}
-              >
-                Try again
-              </button>
+            <div className="rounded-xl bg-danger-lighter p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-danger shrink-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-danger">Camera access blocked</p>
+              </div>
+
+              {camError === 'hard-blocked' && (
+                <div className="text-xs text-gray-600 space-y-2">
+                  <p>Chrome has blocked camera access for this site. To fix it:</p>
+                  <ol className="list-decimal list-inside space-y-1 pl-1">
+                    <li>Click the <strong>lock icon 🔒</strong> in the address bar</li>
+                    <li>Click <strong>Site settings</strong></li>
+                    <li>Set <strong>Camera</strong> and <strong>Microphone</strong> to <strong>Allow</strong></li>
+                    <li>Reload the page, then come back here</li>
+                  </ol>
+                </div>
+              )}
+
+              {camError === 'insecure' && (
+                <p className="text-xs text-gray-600">Camera requires an HTTPS connection. Make sure you are on <strong>https://sisterroam.com</strong>.</p>
+              )}
+
+              {camError === 'no-device' && (
+                <p className="text-xs text-gray-600">No camera was detected on this device. Use the <strong>&quot;Upload file&quot;</strong> tab to submit a pre-recorded video.</p>
+              )}
+
+              {camError === 'in-use' && (
+                <p className="text-xs text-gray-600">Your camera is already open in another app or browser tab. Close it and try again.</p>
+              )}
+
+              {!['hard-blocked','insecure','no-device','in-use'].includes(camError) && (
+                <p className="text-xs text-gray-600">Could not access camera ({camError || 'unknown error'}). Use the <strong>&quot;Upload file&quot;</strong> tab instead.</p>
+              )}
+
+              {camError !== 'hard-blocked' && (
+                <button
+                  className="text-xs text-brand underline"
+                  onClick={() => { setCamState('idle'); setCamError('') }}
+                >
+                  Try again
+                </button>
+              )}
             </div>
           )}
 
