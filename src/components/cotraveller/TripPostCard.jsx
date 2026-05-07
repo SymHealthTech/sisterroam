@@ -161,9 +161,9 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
 
           {!compact && (
             <div className="flex items-center gap-2">
-              <Button href={`/cotraveller/${post._id}`} variant="ghost" size="sm">
+              {/* <Button href={`/cotraveller/${post._id}`} variant="ghost" size="sm">
                 View trip
-              </Button>
+              </Button> */}
               {post.status === 'open' && !isFull && !isOwnPost && (
                 currentUserTier === 'basic' ? (
                   verifPending ? (
@@ -181,7 +181,7 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
                   )
                 ) : currentUserTier ? (
                   <Button href={`/cotraveller/${post._id}`} variant="primary" size="sm">
-                    Express interest
+                    View Trip & Express Interest
                   </Button>
                 ) : null
               )}
