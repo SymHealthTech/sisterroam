@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
-  ArrowUp, MoreVertical, Clock, CheckCircle, XCircle, Shield,
+  ArrowUp, ArrowLeft, MoreVertical, Clock, CheckCircle, XCircle, Shield,
   WifiOff, Star, AlertTriangle, ChevronDown,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
@@ -278,6 +279,7 @@ function SafetyCheckinPrompt({ requestId }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ChatWindow({ requestId, currentUserId }) {
+  const router = useRouter()
   const [request, setRequest] = useState(null)
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -602,74 +604,87 @@ export default function ChatWindow({ requestId, currentUserId }) {
 
   return (
     <div className="flex-1 flex flex-col bg-white min-h-0 relative">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
-        <Link href={otherProfilePath}>
-          <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link
-            href={otherProfilePath}
-            className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
-          >
-            {otherParty?.fullName ?? 'Unknown'}
-          </Link>
-          <Badge
-            variant={
-              otherParty?.verificationTier === 'trusted' ? 'trusted' :
-              otherParty?.verificationTier === 'verified' ? 'verified' : 'basic'
-            }
-            size="sm"
-          >
-            {otherParty?.verificationTier ?? 'basic'}
-          </Badge>
-        </div>
 
-        {/* Three-dot menu */}
-        <div className="relative" ref={menuRef}>
+      {/* ── Sticky top block: header + status banner ── */}
+      <div className="sticky top-0 z-20 bg-white shrink-0">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          {/* Back button — mobile only */}
           <button
-            onClick={() => setShowMenu(v => !v)}
-            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-            aria-label="More options"
+            onClick={() => router.back()}
+            className="lg:hidden p-1.5 -ml-1.5 text-gray-600 hover:text-gray-900 shrink-0"
+            aria-label="Go back"
           >
-            <MoreVertical className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
-              <Link
-                href={otherProfilePath}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                onClick={() => setShowMenu(false)}
-              >
-                View profile
-              </Link>
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
-                onClick={() => {
-                  setShowMenu(false)
-                  toast('Safety report — coming soon', { icon: '🛡️' })
-                }}
-              >
-                <AlertTriangle className="w-4 h-4" />
-                Report user
-              </button>
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
-                onClick={() => {
-                  setShowMenu(false)
-                  toast('Archive — coming soon')
-                }}
-              >
-                Archive
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+          <Link href={otherProfilePath}>
+            <Avatar src={otherParty?.profilePhotoUrl} name={otherParty?.fullName} size="md" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <Link
+              href={otherProfilePath}
+              className="text-sm font-semibold text-gray-900 hover:text-brand transition-colors truncate block"
+            >
+              {otherParty?.fullName ?? 'Unknown'}
+            </Link>
+            <Badge
+              variant={
+                otherParty?.verificationTier === 'trusted' ? 'trusted' :
+                otherParty?.verificationTier === 'verified' ? 'verified' : 'basic'
+              }
+              size="sm"
+            >
+              {otherParty?.verificationTier ?? 'basic'}
+            </Badge>
+          </div>
 
-      {/* ── Status banner ── */}
-      <StatusBanner request={request} otherParty={otherParty} isGuest={isGuest} />
+          {/* Three-dot menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(v => !v)}
+              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              aria-label="More options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
+                <Link
+                  href={otherProfilePath}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  onClick={() => setShowMenu(false)}
+                >
+                  View profile
+                </Link>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
+                  onClick={() => {
+                    setShowMenu(false)
+                    toast('Safety report — coming soon', { icon: '🛡️' })
+                  }}
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Report user
+                </button>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowMenu(false)
+                    toast('Archive — coming soon')
+                  }}
+                >
+                  Archive
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status banner — fixed just below header */}
+        <StatusBanner request={request} otherParty={otherParty} isGuest={isGuest} />
+      </div>
 
       {/* ── Host accept/decline actions ── */}
       {!isGuest && request.status === 'pending' && (
@@ -711,7 +726,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto py-2"
+        className="flex-1 overflow-y-auto py-2 bg-rose-50/60"
       >
         {messageGroups.map(item => {
           if (item.type === 'separator') {
@@ -766,8 +781,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
         </button>
       )}
 
-      {/* ── Message input ── */}
-      <div className="shrink-0 border-t border-gray-100 px-4 py-3 bg-white">
+      {/* ── Message input — sticky above bottom tab bar ── */}
+      <div className="sticky bottom-0 z-20 shrink-0 border-t border-gray-100 px-4 py-3 bg-white">
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}

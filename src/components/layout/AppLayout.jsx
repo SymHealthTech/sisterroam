@@ -34,7 +34,7 @@ function LoadingSkeleton() {
   )
 }
 
-function AppLayoutInner({ children, title, subtitle, scrollable = true }) {
+function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar = false }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
@@ -132,7 +132,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true }) {
         </div>
 
         {/* Mobile mini-header */}
-        <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
+        {!noTopBar && <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
           <button
             onClick={() => router.back()}
             className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 self-start mt-0.5"
@@ -149,7 +149,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true }) {
           <div className="ml-auto self-start mt-0.5">
             <NotificationPanel userId={user?.id} />
           </div>
-        </div>
+        </div>}
 
         {/* Scrollable content */}
         <main className={scrollable ? "flex-1 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden flex flex-col"}>
@@ -171,10 +171,10 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true }) {
   )
 }
 
-export default function AppLayout({ children, title, subtitle, scrollable = true }) {
+export default function AppLayout({ children, title, subtitle, scrollable = true, noTopBar = false }) {
   return (
     <SSEProvider>
-      <AppLayoutInner title={title} subtitle={subtitle} scrollable={scrollable}>{children}</AppLayoutInner>
+      <AppLayoutInner title={title} subtitle={subtitle} scrollable={scrollable} noTopBar={noTopBar}>{children}</AppLayoutInner>
     </SSEProvider>
   )
 }

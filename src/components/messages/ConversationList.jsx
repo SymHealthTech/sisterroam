@@ -124,7 +124,8 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
             </p>
           </div>
         ) : (
-          requests.map(req => {
+          <div className="divide-y divide-gray-100">
+          {requests.map(req => {
             const other = getOtherParty(req)
             const unread = hasUnread(req)
             const badge = STATUS_BADGE[req.status]
@@ -193,7 +194,8 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                 </div>
               </button>
             )
-          })
+          })}
+          </div>
         )}
       </div>
     </div>
