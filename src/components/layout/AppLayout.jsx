@@ -21,7 +21,7 @@ export function useAppUser() { return useContext(AppUserContext) }
 
 function LoadingSkeleton() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <div className="hidden lg:block w-60 h-screen bg-white border-r border-gray-100 shrink-0" />
       <div className="flex-1 p-6 space-y-4 max-w-2xl">
         <Skeleton className="h-8 w-48" />
@@ -113,7 +113,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
   return (
     <AppUserContext.Provider value={freshUser}>
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       {/* Desktop sidebar */}
       <Sidebar user={{ ...user, profilePhotoUrl: avatarSrc }} />
 

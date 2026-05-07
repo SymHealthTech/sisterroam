@@ -603,10 +603,10 @@ export default function ChatWindow({ requestId, currentUserId }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-0 relative">
+    <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
 
-      {/* ── Sticky top block: header + status banner ── */}
-      <div className="sticky top-0 z-20 bg-white shrink-0">
+      {/* ── Fixed top block: header + status banner (never scrolls) ── */}
+      <div className="flex-none bg-white">
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
           {/* Back button — mobile only */}
@@ -722,11 +722,11 @@ export default function ChatWindow({ requestId, currentUserId }) {
         </div>
       )}
 
-      {/* ── Messages area ── */}
+      {/* ── Messages area (only scrollable element) ── */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto py-2 bg-rose-50/60"
+        className="flex-1 overflow-y-auto min-h-0 py-2 bg-brand-lighter"
       >
         {messageGroups.map(item => {
           if (item.type === 'separator') {
@@ -781,8 +781,8 @@ export default function ChatWindow({ requestId, currentUserId }) {
         </button>
       )}
 
-      {/* ── Message input — sticky above bottom tab bar ── */}
-      <div className="sticky bottom-0 z-20 shrink-0 border-t border-gray-100 px-4 py-3 bg-white">
+      {/* ── Message input (never scrolls, always visible at bottom) ── */}
+      <div className="flex-none border-t border-gray-100 px-4 py-3 bg-white">
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
