@@ -726,7 +726,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto min-h-0 py-2 bg-brand-lighter"
+        className="flex-1 overflow-y-auto min-h-0 py-2 bg-gray-50"
       >
         {messageGroups.map(item => {
           if (item.type === 'separator') {
