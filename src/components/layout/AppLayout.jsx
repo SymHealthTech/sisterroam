@@ -34,7 +34,7 @@ function LoadingSkeleton() {
   )
 }
 
-function AppLayoutInner({ children, title, scrollable = true }) {
+function AppLayoutInner({ children, title, subtitle, scrollable = true }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
@@ -132,20 +132,21 @@ function AppLayoutInner({ children, title, scrollable = true }) {
         </div>
 
         {/* Mobile mini-header */}
-        <div className="lg:hidden flex items-center h-[52px] px-4 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
+        <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
           <button
             onClick={() => router.back()}
-            className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5"
+            className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 self-start mt-0.5"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           {title && (
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-gray-900 pointer-events-none">
-              {title}
-            </h1>
+            <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none">
+              <h1 className="text-sm font-semibold text-gray-900">{title}</h1>
+              {subtitle && <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>}
+            </div>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto self-start mt-0.5">
             <NotificationPanel userId={user?.id} />
           </div>
         </div>
@@ -170,10 +171,10 @@ function AppLayoutInner({ children, title, scrollable = true }) {
   )
 }
 
-export default function AppLayout({ children, title, scrollable = true }) {
+export default function AppLayout({ children, title, subtitle, scrollable = true }) {
   return (
     <SSEProvider>
-      <AppLayoutInner title={title} scrollable={scrollable}>{children}</AppLayoutInner>
+      <AppLayoutInner title={title} subtitle={subtitle} scrollable={scrollable}>{children}</AppLayoutInner>
     </SSEProvider>
   )
 }

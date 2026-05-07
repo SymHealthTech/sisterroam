@@ -100,8 +100,8 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
 
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-100">
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
+      {/* Header — desktop only; mobile shows title+subtitle in the AppLayout top bar */}
+      <div className="hidden lg:block px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
         <h2 className="text-base font-semibold text-gray-900">Messages</h2>
         <p className="text-xs text-gray-400 mt-0.5">Your trips &amp; stay requests</p>
       </div>

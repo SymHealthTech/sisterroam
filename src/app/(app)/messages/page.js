@@ -12,14 +12,14 @@ export default function MessagesPage() {
 
   if (session && !isVerified) {
     return (
-      <AppLayout title="Messages">
+      <AppLayout title="Messages" subtitle="Your trips & stay requests">
         <VerificationGate mode="page" />
       </AppLayout>
     )
   }
 
   return (
-    <AppLayout title="Messages" scrollable={false}>
+    <AppLayout title="Messages" subtitle="Your trips & stay requests" scrollable={false}>
       <div className="flex flex-1 min-h-0">
 
         {/* Left panel: conversation list — full width on mobile, fixed 360px on desktop */}
