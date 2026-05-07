@@ -124,7 +124,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div>
           {requests.map(req => {
             const other = getOtherParty(req)
             const unread = hasUnread(req)
@@ -137,7 +137,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                 onClick={() => handleSelect(req)}
                 className={cn(
                   'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors',
-                  'hover:bg-gray-50 cursor-pointer',
+                  'hover:bg-gray-50 cursor-pointer border-b border-gray-100',
                   isSelected
                     ? 'bg-brand-lighter border-l-2 border-brand'
                     : 'border-l-2 border-transparent'

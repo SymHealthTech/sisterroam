@@ -37,7 +37,7 @@ export default function ConversationPage({ params }) {
         </div>
 
         {/* Right panel: full width on mobile, flex-1 on desktop */}
-        <div className="flex-1 flex flex-col min-h-0 pb-20 lg:pb-0">
+        <div className="flex-1 flex flex-col min-h-0 lg:pb-0">
           <ChatWindow
             requestId={requestId}
             currentUserId={userId}
