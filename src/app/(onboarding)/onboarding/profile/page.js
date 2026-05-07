@@ -12,131 +12,11 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import ImageUpload from "@/components/ui/ImageUpload";
+import { COUNTRIES as COUNTRIES_DATA } from "@/lib/countries";
 
 /* ── Static data ─────────────────────────────────────────── */
 
-const COUNTRIES = [
-  "Afghanistan",
-  "Albania",
-  "Algeria",
-  "Argentina",
-  "Armenia",
-  "Australia",
-  "Austria",
-  "Azerbaijan",
-  "Bahrain",
-  "Bangladesh",
-  "Belgium",
-  "Bolivia",
-  "Bosnia and Herzegovina",
-  "Brazil",
-  "Bulgaria",
-  "Cambodia",
-  "Cameroon",
-  "Canada",
-  "Chile",
-  "China",
-  "Colombia",
-  "Costa Rica",
-  "Croatia",
-  "Cuba",
-  "Cyprus",
-  "Czech Republic",
-  "Denmark",
-  "Dominican Republic",
-  "Ecuador",
-  "Egypt",
-  "Ethiopia",
-  "Finland",
-  "France",
-  "Georgia",
-  "Germany",
-  "Ghana",
-  "Greece",
-  "Guatemala",
-  "Hungary",
-  "India",
-  "Indonesia",
-  "Iran",
-  "Iraq",
-  "Ireland",
-  "Israel",
-  "Italy",
-  "Jamaica",
-  "Japan",
-  "Jordan",
-  "Kazakhstan",
-  "Kenya",
-  "Kuwait",
-  "Kyrgyzstan",
-  "Laos",
-  "Lebanon",
-  "Libya",
-  "Lithuania",
-  "Luxembourg",
-  "Malaysia",
-  "Maldives",
-  "Malta",
-  "Mexico",
-  "Moldova",
-  "Mongolia",
-  "Morocco",
-  "Mozambique",
-  "Myanmar",
-  "Namibia",
-  "Nepal",
-  "Netherlands",
-  "New Zealand",
-  "Nicaragua",
-  "Nigeria",
-  "Norway",
-  "Oman",
-  "Pakistan",
-  "Palestine",
-  "Panama",
-  "Paraguay",
-  "Peru",
-  "Philippines",
-  "Poland",
-  "Portugal",
-  "Qatar",
-  "Romania",
-  "Russia",
-  "Saudi Arabia",
-  "Senegal",
-  "Serbia",
-  "Singapore",
-  "Slovakia",
-  "Slovenia",
-  "Somalia",
-  "South Africa",
-  "South Korea",
-  "Spain",
-  "Sri Lanka",
-  "Sudan",
-  "Sweden",
-  "Switzerland",
-  "Syria",
-  "Taiwan",
-  "Tajikistan",
-  "Tanzania",
-  "Thailand",
-  "Tunisia",
-  "Turkey",
-  "Turkmenistan",
-  "Uganda",
-  "Ukraine",
-  "United Arab Emirates",
-  "United Kingdom",
-  "United States",
-  "Uruguay",
-  "Uzbekistan",
-  "Venezuela",
-  "Vietnam",
-  "Yemen",
-  "Zambia",
-  "Zimbabwe",
-];
+const COUNTRY_NAMES = COUNTRIES_DATA.map((c) => c.name);
 
 const COMMON_LANGUAGES = [
   "English",
@@ -615,7 +495,7 @@ export default function OnboardingProfilePage() {
             label="Home country"
             value={country}
             onChange={setCountry}
-            options={COUNTRIES}
+            options={COUNTRY_NAMES}
             placeholder="Select your country"
           />
 
@@ -709,7 +589,7 @@ export default function OnboardingProfilePage() {
             label="Countries visited"
             tags={countriesVisited}
             onChange={setCountriesVisited}
-            suggestions={COUNTRIES}
+            suggestions={COUNTRY_NAMES}
             placeholder="Type a country and press Enter…"
           />
 

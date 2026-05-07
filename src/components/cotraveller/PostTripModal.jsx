@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, ArrowRight, ArrowLeft, Check, ShieldCheck } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, ArrowRight, ArrowLeft, Check, ShieldCheck, ChevronDown } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { COUNTRIES } from '@/lib/countries'
@@ -84,18 +84,69 @@ function Textarea({ className, ...props }) {
   )
 }
 
-function CountrySelect({ value, onChange, placeholder }) {
+const COUNTRY_NAMES = COUNTRIES.map(c => c.name)
+
+function SearchableSelect({ value, onChange, options, placeholder, openUp = false }) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const ref = useRef(null)
+
+  const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase()))
+
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   return (
-    <select
-      value={value}
-      onChange={onChange}
-      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition bg-white appearance-none"
-    >
-      <option value="">{placeholder ?? 'Select country'}</option>
-      {COUNTRIES.map(c => (
-        <option key={c.code} value={c.name}>{c.name}</option>
-      ))}
-    </select>
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={cn(
+          'w-full h-[44px] flex items-center justify-between px-3 rounded-xl border bg-white text-sm transition-colors',
+          open ? 'ring-2 ring-brand/30 border-brand' : 'border-gray-200 hover:border-gray-300',
+          value ? 'text-gray-900' : 'text-gray-400',
+        )}
+      >
+        <span>{value || placeholder}</span>
+        <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div className={cn(
+          'absolute left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50',
+          openUp ? 'bottom-full mb-1' : 'top-full mt-1'
+        )}>
+          <div className="p-2 border-b border-gray-100">
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search…"
+              className="w-full text-sm px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-brand"
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {filtered.map(o => (
+              <button
+                key={o}
+                type="button"
+                onClick={() => { onChange(o); setOpen(false); setSearch('') }}
+                className={cn('w-full text-left px-3 py-2 text-sm hover:bg-gray-50', value === o && 'text-brand font-medium')}
+              >
+                {o}
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="px-3 py-4 text-sm text-gray-400 text-center">No results</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -109,10 +160,39 @@ const EMPTY_FORM = {
   minAge: '', maxAge: '', languages: '',
 }
 
+function fetchCities(country, setter) {
+  if (!country) { setter([]); return () => {} }
+  let cancelled = false
+  fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ country }),
+  })
+    .then(r => r.json())
+    .then(data => { if (!cancelled) setter(!data.error && Array.isArray(data.data) ? data.data.sort() : []) })
+    .catch(() => { if (!cancelled) setter([]) })
+  return () => { cancelled = true }
+}
+
 export default function PostTripModal({ onClose, onCreated }) {
   const [step, setStep]       = useState(0)
   const [form, setForm]       = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(false)
+  const [fromCities, setFromCities]               = useState([])
+  const [fetchedForFromCountry, setFetchedForFromCountry] = useState(null)
+  const [toCities, setToCities]                   = useState([])
+  const [fetchedForToCountry, setFetchedForToCountry]     = useState(null)
+
+  useEffect(() => {
+    return fetchCities(form.fromCountry, v => { setFromCities(v); setFetchedForFromCountry(form.fromCountry) })
+  }, [form.fromCountry])
+
+  useEffect(() => {
+    return fetchCities(form.toCountry, v => { setToCities(v); setFetchedForToCountry(form.toCountry) })
+  }, [form.toCountry])
+
+  const loadingFromCities = !!form.fromCountry && form.fromCountry !== fetchedForFromCountry
+  const loadingToCities   = !!form.toCountry   && form.toCountry   !== fetchedForToCountry
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
@@ -192,42 +272,78 @@ export default function PostTripModal({ onClose, onCreated }) {
           {step === 0 && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-800">Where are you travelling?</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label required>From city</Label>
-                  <Input placeholder="Delhi" value={form.fromCity} onChange={e => set('fromCity', e.target.value)} />
-                </div>
+
+              {/* From */}
+              <div className="space-y-3">
                 <div>
                   <Label required>From country</Label>
-                  <CountrySelect
+                  <SearchableSelect
                     value={form.fromCountry}
+                    options={COUNTRY_NAMES}
                     placeholder="Select country"
-                    onChange={e => {
-                      const country = COUNTRIES.find(c => c.name === e.target.value)
-                      setForm(f => ({ ...f, fromCountry: e.target.value, fromCountryCode: country?.code ?? '' }))
+                    onChange={name => {
+                      const c = COUNTRIES.find(x => x.name === name)
+                      setForm(f => ({ ...f, fromCountry: name, fromCountryCode: c?.code ?? '', fromCity: '' }))
                     }}
                   />
                 </div>
+                {form.fromCountry && (
+                  loadingFromCities ? (
+                    <div>
+                      <Label required>From city</Label>
+                      <div className="h-[44px] rounded-xl border border-gray-200 bg-gray-50 flex items-center px-3 text-sm text-gray-400">Loading cities…</div>
+                    </div>
+                  ) : fromCities.length > 0 ? (
+                    <div>
+                      <Label required>From city</Label>
+                      <SearchableSelect value={form.fromCity} options={fromCities} placeholder="Select city" onChange={v => set('fromCity', v)} />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label required>From city</Label>
+                      <Input placeholder="e.g. Delhi" value={form.fromCity} onChange={e => set('fromCity', e.target.value)} />
+                    </div>
+                  )
+                )}
               </div>
+
               <div className="flex items-center justify-center">
                 <ArrowRight className="w-5 h-5 text-brand" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label required>To city</Label>
-                  <Input placeholder="Leh" value={form.toCity} onChange={e => set('toCity', e.target.value)} />
-                </div>
+
+              {/* To */}
+              <div className="space-y-3">
                 <div>
                   <Label required>To country</Label>
-                  <CountrySelect
+                  <SearchableSelect
                     value={form.toCountry}
+                    options={COUNTRY_NAMES}
                     placeholder="Select country"
-                    onChange={e => {
-                      const country = COUNTRIES.find(c => c.name === e.target.value)
-                      setForm(f => ({ ...f, toCountry: e.target.value, toCountryCode: country?.code ?? '' }))
+                    openUp
+                    onChange={name => {
+                      const c = COUNTRIES.find(x => x.name === name)
+                      setForm(f => ({ ...f, toCountry: name, toCountryCode: c?.code ?? '', toCity: '' }))
                     }}
                   />
                 </div>
+                {form.toCountry && (
+                  loadingToCities ? (
+                    <div>
+                      <Label required>To city</Label>
+                      <div className="h-[44px] rounded-xl border border-gray-200 bg-gray-50 flex items-center px-3 text-sm text-gray-400">Loading cities…</div>
+                    </div>
+                  ) : toCities.length > 0 ? (
+                    <div>
+                      <Label required>To city</Label>
+                      <SearchableSelect value={form.toCity} options={toCities} placeholder="Select city" openUp onChange={v => set('toCity', v)} />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label required>To city</Label>
+                      <Input placeholder="e.g. Leh" value={form.toCity} onChange={e => set('toCity', e.target.value)} />
+                    </div>
+                  )
+                )}
               </div>
             </div>
           )}
