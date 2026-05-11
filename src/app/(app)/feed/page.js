@@ -9,28 +9,25 @@ import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
-import HostCard from "@/components/host/HostCard";
+import NotificationPanel from "@/components/ui/NotificationPanel";
 import {
-  Search,
   ShieldCheck,
-  MessageSquare,
-  Users,
-  MapPin,
-  AlertCircle,
   Copy,
+  AlertCircle,
   Clock,
+  ArrowLeft,
 } from "lucide-react";
-import TripPostCard from "@/components/cotraveller/TripPostCard";
-import StoryCard from "@/components/stories/StoryCard";
-import { formatDateRange, formatRelativeTime } from "@/lib/utils";
+import { FeedTab } from "@/app/(app)/community/page";
+import { formatDateRange } from "@/lib/utils";
 
 const QUICK_ACTIONS = [
+  { label: "Travel Stories", href: "/community/stories" },
   { label: "Browse all hosts", href: "/explore" },
-  { label: "Community feed", href: "/community" },
   { label: "Find co-traveller", href: "/cotraveller" },
   { label: "Place recommendations", href: "/recommendations" },
-  { label: "Find cyclists", href: "/explore?category=cyclist" },
-  { label: "Find trekkers", href: "/explore?category=trekker" },
+  { label: "Messeges", href: "/messeges" },
+  { label: "Profile", href: "/profile" },
+  { label: "Safety SoS", href: "/safety" },
 ];
 
 function getGreeting() {
@@ -55,34 +52,6 @@ function getProfileCompleteness(profile) {
   ];
   const done = checks.filter((c) => c.done).length;
   return { checks, pct: Math.round((done / checks.length) * 100) };
-}
-
-function PostPreviewCard({ post }) {
-  return (
-    <Link
-      href="/community"
-      className="flex gap-3 p-4 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-    >
-      <Avatar
-        name={post.author?.fullName}
-        src={post.author?.profilePhotoUrl}
-        size="sm"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 line-clamp-1">
-          {post.title}
-        </p>
-        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-          {typeof post.content === "string" ? post.content : ""}
-        </p>
-        {post.createdAt && (
-          <p className="text-[11px] text-gray-400 mt-1.5">
-            {formatRelativeTime(post.createdAt)}
-          </p>
-        )}
-      </div>
-    </Link>
-  );
 }
 
 function ProfileCompletenessCard({ profile }) {
@@ -184,14 +153,8 @@ export default function FeedPage() {
   const sessionUser = freshUser ?? session?.user;
 
   const [userProfile, setUserProfile] = useState(null);
-  const [hosts, setHosts] = useState([]);
-  const [communityPosts, setCommunityPosts] = useState([]);
-  const [recentTrips, setRecentTrips] = useState([]);
-  const [travelStories, setTravelStories] = useState([]);
   const [activeStay, setActiveStay] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [verifPending, setVerifPending] = useState(false);
   const [verifApproved, setVerifApproved] = useState(false);
 
@@ -203,35 +166,11 @@ export default function FeedPage() {
         const profile = userData.data ?? {};
         setUserProfile(profile);
 
-        const [
-          hostsRes,
-          postsRes,
-          requestsRes,
-          unreadRes,
-          tripsRes,
-          storiesRes,
-          verifRes,
-        ] = await Promise.allSettled([
-          fetch(
-            `/api/hosts?country=${encodeURIComponent(profile.country ?? "")}&limit=4&sort=stays`,
-          ),
-          fetch("/api/community/posts?limit=2"),
+        const [requestsRes, verifRes] = await Promise.allSettled([
           fetch("/api/requests"),
-          fetch("/api/messages/unread-count"),
-          fetch("/api/cotraveller?limit=2&status=open"),
-          fetch("/api/stories?sort=newest&limit=2"),
           fetch("/api/verification/status"),
         ]);
 
-        if (hostsRes.status === "fulfilled" && hostsRes.value.ok) {
-          const d = await hostsRes.value.json();
-          setHosts(d.data?.hosts ?? []);
-        }
-        if (postsRes.status === "fulfilled" && postsRes.value.ok) {
-          const d = await postsRes.value.json();
-          const posts = d.data?.posts ?? d.data ?? [];
-          setCommunityPosts(Array.isArray(posts) ? posts.slice(0, 2) : []);
-        }
         if (requestsRes.status === "fulfilled" && requestsRes.value.ok) {
           const d = await requestsRes.value.json();
           const today = new Date();
@@ -243,18 +182,6 @@ export default function FeedPage() {
               new Date(r.checkOutDate) >= today,
           );
           setActiveStay(active ?? null);
-        }
-        if (unreadRes.status === "fulfilled" && unreadRes.value.ok) {
-          const d = await unreadRes.value.json();
-          setUnreadCount(d.data?.count ?? 0);
-        }
-        if (tripsRes.status === "fulfilled" && tripsRes.value.ok) {
-          const d = await tripsRes.value.json();
-          setRecentTrips(d.data?.posts ?? []);
-        }
-        if (storiesRes.status === "fulfilled" && storiesRes.value.ok) {
-          const d = await storiesRes.value.json();
-          setTravelStories(d.data?.stories ?? []);
         }
         if (verifRes.status === "fulfilled" && verifRes.value.ok) {
           const d = await verifRes.value.json();
@@ -273,17 +200,9 @@ export default function FeedPage() {
     loadFeedData();
   }, [sessionUser?.id]);
 
-  function handleSearch(e) {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    router.push(q ? `/explore?city=${encodeURIComponent(q)}` : "/explore");
-  }
-
   const firstName =
     (userProfile?.fullName ?? sessionUser?.fullName ?? "").split(" ")[0] ||
     "there";
-  // Use fresh DB value when loaded; fall back to session during first render.
-  // Session verificationTier is stale after admin approves KYC.
   const verTier =
     userProfile?.verificationTier ?? sessionUser?.verificationTier;
   const isBasicTier = !loading && verTier === "basic";
@@ -291,32 +210,40 @@ export default function FeedPage() {
   const hostCity = activeStay?.hostId?.city ?? "";
 
   return (
-    <AppLayout title="">
-      <div className="lg:flex lg:gap-0 max-w-5xl mx-auto">
-        {/* ── Main feed ── */}
-        <div className="flex-1 min-w-0 px-4 py-5 lg:px-8 space-y-6">
-          {/* Greeting */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                {getGreeting()}, {firstName}!
-              </h1>
-              <p className="text-sm text-gray-500">
-                Ready for your next adventure?
-              </p>
-            </div>
-            <div className="relative">
-              <Avatar
-                src={
-                  userProfile?.profilePhotoUrl ?? sessionUser?.profilePhotoUrl
-                }
-                name={userProfile?.fullName ?? sessionUser?.fullName}
-                size="md"
-              />
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-teal rounded-full border-2 border-white" />
-            </div>
-          </div>
+    <AppLayout title={`${getGreeting()}, ${firstName}`} noTopBar>
+      {/* ── Custom mobile header ── */}
+      <div className="lg:hidden sticky top-0 z-20 bg-white border-b border-gray-100 flex items-center gap-2 min-h-[52px] py-2 px-4 shrink-0">
+        <button
+          onClick={() => router.back()}
+          className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 shrink-0"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <Link href="/profile" className="shrink-0">
+          <Avatar
+            src={userProfile?.profilePhotoUrl ?? sessionUser?.profilePhotoUrl}
+            name={userProfile?.fullName ?? sessionUser?.fullName}
+            size="sm"
+          />
+        </Link>
+        <div className="flex flex-col min-w-0">
+          <p className="text-[11px] text-gray-400 leading-none">
+            {getGreeting()},
+          </p>
+          <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
+            {firstName}!
+          </p>
+        </div>
+        <div className="ml-auto shrink-0">
+          <NotificationPanel userId={sessionUser?.id} />
+        </div>
+      </div>
 
+      {/* ── Page body ── */}
+      <div className="lg:flex lg:gap-0 max-w-5xl mx-auto">
+        {/* Main feed */}
+        <div className="flex-1 min-w-0 px-4 py-5 lg:px-8 space-y-6">
           {/* Identity approved — payment needed */}
           {isBasicTier && verifApproved && !loading && (
             <div className="flex items-start gap-3 p-4 bg-teal-lighter border border-teal/30 rounded-xl">
@@ -375,18 +302,6 @@ export default function FeedPage() {
             </div>
           )}
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for a host in any city..."
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-[14px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 shadow-sm transition"
-            />
-          </form>
-
           {/* Quick actions */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap scrollbar-hide">
             {QUICK_ACTIONS.map(({ label, href }) => (
@@ -442,188 +357,10 @@ export default function FeedPage() {
             </div>
           )}
 
-          {/* Suggested hosts */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">
-                Verified hosts in {userProfile?.country ?? "your area"}
-              </h2>
-              <Button
-                href={`/explore${userProfile?.country ? `?country=${encodeURIComponent(userProfile.country)}` : ""}`}
-                variant="ghost"
-                size="sm"
-              >
-                See all
-              </Button>
-            </div>
-
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <HostCard.Skeleton key={i} />
-                ))}
-              </div>
-            ) : hosts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {hosts.map((host) => (
-                  <HostCard key={host._id} host={host} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 text-gray-400">
-                <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-200" />
-                <p className="text-sm">No hosts in your country yet.</p>
-                <Button
-                  href="/explore"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2"
-                >
-                  Browse globally →
-                </Button>
-              </div>
-            )}
-          </section>
-
-          {/* Recent messages */}
-          {unreadCount > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-gray-900">
-                  Recent messages
-                </h2>
-                <Button href="/messages" variant="ghost" size="sm">
-                  View all
-                </Button>
-              </div>
-              <Link
-                href="/messages"
-                className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-              >
-                <div className="w-9 h-9 rounded-full bg-brand-lighter flex items-center justify-center shrink-0">
-                  <MessageSquare className="w-4 h-4 text-brand" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {unreadCount} unread message{unreadCount !== 1 ? "s" : ""}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Tap to view your conversations
-                  </p>
-                </div>
-                <span className="w-5 h-5 rounded-full bg-brand text-white text-[10px] flex items-center justify-center font-bold shrink-0">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              </Link>
-            </section>
-          )}
-
-          {/* Recent trip posts */}
-          {recentTrips.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-gray-900">
-                  Recent trip posts
-                </h2>
-                <Button href="/cotraveller" variant="ghost" size="sm">
-                  Browse all trips
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {recentTrips.map((post) => (
-                  <TripPostCard
-                    key={post._id}
-                    post={post}
-                    currentUserTier={sessionUser?.verificationTier}
-                    compact
-                  />
-                ))}
-              </div>
-              <div className="flex gap-2 mt-3">
-                <Button href="/cotraveller" variant="ghost" size="sm">
-                  Browse all trips →
-                </Button>
-              </div>
-            </section>
-          )}
-
-          {/* Community section */}
+          {/* Community feed */}
           <section className="pb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-gray-900">
-                From the community
-              </h2>
-              <Button href="/community" variant="ghost" size="sm">
-                View community
-              </Button>
-            </div>
-            {communityPosts.length > 0 ? (
-              <div className="space-y-3">
-                {communityPosts.map((post) => (
-                  <PostPreviewCard key={post._id} post={post} />
-                ))}
-              </div>
-            ) : (
-              <Link
-                href="/community"
-                className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-              >
-                <Users className="w-6 h-6 text-gray-300 shrink-0" />
-                <p className="text-sm text-gray-500">
-                  Join the community conversation
-                </p>
-              </Link>
-            )}
+            <FeedTab />
           </section>
-
-          {/* Travel Stories section */}
-          {(loading || travelStories.length > 0) && (
-            <section className="pb-6">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="text-base font-semibold text-gray-900">
-                    Travel stories
-                  </h2>
-                  {!isBasicTier && (
-                    <Button
-                      href="/community/stories/new"
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs px-0 hover:bg-transparent text-brand"
-                    >
-                      + Share your story
-                    </Button>
-                  )}
-                </div>
-                <Button href="/stories" variant="ghost" size="sm">
-                  View all →
-                </Button>
-              </div>
-              {isBasicTier && (
-                <p className="text-xs text-gray-400 mb-3">
-                  Get verified to share your own story
-                </p>
-              )}
-              {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="h-24 bg-gray-100 rounded-xl animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div
-                  className={`grid gap-3 ${travelStories.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}
-                >
-                  {travelStories.map((story) => (
-                    <StoryCard key={story._id} story={story} variant="feed" />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
         </div>
 
         {/* ── Right sidebar (desktop only) ── */}

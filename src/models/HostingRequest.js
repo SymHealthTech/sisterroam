@@ -40,8 +40,9 @@ const hostingRequestSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-hostingRequestSchema.index({ guestId: 1 })
-hostingRequestSchema.index({ hostId: 1 })
+hostingRequestSchema.index({ guestId: 1, createdAt: -1 })  // requests list for guest
+hostingRequestSchema.index({ hostId: 1, createdAt: -1 })   // requests list for host
+hostingRequestSchema.index({ requestType: 1, guestId: 1, hostId: 1 }) // direct conversation lookup
 hostingRequestSchema.index({ status: 1 })
 hostingRequestSchema.index({ checkInDate: 1 })
 

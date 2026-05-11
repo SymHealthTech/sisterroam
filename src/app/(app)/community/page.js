@@ -22,7 +22,7 @@ const CATEGORIES = [
 ];
 
 /* ── Feed tab ─────────────────────────────────────────────── */
-function FeedTab() {
+export function FeedTab() {
   const user = useAppUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);

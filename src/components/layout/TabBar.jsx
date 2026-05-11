@@ -11,14 +11,15 @@ import { useUnreadCount } from '@/hooks/useUnreadCount'
 const TABS = [
   { href: '/feed',      icon: Home,   label: 'Home'      },
   { href: '/explore',   icon: Search, label: 'Explore'   },
-  { href: '/community', icon: Users,  label: 'Community' },
-  { href: '/safety',    icon: Shield, label: 'SOS', isSos: true },
+  { href: '/cotraveller',       icon: UserPlus,      label: 'Co-traveller',    description: 'Find travel companions'    },
+  { href: '/recommendations',   icon: MapPin,        label: 'Recommendations', description: 'Community travel guide'    },
+  
 ]
 
 const MORE_ITEMS = [
+  { href: '/safety',    icon: Shield, label: 'SOS', isSos: true },
   { href: '/messages',          icon: MessageCircle, label: 'Messages',        description: 'Your conversations'        },
-  { href: '/cotraveller',       icon: UserPlus,      label: 'Co-traveller',    description: 'Find travel companions'    },
-  { href: '/recommendations',   icon: MapPin,        label: 'Recommendations', description: 'Community travel guide'    },
+  { href: '/community', icon: Users,  label: 'Community' },
   { href: '/community/stories', icon: BookOpen,      label: 'Travel Stories',  description: 'Stories from the community'},
   { href: '/profile',           icon: User,          label: 'Profile',         description: 'Your profile & settings'  },
   { href: '/profile/settings',          icon: Settings,      label: 'Settings',        description: 'App preferences'           },

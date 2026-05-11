@@ -33,8 +33,7 @@ const notificationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 })
 
-notificationSchema.index({ recipientId: 1 })
-notificationSchema.index({ isRead: 1 })
-notificationSchema.index({ createdAt: -1 })
+notificationSchema.index({ recipientId: 1, createdAt: -1 })          // fetch all notifications (filter + sort)
+notificationSchema.index({ recipientId: 1, isRead: 1, createdAt: -1 }) // fetch unread (filter + sort)
 
 export default mongoose.models.Notification || mongoose.model('Notification', notificationSchema)

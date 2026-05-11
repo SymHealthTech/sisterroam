@@ -10,8 +10,8 @@ const messageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 })
 
-messageSchema.index({ requestId: 1 })
-messageSchema.index({ senderId: 1 })
-messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 }) // auto-delete after 30 days
+messageSchema.index({ requestId: 1, createdAt: 1 })          // load conversation (filter + sort)
+messageSchema.index({ requestId: 1, isRead: 1, senderId: 1 }) // unread-count + mark-as-read
+messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 })
 
 export default mongoose.models.Message || mongoose.model('Message', messageSchema)

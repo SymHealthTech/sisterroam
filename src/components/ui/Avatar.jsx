@@ -21,7 +21,7 @@ export default function Avatar({ name, src, size = 'md', className }) {
         cls,
         className
       )}
-      style={!src ? { backgroundColor: color.bg, color: color.text } : undefined}
+      style={src ? { position: 'relative' } : { position: 'relative', backgroundColor: color.bg, color: color.text }}
       aria-label={name ?? 'User avatar'}
     >
       {src ? (
