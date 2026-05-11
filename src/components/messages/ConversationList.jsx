@@ -128,7 +128,9 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
           {requests.map(req => {
             const other = getOtherParty(req)
             const unread = hasUnread(req)
-            const badge = STATUS_BADGE[req.status]
+            const badge = req.status === 'accepted' && req.requestType === 'cotraveller'
+              ? { variant: 'success', label: 'Trip Confirmed' }
+              : STATUS_BADGE[req.status]
             const isSelected = selectedRequestId === req._id
 
             return (

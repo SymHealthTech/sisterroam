@@ -246,7 +246,7 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
                   )
                 ) : currentUserTier ? (
                   <Button href={`/cotraveller/${post._id}`} variant="primary" size="sm">
-                    View Trip & Express Interest
+                    View Trip
                   </Button>
                 ) : null
               )}

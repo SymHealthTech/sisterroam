@@ -118,7 +118,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
       <Sidebar user={{ ...user, profilePhotoUrl: avatarSrc }} />
 
       {/* Main content column */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Desktop top bar */}
         <div className="hidden lg:flex items-center justify-between h-14 px-6 bg-white border-b border-gray-100 sticky top-0 z-20 shrink-0">
@@ -152,7 +152,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
         </div>}
 
         {/* Scrollable content */}
-        <main className={scrollable ? "flex-1 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden flex flex-col"}>
+        <main className={scrollable ? "flex-1 min-h-0 overflow-y-auto pb-20 lg:pb-0" : "flex-1 overflow-hidden flex flex-col"}>
           {children}
         </main>
       </div>

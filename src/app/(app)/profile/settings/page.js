@@ -353,7 +353,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title="Settings">
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-10 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {/* Account */}
         <SettingsSection title="Account" icon={User}>
           <AccountRow label="Email address" value={userData?.email}>
@@ -685,15 +685,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Sign out */}
-        <div className="pb-4">
-          <Button
-            variant="ghost"
-            fullWidth
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            Sign out
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          fullWidth
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
+          Sign out
+        </Button>
       </div>
 
       {/* Confirm dialogs */}

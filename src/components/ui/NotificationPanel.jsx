@@ -212,16 +212,14 @@ export default function NotificationPanel({ userId }) {
             ))}
           </div>
 
-          {notifs.length > 10 && (
-            <div className="border-t border-gray-100 px-4 py-2.5 text-center">
-              <button
-                onClick={() => { setOpen(false); router.push('/notifications') }}
-                className="text-xs text-brand hover:underline"
-              >
-                View all notifications
-              </button>
-            </div>
-          )}
+          <div className="border-t border-gray-100 px-4 py-2.5 text-center">
+            <button
+              onClick={() => { setOpen(false); router.push('/notifications') }}
+              className="text-xs text-brand hover:underline"
+            >
+              {notifs.length > 10 ? 'View all notifications' : 'View notifications page'}
+            </button>
+          </div>
         </div>
       )}
     </div>

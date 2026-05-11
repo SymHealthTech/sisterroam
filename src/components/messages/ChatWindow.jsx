@@ -82,13 +82,17 @@ function StatusBanner({ request, otherParty, isGuest }) {
   if (request.requestType === 'direct') return null
 
   const name = otherParty?.fullName?.split(' ')[0] ?? 'them'
+  const isCotraveller = request.requestType === 'cotraveller'
 
   if (request.status === 'pending') {
     if (!isGuest) {
       return (
         <div className="flex items-center gap-2 px-4 py-2.5 bg-brand-lighter border-b border-brand/20 text-brand-dark text-sm shrink-0">
           <Clock className="w-4 h-4 shrink-0" />
-          <span><strong>{name}</strong> sent you a hosting request</span>
+          <span>
+            <strong>{name}</strong>{' '}
+            {isCotraveller ? 'wants to join your trip' : 'sent you a hosting request'}
+          </span>
         </div>
       )
     }
@@ -104,9 +108,11 @@ function StatusBanner({ request, otherParty, isGuest }) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-teal-50 border-b border-teal-100 text-teal-800 text-sm shrink-0">
         <CheckCircle className="w-4 h-4 shrink-0" />
-        <span>
-          Stay confirmed · {otherParty?.city ?? ''} · {formatDateRange(request.checkInDate, request.checkOutDate)}
-        </span>
+        {isCotraveller ? (
+          <span>Trip confirmed · {formatDateRange(request.checkInDate, request.checkOutDate)}</span>
+        ) : (
+          <span>Stay confirmed · {otherParty?.city ?? ''} · {formatDateRange(request.checkInDate, request.checkOutDate)}</span>
+        )}
       </div>
     )
   }
@@ -124,7 +130,7 @@ function StatusBanner({ request, otherParty, isGuest }) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-100 text-gray-600 text-sm shrink-0">
         <CheckCircle className="w-4 h-4 shrink-0" />
-        <span>Stay completed · {formatDate(request.checkOutDate)}</span>
+        <span>{isCotraveller ? 'Trip completed' : 'Stay completed'} · {formatDate(request.checkOutDate)}</span>
         {' · '}
         <Link href="#review" className="underline font-medium">Leave a review?</Link>
       </div>
