@@ -40,6 +40,24 @@ export async function GET(request, { params }) {
   }
 }
 
+export async function DELETE(request, { params }) {
+  try {
+    const session = await connectAndAuth()
+    const { postId } = await params
+    const userId = session.user.id
+
+    const post = await CoTravelPost.findById(postId)
+    if (!post) return fail('Post not found', 404)
+    if (post.authorId.toString() !== userId) return fail('Not authorised', 403)
+
+    await CoTravelPost.findByIdAndDelete(postId)
+    await CoTravelInterest.deleteMany({ postId })
+    return ok({ deleted: true })
+  } catch (e) {
+    return handleError(e)
+  }
+}
+
 export async function PATCH(request, { params }) {
   try {
     const session = await connectAndAuth()

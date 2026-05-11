@@ -1,13 +1,15 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Calendar, Heart, ArrowRight, Clock } from 'lucide-react'
+import { Calendar, Heart, ArrowRight, Clock, ChevronDown, Pencil, Trash2, Users as UsersIcon } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, formatRelativeTime } from '@/lib/utils'
 import { useAppUser } from '@/components/layout/AppLayout'
+import toast from 'react-hot-toast'
 
 const CATEGORY_LABELS = {
   solo_traveller: 'Solo traveller',
@@ -57,7 +59,7 @@ function SpotDots({ max, filled }) {
   )
 }
 
-export default function TripPostCard({ post, currentUserTier, currentUserId, compact = false }) {
+export default function TripPostCard({ post, currentUserTier, currentUserId, compact = false, onEdit, onDelete }) {
   const appUser = useAppUser()
   const verifPending  = appUser?.verifPending  ?? false
   const verifApproved = appUser?.verifApproved ?? false
@@ -67,6 +69,32 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
   const spotsLeft = (post.maxCoTravellers ?? 1) - (post.currentCoTravellers ?? 0)
   const isFull    = spotsLeft <= 0
   const soon      = isSoon(post.departureDate)
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handler(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  async function handleDelete() {
+    setMenuOpen(false)
+    if (!window.confirm('Delete this trip post? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/cotraveller/${post._id}`, { method: 'DELETE' })
+      if (!res.ok) { toast.error('Failed to delete trip'); return }
+      toast.success('Trip deleted')
+      onDelete?.(post._id)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
@@ -161,10 +189,47 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
 
           {!compact && (
             <div className="flex items-center gap-2">
-              {/* <Button href={`/cotraveller/${post._id}`} variant="ghost" size="sm">
-                View trip
-              </Button> */}
-              {post.status === 'open' && !isFull && !isOwnPost && (
+              {isOwnPost ? (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(v => !v)}
+                    disabled={deleting}
+                    className="flex items-center gap-1 text-xs text-brand font-medium hover:text-brand-dark"
+                  >
+                    Manage trip
+                    <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', menuOpen && 'rotate-180')} />
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute right-0 bottom-full mb-1 bg-white border border-gray-100 rounded-xl shadow-lg z-20 w-40 overflow-hidden">
+                      <Link
+                        href={`/cotraveller/${post._id}/interests`}
+                        onClick={() => setMenuOpen(false)}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <UsersIcon className="w-3.5 h-3.5" />
+                        View interests
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => { setMenuOpen(false); onEdit?.(post) }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit trip
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete trip
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : post.status === 'open' && !isFull && (
                 currentUserTier === 'basic' ? (
                   verifPending ? (
                     <Button variant="ghost" size="sm" disabled className="text-brand/50">

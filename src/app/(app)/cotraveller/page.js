@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -19,6 +19,9 @@ import {
   Heart,
   X,
   Check,
+  Pencil,
+  Trash2,
+  ChevronDown,
 } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -40,7 +43,40 @@ const STATUS_COLORS = {
   expired: "bg-gray-100 text-gray-500",
 };
 
-function MyPostCard({ post }) {
+function MyPostCard({ post, onEdit, onDelete }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handler(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  async function handleDelete() {
+    setMenuOpen(false);
+    if (!window.confirm("Delete this trip post? This cannot be undone."))
+      return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/cotraveller/${post._id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        toast.error("Failed to delete trip");
+        return;
+      }
+      toast.success("Trip deleted");
+      onDelete?.(post._id);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-start justify-between gap-3">
       <div className="flex-1 min-w-0">
@@ -71,12 +107,198 @@ function MyPostCard({ post }) {
           </span>
         </div>
       </div>
-      <Link
-        href={`/cotraveller/${post._id}/interests`}
-        className="text-xs text-brand font-medium hover:text-brand-dark whitespace-nowrap mt-1"
-      >
-        View interests →
-      </Link>
+      <div className="relative shrink-0 mt-1" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          disabled={deleting}
+          className="flex items-center gap-1 text-xs text-brand font-medium hover:text-brand-dark"
+        >
+          Manage trip
+          <ChevronDown
+            className={cn(
+              "w-3.5 h-3.5 transition-transform",
+              menuOpen && "rotate-180",
+            )}
+          />
+        </button>
+        {menuOpen && (
+          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-20 w-40 overflow-hidden">
+            <Link
+              href={`/cotraveller/${post._id}/interests`}
+              onClick={() => setMenuOpen(false)}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Users className="w-3.5 h-3.5" />
+              View interests
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onEdit?.(post);
+              }}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit trip
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete trip
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EditTripModal({ post, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    title: post.title ?? "",
+    description: post.description ?? "",
+    departureDate: post.departureDate
+      ? post.departureDate.split("T")[0]
+      : "",
+    isFlexibleDates: post.isFlexibleDates ?? false,
+    status: post.status ?? "open",
+  });
+  const [loading, setLoading] = useState(false);
+
+  async function handleSave() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/cotraveller/${post._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Failed to update trip");
+        return;
+      }
+      toast.success("Trip updated!");
+      onSaved?.();
+      onClose();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col shadow-xl">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">Edit trip</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Title
+            </label>
+            <input
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
+              value={form.title}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, title: e.target.value }))
+              }
+              maxLength={200}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Departure date
+            </label>
+            <input
+              type="date"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
+              value={form.departureDate}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, departureDate: e.target.value }))
+              }
+            />
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.isFlexibleDates}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, isFlexibleDates: e.target.checked }))
+              }
+              className="w-4 h-4 rounded accent-brand"
+            />
+            <span className="text-sm text-gray-700">Flexible dates</span>
+          </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Status
+            </label>
+            <div className="flex gap-2">
+              {["open", "filled", "cancelled"].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, status: s }))}
+                  className={cn(
+                    "flex-1 py-2 rounded-xl text-sm border capitalize transition-colors",
+                    form.status === s
+                      ? "bg-brand text-white border-brand"
+                      : "border-gray-200 text-gray-600 hover:border-brand",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <span className="text-xs text-gray-400">
+                {form.description.length}/1500
+              </span>
+            </div>
+            <textarea
+              rows={5}
+              maxLength={1500}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition resize-none"
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+            />
+          </div>
+        </div>
+        <div className="px-5 py-4 border-t border-gray-100 flex gap-3 justify-end">
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            loading={loading}
+            onClick={handleSave}
+          >
+            Save changes
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -145,6 +367,7 @@ export default function CoTravellerPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [showModal, setModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
 
   const [posts, setPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
@@ -210,7 +433,12 @@ export default function CoTravellerPage() {
     let cancelled = false;
     (async () => {
       try {
-        const params = new URLSearchParams({ page: "1", limit: "12", status: "open", verifiedOnly: "true" });
+        const params = new URLSearchParams({
+          page: "1",
+          limit: "12",
+          status: "open",
+          verifiedOnly: "true",
+        });
         const res = await fetch(`/api/cotraveller?${params}`);
         if (!res.ok || cancelled) return;
         const data = await res.json();
@@ -222,13 +450,17 @@ export default function CoTravellerPage() {
         }
       } catch {}
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function handleTabChange(i) {
     setActiveTab(i);
-    if (i === 0) { setLoading(true); fetchPosts(1, filters); }
-    else if (i === 1) fetchMyPosts();
+    if (i === 0) {
+      setLoading(true);
+      fetchPosts(1, filters);
+    } else if (i === 1) fetchMyPosts();
     else if (i === 2) fetchMyInterests();
   }
 
@@ -259,44 +491,18 @@ export default function CoTravellerPage() {
           Connect with verified sisters who share your destination. Travel
           together, explore fearlessly.
         </p>
-        <div className="flex items-center justify-center gap-3 mt-4">
-          {isVerified ? (
-            <Button variant="primary" size="sm" onClick={() => setModal(true)}>
-              Post my trip
-            </Button>
-          ) : verifPending ? (
-            <Button variant="ghost" size="sm" disabled>
-              Verification under review
-            </Button>
-          ) : verifApproved ? (
-            <Button variant="primary" size="sm" href="/profile/verification">
-              Activate badge to post
-            </Button>
-          ) : (
-            <Button variant="primary" size="sm" href="/profile/verification">
-              Get verified to post
-            </Button>
-          )}
-          <Link
-            href="#my-activity"
-            className="text-sm text-brand font-medium hover:text-brand-dark"
-            onClick={() => handleTabChange(1)}
-          >
-            My posts &amp; interests →
-          </Link>
-        </div>
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[52px] lg:top-14 z-10 bg-white border-b border-gray-100">
-        <div className="flex max-w-3xl mx-auto">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+        <div className="flex overflow-x-auto scrollbar-hide max-w-3xl mx-auto">
           {TABS.map((label, i) => (
             <button
               key={label}
               type="button"
               onClick={() => handleTabChange(i)}
               className={cn(
-                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                "shrink-0 sm:flex-1 px-5 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap",
                 activeTab === i
                   ? "border-brand text-brand"
                   : "border-transparent text-gray-500 hover:text-gray-700",
@@ -324,7 +530,7 @@ export default function CoTravellerPage() {
                     setFilters((f) => ({ ...f, search: e.target.value }))
                   }
                   onKeyDown={(e) => e.key === "Enter" && fetchPosts(1, filters)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 "
                 />
               </div>
               <button
@@ -417,6 +623,10 @@ export default function CoTravellerPage() {
                       post={post}
                       currentUserTier={userTier}
                       currentUserId={session?.user?.id}
+                      onEdit={(p) => setEditingPost(p)}
+                      onDelete={(id) =>
+                        setPosts((prev) => prev.filter((p) => p._id !== id))
+                      }
                     />
                   ))}
                 </div>
@@ -426,7 +636,10 @@ export default function CoTravellerPage() {
                       variant="ghost"
                       size="sm"
                       loading={loading}
-                      onClick={() => { setLoading(true); fetchPosts(page + 1, filters); }}
+                      onClick={() => {
+                        setLoading(true);
+                        fetchPosts(page + 1, filters);
+                      }}
                     >
                       Load more trips
                     </Button>
@@ -500,7 +713,16 @@ export default function CoTravellerPage() {
                 {myPosts.length > 0 ? (
                   <div className="space-y-3">
                     {myPosts.map((post) => (
-                      <MyPostCard key={post._id} post={post} />
+                      <MyPostCard
+                        key={post._id}
+                        post={post}
+                        onEdit={(p) => setEditingPost(p)}
+                        onDelete={(id) =>
+                          setMyPosts((prev) =>
+                            prev.filter((p) => p._id !== id),
+                          )
+                        }
+                      />
                     ))}
                   </div>
                 ) : (
@@ -573,6 +795,16 @@ export default function CoTravellerPage() {
             setLoading(true);
             fetchPosts(1, filters);
             fetchMyPosts();
+          }}
+        />
+      )}
+      {editingPost && (
+        <EditTripModal
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onSaved={() => {
+            fetchMyPosts();
+            setEditingPost(null);
           }}
         />
       )}
