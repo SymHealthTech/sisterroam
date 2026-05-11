@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useAppUser } from '@/components/layout/AppLayout'
 import Image from 'next/image'
@@ -80,16 +80,65 @@ function Lightbox({ images, index, onClose, onChange }) {
   )
 }
 
+/* ── Mobile full-screen image viewer (Facebook-style) ──────── */
+function ImageViewer({ images, startIndex, onClose }) {
+  const itemRefs = useRef([])
+
+  useEffect(() => {
+    const el = itemRefs.current[startIndex]
+    if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
+  }, [startIndex])
+
+  return (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="flex items-center justify-between px-4 py-3 shrink-0 bg-black/90">
+        <span className="text-white/60 text-sm">{images.length} {images.length === 1 ? 'photo' : 'photos'}</span>
+        <button onClick={onClose} className="text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {images.map((src, i) => (
+          <div key={i} ref={el => { itemRefs.current[i] = el }} className="w-full">
+            <Image
+              src={src}
+              alt=""
+              width={1200}
+              height={900}
+              className="w-full h-auto block"
+              sizes="100vw"
+              priority={i === startIndex}
+            />
+            {i < images.length - 1 && <div className="h-2 bg-black" />}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /* ── Image grid ────────────────────────────────────────────── */
 function ImageGrid({ images, priority = false }) {
   const [lightbox, setLightbox] = useState(null)
+  const [viewer,   setViewer]   = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   if (!images?.length) return null
   const count = images.length
+
+  const open = (i) => isMobile ? setViewer(i) : setLightbox(i)
 
   const cell = (src, i, extraClass = '') => (
     <div
       key={i}
-      onClick={() => setLightbox(i)}
+      onClick={() => open(i)}
       className={`relative overflow-hidden cursor-pointer rounded-xl ${extraClass}`}
     >
       <Image src={src} alt="" fill sizes="(max-width: 768px) 100vw, 340px" priority={priority && i === 0} className="object-cover hover:brightness-90 transition-[filter]" />
@@ -100,7 +149,7 @@ function ImageGrid({ images, priority = false }) {
   const overflowCell = (src, i, remaining, extraClass = '') => (
     <div
       key={i}
-      onClick={() => setLightbox(i)}
+      onClick={() => open(i)}
       className={`relative overflow-hidden cursor-pointer rounded-xl ${extraClass}`}
     >
       <Image src={src} alt="" fill sizes="50vw" className="object-cover brightness-50" />
@@ -113,6 +162,9 @@ function ImageGrid({ images, priority = false }) {
   return (
     <>
       <Lightbox images={images} index={lightbox} onClose={() => setLightbox(null)} onChange={setLightbox} />
+      {viewer !== null && (
+        <ImageViewer images={images} startIndex={viewer} onClose={() => setViewer(null)} />
+      )}
 
       {/* ── Mobile: max 3 slots, +N on last if more ── */}
       <div className="sm:hidden">
