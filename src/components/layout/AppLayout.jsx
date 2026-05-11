@@ -121,7 +121,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Desktop top bar */}
-        <div className="hidden lg:flex items-center justify-between h-14 px-6 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
+        <div className="hidden lg:flex items-center justify-between h-14 px-6 bg-white border-b border-gray-100 sticky top-0 z-20 shrink-0">
           <h1 className="text-base font-semibold text-gray-900">{title}</h1>
           <div className="flex items-center gap-3">
             <NotificationPanel userId={user?.id} />
@@ -132,7 +132,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
         </div>
 
         {/* Mobile mini-header */}
-        {!noTopBar && <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
+        {!noTopBar && <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-20 shrink-0">
           <button
             onClick={() => router.back()}
             className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 self-start mt-0.5"

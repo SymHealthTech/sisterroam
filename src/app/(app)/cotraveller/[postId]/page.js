@@ -300,7 +300,7 @@ export default function TripDetailPage({ params }) {
                   </p>
                 )}
                 <Link
-                  href={`/explore/${post.authorId?._id ?? post.authorId}`}
+                  href={`/user/${post.authorId?._id ?? post.authorId}`}
                   className="text-xs text-brand hover:text-brand-dark font-medium mt-1 inline-block"
                 >
                   View full profile →

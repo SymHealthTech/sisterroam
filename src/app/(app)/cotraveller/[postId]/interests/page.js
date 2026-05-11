@@ -95,7 +95,7 @@ function InterestCard({ interest, onAccept, onDecline }) {
 
       {/* Actions */}
       <div className="flex items-center justify-between gap-3">
-        <Link href={`/explore/${user._id}`} className="text-xs text-brand hover:text-brand-dark font-medium">
+        <Link href={`/user/${user._id}`} className="text-xs text-brand hover:text-brand-dark font-medium">
           View profile →
         </Link>
 
