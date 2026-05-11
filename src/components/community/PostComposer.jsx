@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { X, ImagePlus } from 'lucide-react'
+import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
@@ -16,15 +16,163 @@ const CATEGORIES = [
   { value: 'questions',        label: 'Questions' },
 ]
 
-const MAX_CHARS = 500
+const MAX_CHARS  = 500
+const MAX_IMAGES = 7
 
+async function compressImage(file, maxWidth = 1200, quality = 0.75) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width)
+        width = maxWidth
+      }
+      canvas.width  = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' })),
+        'image/webp',
+        quality,
+      )
+    }
+    img.src = url
+  })
+}
+
+/* ── Facebook-style image grid ─────────────────────────────────────────── */
+function ImageGrid({ images, onRemove, onView }) {
+  const count = images.length
+
+  const cell = (img, i, extraClass = '') => (
+    <div
+      key={i}
+      onClick={() => onView(i)}
+      className={`relative overflow-hidden cursor-pointer group ${extraClass}`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={img.url} alt="" className="w-full h-full object-cover" />
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(i) }}
+        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  )
+
+  if (count === 1) {
+    return (
+      <div className="rounded-xl overflow-hidden h-60">
+        {cell(images[0], 0, 'h-full')}
+      </div>
+    )
+  }
+
+  if (count === 2) {
+    return (
+      <div className="grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden h-52">
+        {images.map((img, i) => cell(img, i, 'h-full'))}
+      </div>
+    )
+  }
+
+  if (count === 3) {
+    return (
+      <div className="grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden h-52">
+        {cell(images[0], 0, 'row-span-2 h-full')}
+        {cell(images[1], 1, 'h-[calc(50%-1px)]')}
+        {cell(images[2], 2, 'h-[calc(50%-1px)]')}
+      </div>
+    )
+  }
+
+  if (count === 4) {
+    return (
+      <div className="grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden h-52">
+        {images.map((img, i) => cell(img, i, 'h-[calc(50%-1px)]'))}
+      </div>
+    )
+  }
+
+  /* 5-7 images: two rows */
+  const topCount = count <= 6 ? Math.ceil(count / 2) : 4
+  const top      = images.slice(0, topCount)
+  const bottom   = images.slice(topCount)
+
+  return (
+    <div className="rounded-xl overflow-hidden space-y-0.5">
+      <div className="flex gap-0.5 h-36">
+        {top.map((img, i) => cell(img, i, 'flex-1 h-full'))}
+      </div>
+      <div className="flex gap-0.5 h-28">
+        {bottom.map((img, i) => cell(img, topCount + i, 'flex-1 h-full'))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Lightbox ──────────────────────────────────────────────────────────── */
+function Lightbox({ images, index, onClose, onChange }) {
+  if (index === null) return null
+  return (
+    <div
+      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {index > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange(index - 1) }}
+          className="absolute left-4 text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition-colors"
+        >
+          <ChevronLeft className="w-7 h-7" />
+        </button>
+      )}
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={images[index].url}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[88vh] max-w-[88vw] object-contain rounded-lg shadow-2xl"
+      />
+
+      {index < images.length - 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange(index + 1) }}
+          className="absolute right-4 text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition-colors"
+        >
+          <ChevronRight className="w-7 h-7" />
+        </button>
+      )}
+
+      <p className="absolute bottom-5 text-white/70 text-sm">
+        {index + 1} / {images.length}
+      </p>
+    </div>
+  )
+}
+
+/* ── Main component ────────────────────────────────────────────────────── */
 export default function PostComposer({ user, onPost }) {
   const [open,       setOpen]       = useState(false)
   const [content,    setContent]    = useState('')
   const [category,   setCategory]   = useState('general')
-  const [images,     setImages]     = useState([]) // [{ url, publicId }]
+  const [images,     setImages]     = useState([])
   const [uploading,  setUploading]  = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [lightbox,   setLightbox]   = useState(null)
   const fileRef = useRef(null)
 
   function reset() {
@@ -32,31 +180,44 @@ export default function PostComposer({ user, onPost }) {
     setCategory('general')
     setImages([])
     setOpen(false)
+    setLightbox(null)
   }
 
   async function handleImageFiles(files) {
-    if (images.length + files.length > 3) {
-      toast.error('Maximum 3 images per post')
+    const remaining = MAX_IMAGES - images.length
+    if (!files.length || remaining <= 0) return
+    if (files.length > remaining) {
+      toast.error(`You can add ${remaining} more image${remaining === 1 ? '' : 's'} (max ${MAX_IMAGES})`)
+      if (fileRef.current) fileRef.current.value = ''
       return
     }
+
     setUploading(true)
-    for (const file of files) {
-      const form = new FormData()
-      form.append('file', file)
-      form.append('folder', 'community')
-      const res = await fetch('/api/upload', { method: 'POST', body: form })
-      if (res.ok) {
-        const d = await res.json()
-        setImages(prev => [...prev, { url: d.url, publicId: d.publicId }])
-      } else {
+    for (const raw of files) {
+      try {
+        const compressed = await compressImage(raw)
+        const form = new FormData()
+        form.append('file', compressed)
+        form.append('type', 'community_image')
+        const res = await fetch('/api/upload', { method: 'POST', body: form })
+        if (res.ok) {
+          const d = await res.json()
+          setImages(prev => [...prev, { url: d.url, publicId: d.publicId }])
+        } else {
+          const err = await res.json().catch(() => ({}))
+          toast.error(err.error ?? 'Image upload failed')
+        }
+      } catch {
         toast.error('Image upload failed')
       }
     }
     setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
   }
 
   function removeImage(idx) {
     setImages(prev => prev.filter((_, i) => i !== idx))
+    setLightbox(null)
   }
 
   async function submit() {
@@ -98,97 +259,102 @@ export default function PostComposer({ user, onPost }) {
 
   /* Expanded state */
   return (
-    <div className="bg-white rounded-2xl border border-brand/30 p-4 space-y-3 shadow-sm">
-      <div className="flex items-start gap-3">
-        <Avatar src={user?.profilePhotoUrl} name={user?.fullName} size="sm" className="shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <textarea
-            autoFocus
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Share your travel story, tip, or question…"
-            maxLength={MAX_CHARS}
-            rows={4}
-            className="w-full resize-none text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none leading-relaxed"
-          />
-          <p className={`text-right text-[11px] mt-1 ${content.length > MAX_CHARS * 0.9 ? 'text-amber' : 'text-gray-300'}`}>
-            {content.length}/{MAX_CHARS}
-          </p>
+    <>
+      <Lightbox
+        images={images}
+        index={lightbox}
+        onClose={() => setLightbox(null)}
+        onChange={setLightbox}
+      />
+
+      <div className="bg-white rounded-2xl border border-brand/30 p-4 space-y-3 shadow-sm">
+        <div className="flex items-start gap-3">
+          <Avatar src={user?.profilePhotoUrl} name={user?.fullName} size="sm" className="shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <textarea
+              autoFocus
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Share your travel experience, tips, or questions…"
+              maxLength={MAX_CHARS}
+              rows={4}
+              className="w-full p-2 rounded-md resize-none text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none leading-relaxed"
+            />
+            <p className={`text-right text-[11px] mt-1 ${content.length > MAX_CHARS * 0.9 ? 'text-amber' : 'text-gray-300'}`}>
+              {content.length}/{MAX_CHARS}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Category pills */}
-      <div className="flex gap-1.5 flex-wrap pl-9">
-        {CATEGORIES.map(c => (
-          <button
-            key={c.value}
-            onClick={() => setCategory(c.value)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-              category === c.value
-                ? 'bg-brand text-white border-brand'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-brand/40 hover:text-brand'
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Image previews */}
-      {images.length > 0 && (
-        <div className="flex gap-2 pl-9">
-          {images.map((img, i) => (
-            <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="w-full h-full object-cover" />
-              <button
-                onClick={() => removeImage(i)}
-                className="absolute top-0.5 right-0.5 bg-black/50 text-white rounded-full p-0.5 hover:bg-black/70"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
+        {/* Category pills */}
+        <div className="flex gap-1.5 flex-wrap pl-9">
+          {CATEGORIES.map(c => (
+            <button
+              key={c.value}
+              onClick={() => setCategory(c.value)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                category === c.value
+                  ? 'bg-brand text-white border-brand'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-brand/40 hover:text-brand'
+              }`}
+            >
+              {c.label}
+            </button>
           ))}
         </div>
-      )}
 
-      {/* Bottom bar */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 pl-9">
-        <div className="flex items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={e => handleImageFiles(Array.from(e.target.files ?? []))}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={images.length >= 3 || uploading}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors disabled:opacity-40"
-          >
-            <ImagePlus className="w-4 h-4" />
-            {uploading ? 'Uploading…' : 'Photo'}
-          </button>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={reset}
-            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            Cancel
-          </button>
-          <Button
-            size="sm"
-            onClick={submit}
-            loading={submitting}
-            disabled={!content.trim() || submitting}
-          >
-            Post
-          </Button>
+        {/* Image grid preview */}
+        {images.length > 0 && (
+          <div className="pl-9">
+            <ImageGrid
+              images={images}
+              onRemove={removeImage}
+              onView={setLightbox}
+            />
+            <p className="text-[11px] text-gray-400 mt-1.5 text-right">
+              {images.length}/{MAX_IMAGES} photos · tap to view full size
+            </p>
+          </div>
+        )}
+
+        {/* Bottom bar */}
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 pl-9">
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={e => handleImageFiles(Array.from(e.target.files ?? []))}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={images.length >= MAX_IMAGES || uploading}
+              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors disabled:opacity-40"
+            >
+              <ImagePlus className="w-4 h-4" />
+              {uploading ? 'Uploading…' : `Photo${images.length > 0 ? ` (${images.length}/${MAX_IMAGES})` : ''}`}
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={reset}
+              className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Cancel
+            </button>
+            <Button
+              size="sm"
+              onClick={submit}
+              loading={submitting}
+              disabled={!content.trim() || submitting}
+            >
+              Post
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

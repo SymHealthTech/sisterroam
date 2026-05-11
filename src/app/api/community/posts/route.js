@@ -50,7 +50,7 @@ export async function POST(request) {
 
     if (!content?.trim())    return fail('Content is required', 400)
     if (content.length > 500) return fail('Content too long — max 500 characters', 400)
-    if (imageUrls.length > 3) return fail('Maximum 3 images allowed', 400)
+    if (imageUrls.length > 7) return fail('Maximum 7 images allowed', 400)
 
     const post = await CommunityPost.create({
       authorId: session.user.id,

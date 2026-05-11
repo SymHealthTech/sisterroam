@@ -12,7 +12,7 @@ const communityPostSchema = new mongoose.Schema(
       default: 'general',
     },
 
-    imageUrls: { type: [String], validate: [v => v.length <= 3, 'Max 3 images'] },
+    imageUrls: { type: [String], validate: [v => v.length <= 7, 'Max 7 images'] },
     imagePublicIds: [{ type: String }],
 
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

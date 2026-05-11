@@ -10,7 +10,7 @@ export default function BlogCard({ post }) {
       className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
       {post.coverImage && (
         <div className="relative h-48">
-          <Image src={post.coverImage} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image src={post.coverImage} alt={post.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover group-hover:scale-105 transition-transform duration-300" />
         </div>
       )}
       <div className="p-4 space-y-3">

@@ -22,7 +22,8 @@ const CATEGORIES = [
 ];
 
 /* ── Feed tab ─────────────────────────────────────────────── */
-function FeedTab({ user }) {
+function FeedTab() {
+  const user = useAppUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("");
@@ -59,7 +60,10 @@ function FeedTab({ user }) {
     setLoadingMore(true);
     fetchPosts(category, next).then((d) => {
       const list = d?.data?.posts ?? [];
-      setPosts((prev) => [...prev, ...list]);
+      setPosts((prev) => {
+        const seen = new Set(prev.map((p) => String(p._id)));
+        return [...prev, ...list.filter((p) => !seen.has(String(p._id)))];
+      });
       setHasMore(next < (d?.data?.totalPages ?? 1));
       setLoadingMore(false);
     });
@@ -73,12 +77,14 @@ function FeedTab({ user }) {
     setPosts((prev) => prev.filter((p) => p._id !== id));
   }
 
-  const isVerified =
-    user?.verificationTier && user.verificationTier !== "basic";
+  const tierKnown = user?.tierLoaded ?? false;
+  const isVerified = tierKnown && user.verificationTier && user.verificationTier !== "basic";
 
   return (
     <div className="space-y-4">
-      {isVerified ? (
+      {!tierKnown ? (
+        <Skeleton variant="card" className="h-16" />
+      ) : isVerified ? (
         <PostComposer user={user} onPost={handleNewPost} />
       ) : (
         <VerificationGate mode="banner" action="Posting" />
@@ -116,13 +122,14 @@ function FeedTab({ user }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((p) => (
+          {posts.map((p, idx) => (
             <PostCard
               key={p._id}
               post={p}
               currentUserId={user?.id}
               currentUserTier={user?.verificationTier}
               onDelete={handleDelete}
+              priority={idx === 0}
             />
           ))}
           {hasMore && (
@@ -262,7 +269,6 @@ function StoriesTabPreview() {
 
 /* ── Main page ────────────────────────────────────────────── */
 export default function CommunityPage() {
-  const freshUser = useAppUser();
   const [activeTab, setActiveTab] = useState("Feed");
 
   return (
@@ -286,7 +292,7 @@ export default function CommunityPage() {
           ))}
         </div>
 
-        {activeTab === "Feed" && <FeedTab user={freshUser} />}
+        {activeTab === "Feed" && <FeedTab />}
         {activeTab === "Circles" && <CirclesTab />}
         {activeTab === "Stories" && <StoriesTabPreview />}
       </div>

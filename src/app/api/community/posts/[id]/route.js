@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import CommunityPost from '@/models/CommunityPost'
 import CommunityComment from '@/models/CommunityComment'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { deleteFile } from '@/lib/cloudinary'
 
 export async function GET(request, { params }) {
   try {
@@ -72,8 +73,12 @@ export async function DELETE(request, { params }) {
       return fail('Not authorized', 403)
     }
 
+    const publicIds = post.imagePublicIds?.filter(Boolean) ?? []
     await post.deleteOne()
-    await CommunityComment.deleteMany({ postId: id })
+    await Promise.all([
+      CommunityComment.deleteMany({ postId: id }),
+      ...publicIds.map(pid => deleteFile(pid).catch(() => null)),
+    ])
 
     return ok({ deleted: true })
   } catch (e) {

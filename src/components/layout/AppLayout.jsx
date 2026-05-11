@@ -37,7 +37,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar = false }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false })
+  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false, tierLoaded: false })
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { subscribe } = useSSEContext()
@@ -57,7 +57,11 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
       try {
         const r = await fetch('/api/users', { signal })
         const d = await r.json()
-        if (!d.success || signal.aborted) return
+        if (signal.aborted) return
+        if (!d.success) {
+          if (!signal.aborted) setFreshData(prev => ({ ...prev, tierLoaded: true }))
+          return
+        }
         const tier = d.data.verificationTier ?? null
         const update = {
           profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
@@ -75,9 +79,12 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
             }
           } catch {}
         }
-        if (!signal.aborted) setFreshData(update)
+        if (!signal.aborted) setFreshData({ ...update, tierLoaded: true })
       } catch (err) {
-        if (err.name !== 'AbortError') console.error('[AppLayout] loadFreshUser:', err.message)
+        if (err.name !== 'AbortError') {
+          console.error('[AppLayout] loadFreshUser:', err.message)
+          setFreshData(prev => ({ ...prev, tierLoaded: true }))
+        }
       }
     }
 
@@ -106,9 +113,10 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
   const freshUser = {
     ...user,
     profilePhotoUrl:  avatarSrc,
-    ...(freshData.verificationTier ? { verificationTier: freshData.verificationTier } : {}),
+    ...(freshData.tierLoaded ? { verificationTier: freshData.verificationTier } : {}),
     verifPending:  freshData.verifPending  ?? false,
     verifApproved: freshData.verifApproved ?? false,
+    tierLoaded:    freshData.tierLoaded,
   }
 
   return (
