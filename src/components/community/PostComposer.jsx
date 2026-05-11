@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react'
-import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 
@@ -165,7 +164,7 @@ function Lightbox({ images, index, onClose, onChange }) {
 }
 
 /* ── Main component ────────────────────────────────────────────────────── */
-export default function PostComposer({ user, onPost }) {
+export default function PostComposer({ onPost }) {
   const [open,       setOpen]       = useState(false)
   const [content,    setContent]    = useState('')
   const [category,   setCategory]   = useState('general')
@@ -245,10 +244,9 @@ export default function PostComposer({ user, onPost }) {
   if (!open) {
     return (
       <div
-        className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 cursor-pointer hover:border-brand/30 transition-colors"
+        className="bg-white rounded-2xl border border-gray-100 px-4 py-2 flex items-center gap-3 cursor-pointer hover:border-brand/30 transition-colors"
         onClick={() => setOpen(true)}
       >
-        <Avatar src={user?.profilePhotoUrl} name={user?.fullName} size="sm" className="shrink-0" />
         <p className="text-sm text-gray-400 flex-1">Share something with the community…</p>
         <button className="p-2 text-gray-300 hover:text-brand transition-colors">
           <ImagePlus className="w-4 h-4" />
@@ -268,8 +266,7 @@ export default function PostComposer({ user, onPost }) {
       />
 
       <div className="bg-white rounded-2xl border border-brand/30 p-4 space-y-3 shadow-sm">
-        <div className="flex items-start gap-3">
-          <Avatar src={user?.profilePhotoUrl} name={user?.fullName} size="sm" className="shrink-0 mt-0.5" />
+        <div className="flex items-start">
           <div className="flex-1 min-w-0">
             <textarea
               autoFocus
@@ -277,8 +274,8 @@ export default function PostComposer({ user, onPost }) {
               onChange={e => setContent(e.target.value)}
               placeholder="Share your travel experience, tips, or questions…"
               maxLength={MAX_CHARS}
-              rows={4}
-              className="w-full p-2 rounded-md resize-none text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none leading-relaxed"
+              rows={3}
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 resize-none text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-brand/30 focus:ring-2 focus:ring-brand/10 leading-relaxed transition-colors"
             />
             <p className={`text-right text-[11px] mt-1 ${content.length > MAX_CHARS * 0.9 ? 'text-amber' : 'text-gray-300'}`}>
               {content.length}/{MAX_CHARS}
@@ -287,7 +284,7 @@ export default function PostComposer({ user, onPost }) {
         </div>
 
         {/* Category pills */}
-        <div className="flex gap-1.5 flex-wrap pl-9">
+        <div className="flex gap-1.5 flex-wrap">
           {CATEGORIES.map(c => (
             <button
               key={c.value}
@@ -305,7 +302,7 @@ export default function PostComposer({ user, onPost }) {
 
         {/* Image grid preview */}
         {images.length > 0 && (
-          <div className="pl-9">
+          <div>
             <ImageGrid
               images={images}
               onRemove={removeImage}
@@ -318,7 +315,7 @@ export default function PostComposer({ user, onPost }) {
         )}
 
         {/* Bottom bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 pl-9">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div className="flex items-center gap-2">
             <input
               ref={fileRef}
