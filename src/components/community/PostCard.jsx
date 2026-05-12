@@ -99,15 +99,22 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
     }
   }, [])
 
-  // Prevent native pull-to-refresh when at top of modal (iOS)
+  // Prevent pull-to-refresh only when pulling up at the top (finger moving down)
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const block = (e) => {
-      if (el.scrollTop <= 0 && e.cancelable) e.preventDefault()
+    let startY = 0
+    const onStart = (e) => { startY = e.touches[0].clientY }
+    const onMove  = (e) => {
+      const dy = e.touches[0].clientY - startY
+      if (el.scrollTop <= 0 && dy > 0 && e.cancelable) e.preventDefault()
     }
-    el.addEventListener('touchmove', block, { passive: false })
-    return () => el.removeEventListener('touchmove', block)
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove',  onMove,  { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove',  onMove)
+    }
   }, [])
 
   // Scroll to tapped image after render
