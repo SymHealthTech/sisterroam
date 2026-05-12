@@ -83,15 +83,31 @@ function Lightbox({ images, index, onClose, onChange }) {
 
 /* ── Mobile image modal ────────────────────────────────────── */
 function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, onLike }) {
+  const containerRef  = useRef(null)
   const imgRefs       = useRef([])
   const prevStRef     = useRef(0)
   const hasScrolled   = useRef(false)
   const [zoomed, setZoomed] = useState(null)
 
-  // Lock body scroll
+  // Lock body scroll + disable pull-to-refresh
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    document.documentElement.style.overscrollBehavior = 'none'
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overscrollBehavior = ''
+    }
+  }, [])
+
+  // Prevent native pull-to-refresh when at top of modal (iOS)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const block = (e) => {
+      if (el.scrollTop <= 0 && e.cancelable) e.preventDefault()
+    }
+    el.addEventListener('touchmove', block, { passive: false })
+    return () => el.removeEventListener('touchmove', block)
   }, [])
 
   // Scroll to tapped image after render
@@ -102,19 +118,23 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
     return () => clearTimeout(t)
   }, [startIndex])
 
-  // Close when scrolled down past the last image
+  // Close only after last image is fully visible and user scrolls further
   const handleScroll = useCallback((e) => {
     const el = e.currentTarget
     const st = el.scrollTop
     const goingDown = st > prevStRef.current
     prevStRef.current = st
     if (st > 30) hasScrolled.current = true
-    const atBottom = st + el.clientHeight >= el.scrollHeight - 16
+    const atBottom = st + el.clientHeight >= el.scrollHeight - 1
     if (goingDown && atBottom && hasScrolled.current) onClose()
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-50 bg-black overflow-y-auto" onScroll={handleScroll}>
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 bg-black overflow-y-auto overscroll-y-none"
+      onScroll={handleScroll}
+    >
       {images.map((src, i) => (
         <div key={i}>
           <div
@@ -151,7 +171,7 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
         </div>
       ))}
 
-      {/* Full-screen single image view */}
+      {/* Single image zoom – centered with equal top/bottom margin */}
       {zoomed && (
         <div className="fixed inset-0 z-[60] bg-black overflow-y-auto">
           <button
@@ -160,7 +180,16 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
           >
             <X className="w-5 h-5" />
           </button>
-          <Image src={zoomed} alt="" width={1200} height={900} sizes="100vw" className="w-full h-auto block" />
+          <div className="min-h-full flex items-center justify-center py-14">
+            <Image
+              src={zoomed}
+              alt=""
+              width={1200}
+              height={900}
+              sizes="100vw"
+              className="w-full h-auto block"
+            />
+          </div>
         </div>
       )}
     </div>
