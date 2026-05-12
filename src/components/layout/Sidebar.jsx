@@ -7,7 +7,7 @@ import { signOut } from 'next-auth/react'
 import {
   Home, Search, MessageCircle, Users, User,
   Shield, Settings, ChevronLeft, LogOut,
-  UserPlus, MapPin,
+  UserPlus, MapPin, BookOpen, Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/feed',              icon: Home,          label: 'Home'            },
   { href: '/explore',           icon: Search,        label: 'Explore'         },
   { href: '/community',         icon: Users,         label: 'Community'       },
+  { href: '/community/stories', icon: BookOpen,      label: 'Travel Stories'  },
   { href: '/cotraveller',       icon: UserPlus,      label: 'Co-traveller'    },
   { href: '/recommendations',   icon: MapPin,        label: 'Recommendations' },
   { href: '/messages',          icon: MessageCircle, label: 'Messages'        },
@@ -99,6 +100,21 @@ export default function Sidebar({ user }) {
           )
         })}
       </nav>
+
+      {/* Go to Website */}
+      <div className="px-2 pb-1">
+        <Link
+          href="/"
+          title={collapsed ? 'Go to Website' : undefined}
+          className={cn(
+            'flex items-center gap-2 w-full rounded-xl py-2.5 px-3 text-sm font-medium text-brand border border-brand-lighter bg-brand-lighter/50 hover:bg-brand-lighter transition-colors',
+            collapsed && 'justify-center px-0',
+          )}
+        >
+          <Globe className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+          {!collapsed && <span>Go to Website</span>}
+        </Link>
+      </div>
 
       {/* Collapse toggle */}
       <div className="px-2 pb-2">

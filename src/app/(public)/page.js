@@ -160,36 +160,11 @@ const TESTIMONIALS = [
 ];
 
 const CATEGORIES = [
-  {
-    icon: Globe,
-    name: "Solo Travel",
-    members: "2,300+",
-    href: "/community/circles?type=solo_traveller",
-  },
-  {
-    icon: Bike,
-    name: "Cycling",
-    members: "890+",
-    href: "/community/circles?type=cyclist",
-  },
-  {
-    icon: Mountain,
-    name: "Trekking",
-    members: "1,100+",
-    href: "/community/circles?type=trekker",
-  },
-  {
-    icon: Activity,
-    name: "Running",
-    members: "650+",
-    href: "/community/circles?type=runner",
-  },
-  {
-    icon: Car,
-    name: "Road Trip",
-    members: "420+",
-    href: "/community/circles?type=road_tripper",
-  },
+  { icon: Globe, name: "Solo Travel", members: "2,300+" },
+  { icon: Bike, name: "Cycling", members: "890+" },
+  { icon: Mountain, name: "Trekking", members: "1,100+" },
+  { icon: Activity, name: "Running", members: "650+" },
+  { icon: Car, name: "Road Trip", members: "420+" },
 ];
 
 // ── Data fetching ───────────────────────────────────────────────────────────
@@ -1181,24 +1156,21 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {CATEGORIES.map(({ icon: Icon, name, members, href }) => (
-                <Link
+              {CATEGORIES.map(({ icon: Icon, name }) => (
+                <div
                   key={name}
-                  href={href}
-                  className="group bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm hover:shadow-md hover:border-brand-light hover:-translate-y-0.5 transition-all duration-200"
+                  className="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-brand-lighter flex items-center justify-center mx-auto mb-4 group-hover:bg-gradient-to-br group-hover:from-brand group-hover:to-brand-dark transition-all duration-200">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-lighter flex items-center justify-center mx-auto mb-4">
                     <Icon
-                      className="w-6 h-6 text-brand group-hover:text-white transition-colors duration-200"
+                      className="w-6 h-6 text-brand"
                       aria-hidden="true"
                     />
                   </div>
-                  <p className="font-semibold text-sm text-gray-900 mb-0.5">
+                  <p className="font-semibold text-sm text-gray-900">
                     {name}
                   </p>
-                  <p className="text-xs text-gray-400 font-medium">{members}</p>
-                  <p className="text-[10px] text-gray-400">members</p>
-                </Link>
+                </div>
               ))}
             </div>
           </div>

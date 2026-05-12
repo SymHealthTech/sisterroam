@@ -95,7 +95,19 @@ export default async function StoryPage({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PublicNavbar />
-      <main className="min-h-screen bg-gray-50 pt-[60px]">
+      <main className="min-h-screen bg-gray-50">
+        {/* Short header */}
+        <section className="bg-brand pt-[60px] pb-6 px-4">
+          <div className="max-w-3xl mx-auto space-y-1">
+            <Link href="/stories" className="text-white/70 hover:text-white text-sm transition-colors">
+              ← Travel Stories
+            </Link>
+            <h2 className="text-white font-bold text-lg">
+              {CATEGORY_LABELS[story.category] ?? 'Story'}
+            </h2>
+          </div>
+        </section>
+
         <article className="max-w-3xl mx-auto px-4 py-10">
 
           {/* Category + meta */}
@@ -151,6 +163,7 @@ export default async function StoryPage({ params }) {
                 src={story.coverImageUrl}
                 alt={story.title}
                 fill
+                sizes="(max-width: 768px) 100vw, 768px"
                 className="object-cover"
                 priority
               />

@@ -332,7 +332,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <AppLayout title="Settings">
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-2xl mx-auto px-4 pt-6 pb-3 space-y-4">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} variant="card" className="h-40" />
           ))}
@@ -353,7 +353,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title="Settings">
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-3 space-y-4">
         {/* Account */}
         <SettingsSection title="Account" icon={User}>
           <AccountRow label="Email address" value={userData?.email}>

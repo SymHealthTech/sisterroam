@@ -74,6 +74,7 @@ function FullCard({ story, basePath }) {
             src={story.coverImageUrl}
             alt={story.title}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 672px"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>
@@ -133,7 +134,7 @@ function CompactCard({ story, basePath }) {
     >
       {story.coverImageUrl ? (
         <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
-          <Image src={story.coverImageUrl} alt={story.title} fill className="object-cover" />
+          <Image src={story.coverImageUrl} alt={story.title} fill sizes="80px" className="object-cover" />
         </div>
       ) : (
         <div className={`w-20 h-20 rounded-lg ${catColor} flex items-center justify-center shrink-0`}>
@@ -208,6 +209,7 @@ function FeaturedCard({ story, basePath }) {
               src={story.coverImageUrl}
               alt={story.title}
               fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>

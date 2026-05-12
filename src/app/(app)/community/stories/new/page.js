@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AppLayout from "@/components/layout/AppLayout";
 import VerificationGate from "@/components/ui/VerificationGate";
 import Button from "@/components/ui/Button";
-import ImageUpload from "@/components/ui/ImageUpload";
 import toast from "react-hot-toast";
 import {
   Bold,
@@ -18,6 +17,8 @@ import {
   Quote,
   Link2,
   Save,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { calculateReadTime } from "@/lib/utils";
 
@@ -72,7 +73,30 @@ export default function NewStoryPage() {
   const [draftSlug, setDraftSlug] = useState(null);
   const [draftReady, setDraftReady] = useState(false);
 
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef(null);
   const editorRef = useRef(null);
+
+  async function handleCoverChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setCoverUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("type", "blog_cover");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      setCoverImageUrl(data.url);
+      setCoverPubId(data.publicId);
+    } catch (err) {
+      toast.error(err.message ?? "Upload failed. Try again.");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
 
   const tier = session?.user?.verificationTier;
   const isVerified = tier && tier !== "basic";
@@ -100,15 +124,18 @@ export default function NewStoryPage() {
       .catch(() => toast.error("Failed to load draft"));
   }, [draftId, session?.user?.id]);
 
-  // Populate the contentEditable editor once draft content is loaded and editor is mounted
+  // Populate the contentEditable editor once — only when draftReady flips true.
+  // Must NOT include `content` in deps; that would re-run on every keystroke and
+  // reset innerHTML, sending the cursor back to the top.
   useEffect(() => {
-    if (!draftReady || !editorRef.current || !content) return;
+    if (!draftReady || !editorRef.current) return;
     editorRef.current.innerHTML = content;
     const text = editorRef.current.innerText ?? "";
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     setWordCount(words);
     setReadTime(words > 0 ? calculateReadTime(text) : "");
-  }, [content, draftReady]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftReady]);
 
   function handleEditorInput() {
     const text = editorRef.current?.innerText ?? "";
@@ -179,9 +206,7 @@ export default function NewStoryPage() {
         return;
       }
       toast.success(isPublished ? "Your story is published!" : "Draft saved");
-      router.push(
-        isPublished ? `/stories/${d.data.slug}` : "/community/stories",
-      );
+      router.push("/community/stories");
     } finally {
       setter(false);
     }
@@ -216,14 +241,58 @@ export default function NewStoryPage() {
               (optional but recommended)
             </span>
           </p>
-          <ImageUpload
-            onUploadComplete={({ url, publicId }) => {
-              setCoverImageUrl(url);
-              setCoverPubId(publicId);
-            }}
-            currentUrl={coverImageUrl}
-            label="Upload cover (16:9)"
-          />
+          <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200">
+            {coverImageUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverImageUrl}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setCoverImageUrl(""); setCoverPubId(""); }}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  aria-label="Remove cover image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  className="absolute bottom-2 right-2 px-3 py-1.5 bg-black/50 hover:bg-black/70 rounded-lg text-white text-xs transition-colors"
+                >
+                  Change
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                disabled={coverUploading}
+                className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-brand hover:bg-brand-lighter/30 transition-colors"
+              >
+                {coverUploading ? (
+                  <div className="w-7 h-7 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ImagePlus className="w-8 h-8" />
+                    <span className="text-sm font-medium">Add cover image</span>
+                    <span className="text-xs">Recommended 16:9</span>
+                  </>
+                )}
+              </button>
+            )}
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              tabIndex={-1}
+              onChange={handleCoverChange}
+            />
+          </div>
         </div>
 
         {/* Category + Tags */}

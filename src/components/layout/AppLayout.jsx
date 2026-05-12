@@ -21,7 +21,7 @@ export function useAppUser() { return useContext(AppUserContext) }
 
 function LoadingSkeleton() {
   return (
-    <div className="flex h-dvh overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50" style={{ height: '100dvh' }}>
       <div className="hidden lg:block w-60 h-screen bg-white border-r border-gray-100 shrink-0" />
       <div className="flex-1 p-6 space-y-4 max-w-2xl">
         <Skeleton className="h-8 w-48" />
@@ -41,6 +41,13 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { subscribe } = useSSEContext()
+
+  useEffect(() => {
+    const html = document.documentElement
+    const prev = html.style.overflow
+    html.style.overflow = 'hidden'
+    return () => { html.style.overflow = prev }
+  }, [])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -121,12 +128,12 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
   return (
     <AppUserContext.Provider value={freshUser}>
-    <div className="flex h-dvh overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50" style={{ height: '100dvh' }}>
       {/* Desktop sidebar */}
       <Sidebar user={{ ...user, profilePhotoUrl: avatarSrc }} />
 
       {/* Main content column */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
 
         {/* Desktop top bar */}
         <div className="hidden lg:flex items-center justify-between h-14 px-6 bg-white border-b border-gray-100 sticky top-0 z-20 shrink-0">
