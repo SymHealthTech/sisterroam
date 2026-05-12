@@ -179,7 +179,7 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
       ))}
 
       {/* Buffer so the last image is fully visible before the modal closes */}
-      <div className="h-20" />
+      <div className="h-[60vh] bg-transparent" />
 
       {/* Single image zoom – centered with equal top/bottom margin */}
       {zoomed && (
