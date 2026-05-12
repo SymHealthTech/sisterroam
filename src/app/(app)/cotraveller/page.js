@@ -365,6 +365,8 @@ export default function CoTravellerPage() {
   const verifApproved = (appUser ?? session?.user)?.verifApproved ?? false;
 
   const [activeTab, setActiveTab] = useState(0);
+  const swipeStart = useRef(null);
+
   const [showModal, setModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -455,6 +457,20 @@ export default function CoTravellerPage() {
     };
   }, []);
 
+  function handleSwipeTouchStart(e) {
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+
+  function handleSwipeTouchEnd(e) {
+    if (!swipeStart.current) return;
+    const dx = e.changedTouches[0].clientX - swipeStart.current.x;
+    const dy = e.changedTouches[0].clientY - swipeStart.current.y;
+    swipeStart.current = null;
+    if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.5) return;
+    if (dx < 0) handleTabChange(Math.min(activeTab + 1, TABS.length - 1));
+    else handleTabChange(Math.max(activeTab - 1, 0));
+  }
+
   function handleTabChange(i) {
     setActiveTab(i);
     if (i === 0) {
@@ -514,7 +530,11 @@ export default function CoTravellerPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+      <div
+        className="max-w-3xl mx-auto px-4 py-5 space-y-4"
+        onTouchStart={handleSwipeTouchStart}
+        onTouchEnd={handleSwipeTouchEnd}
+      >
         {/* ── Browse trips tab ── */}
         {activeTab === 0 && (
           <>

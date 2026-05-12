@@ -388,18 +388,20 @@ export default function RecommendationsPage() {
   const verifApproved = appUser?.verifApproved ?? false;
 
   const [activeTab, setActiveTab] = useState(0);
-  const swipeTouchStartX = useRef(null);
+  const swipeStart = useRef(null);
 
   function handleSwipeTouchStart(e) {
-    swipeTouchStartX.current = e.touches[0].clientX;
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }
 
   function handleSwipeTouchEnd(e) {
-    if (swipeTouchStartX.current === null) return;
-    const delta = e.changedTouches[0].clientX - swipeTouchStartX.current;
-    swipeTouchStartX.current = null;
-    if (Math.abs(delta) < 50) return;
-    if (delta < 0) setActiveTab((t) => Math.min(t + 1, TABS.length - 1));
+    if (!swipeStart.current) return;
+    const dx = e.changedTouches[0].clientX - swipeStart.current.x;
+    const dy = e.changedTouches[0].clientY - swipeStart.current.y;
+    swipeStart.current = null;
+    // ignore if gesture is more vertical than horizontal, or too short
+    if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.5) return;
+    if (dx < 0) setActiveTab((t) => Math.min(t + 1, TABS.length - 1));
     else setActiveTab((t) => Math.max(t - 1, 0));
   }
   const [showRecModal, setRecModal] = useState(false);
