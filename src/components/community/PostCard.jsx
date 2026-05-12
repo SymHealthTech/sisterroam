@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAppUser } from '@/components/layout/AppLayout'
 import Image from 'next/image'
@@ -81,13 +81,81 @@ function Lightbox({ images, index, onClose, onChange }) {
 }
 
 
+/* ── Mobile image modal ────────────────────────────────────── */
+function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, onLike }) {
+  const imgRefs      = useRef([])
+  const prevStRef    = useRef(0)
+  const hasScrolled  = useRef(false)
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  // Scroll to tapped image after render; arm close-guard after settling
+  useEffect(() => {
+    const t = setTimeout(() => {
+      imgRefs.current[startIndex]?.scrollIntoView({ behavior: 'instant', block: 'start' })
+      hasScrolled.current = startIndex > 0  // already scrolled if not first image
+    }, 80)
+    return () => clearTimeout(t)
+  }, [startIndex])
+
+  const handleScroll = useCallback((e) => {
+    const st = e.currentTarget.scrollTop
+    const goingUp = st < prevStRef.current
+    prevStRef.current = st
+    if (st > 80) hasScrolled.current = true
+    if (goingUp && st <= 4 && hasScrolled.current) onClose()
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black overflow-y-auto"
+      onScroll={handleScroll}
+    >
+      {images.map((src, i) => (
+        <div key={i}>
+          <div ref={el => { imgRefs.current[i] = el }} className="w-full">
+            <Image
+              src={src}
+              alt=""
+              width={1200}
+              height={900}
+              sizes="100vw"
+              className="w-full h-auto block"
+              priority={i === startIndex}
+            />
+          </div>
+
+          {/* Gap between images with like button */}
+          {i < images.length - 1 && (
+            <div className="bg-zinc-900 flex items-center gap-3 px-5 py-3">
+              <button
+                onClick={onLike}
+                className={cn(
+                  'flex items-center gap-2 transition-colors',
+                  hasLiked ? 'text-pink' : 'text-white/60',
+                )}
+              >
+                <Heart className={cn('w-5 h-5', hasLiked && 'fill-pink')} />
+                <span className="text-sm font-medium">{likesCount || 0}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ── Image grid ────────────────────────────────────────────── */
-function ImageGrid({ images, priority = false }) {
-  const [lightbox,       setLightbox]       = useState(null)
-  const [inlineExpanded, setInlineExpanded] = useState(false)
-  const [expandedFrom,   setExpandedFrom]   = useState(0)
-  const [isMobile,       setIsMobile]       = useState(false)
-  const imgRefs = useRef([])
+function ImageGrid({ images, priority = false, hasLiked, likesCount, onLike }) {
+  const [lightbox,  setLightbox]  = useState(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalFrom, setModalFrom] = useState(0)
+  const [isMobile,  setIsMobile]  = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
@@ -96,36 +164,12 @@ function ImageGrid({ images, priority = false }) {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  useEffect(() => {
-    if (!inlineExpanded) return
-    const el = imgRefs.current[expandedFrom]
-    if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
-  }, [inlineExpanded, expandedFrom])
-
   if (!images?.length) return null
   const count = images.length
 
   const open = (i) => {
-    if (isMobile) { setExpandedFrom(i); setInlineExpanded(true) }
+    if (isMobile) { setModalFrom(i); setModalOpen(true) }
     else setLightbox(i)
-  }
-
-  // Mobile inline expanded: each image fills full viewport width + height, no close button
-  if (isMobile && inlineExpanded) {
-    return (
-      <div>
-        {images.map((src, i) => (
-          <div
-            key={i}
-            ref={el => { imgRefs.current[i] = el }}
-            className="relative overflow-hidden"
-            style={{ width: '100vw', height: '100dvh', marginLeft: 'calc(-50vw + 50%)' }}
-          >
-            <Image src={src} alt="" fill sizes="100vw" className="object-cover" priority={i === expandedFrom} />
-          </div>
-        ))}
-      </div>
-    )
   }
 
   const cell = (src, i, extraClass = '') => (
@@ -155,6 +199,16 @@ function ImageGrid({ images, priority = false }) {
   return (
     <>
       <Lightbox images={images} index={lightbox} onClose={() => setLightbox(null)} onChange={setLightbox} />
+      {modalOpen && (
+        <MobileImageModal
+          images={images}
+          startIndex={modalFrom}
+          onClose={() => setModalOpen(false)}
+          hasLiked={hasLiked}
+          likesCount={likesCount}
+          onLike={onLike}
+        />
+      )}
 
       {/* ── Mobile: max 3 slots, +N on last if more ── */}
       <div className="sm:hidden">
@@ -559,7 +613,13 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
       )}
 
       {/* Images */}
-      <ImageGrid images={post.imageUrls} priority={priority} />
+      <ImageGrid
+        images={post.imageUrls}
+        priority={priority}
+        hasLiked={post.hasLiked}
+        likesCount={post.likesCount}
+        onLike={toggleLike}
+      />
 
       {/* Action row */}
       <div className="flex items-center gap-4 pt-1 border-t border-gray-50">
