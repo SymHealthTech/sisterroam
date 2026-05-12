@@ -134,7 +134,7 @@ export default function NewStoryPage() {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     setWordCount(words);
     setReadTime(words > 0 ? calculateReadTime(text) : "");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftReady]);
 
   function handleEditorInput() {
@@ -252,7 +252,10 @@ export default function NewStoryPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => { setCoverImageUrl(""); setCoverPubId(""); }}
+                  onClick={() => {
+                    setCoverImageUrl("");
+                    setCoverPubId("");
+                  }}
                   className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
                   aria-label="Remove cover image"
                 >
@@ -418,7 +421,7 @@ export default function NewStoryPage() {
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3 lg:left-60">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3 lg:left-60">
         <Button
           variant="secondary"
           onClick={() => save(false)}
