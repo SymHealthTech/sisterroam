@@ -83,9 +83,10 @@ function Lightbox({ images, index, onClose, onChange }) {
 
 /* ── Mobile image modal ────────────────────────────────────── */
 function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, onLike }) {
-  const imgRefs      = useRef([])
-  const prevStRef    = useRef(0)
-  const hasScrolled  = useRef(false)
+  const imgRefs       = useRef([])
+  const prevStRef     = useRef(0)
+  const hasScrolled   = useRef(false)
+  const [zoomed, setZoomed] = useState(null)
 
   // Lock body scroll
   useEffect(() => {
@@ -93,31 +94,34 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // Scroll to tapped image after render; arm close-guard after settling
+  // Scroll to tapped image after render
   useEffect(() => {
     const t = setTimeout(() => {
       imgRefs.current[startIndex]?.scrollIntoView({ behavior: 'instant', block: 'start' })
-      hasScrolled.current = startIndex > 0  // already scrolled if not first image
     }, 80)
     return () => clearTimeout(t)
   }, [startIndex])
 
+  // Close when scrolled down past the last image
   const handleScroll = useCallback((e) => {
-    const st = e.currentTarget.scrollTop
-    const goingUp = st < prevStRef.current
+    const el = e.currentTarget
+    const st = el.scrollTop
+    const goingDown = st > prevStRef.current
     prevStRef.current = st
-    if (st > 80) hasScrolled.current = true
-    if (goingUp && st <= 4 && hasScrolled.current) onClose()
+    if (st > 30) hasScrolled.current = true
+    const atBottom = st + el.clientHeight >= el.scrollHeight - 16
+    if (goingDown && atBottom && hasScrolled.current) onClose()
   }, [onClose])
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black overflow-y-auto"
-      onScroll={handleScroll}
-    >
+    <div className="fixed inset-0 z-50 bg-black overflow-y-auto" onScroll={handleScroll}>
       {images.map((src, i) => (
         <div key={i}>
-          <div ref={el => { imgRefs.current[i] = el }} className="w-full">
+          <div
+            ref={el => { imgRefs.current[i] = el }}
+            className="w-full cursor-pointer"
+            onClick={() => setZoomed(src)}
+          >
             <Image
               src={src}
               alt=""
@@ -129,23 +133,36 @@ function MobileImageModal({ images, startIndex, onClose, hasLiked, likesCount, o
             />
           </div>
 
-          {/* Gap between images with like button */}
+          {/* Gap with like button */}
           {i < images.length - 1 && (
-            <div className="bg-zinc-900 flex items-center gap-3 px-5 py-3">
+            <div className="bg-gray-50 flex items-center gap-3 px-5 py-3 border-y border-gray-100">
               <button
                 onClick={onLike}
                 className={cn(
                   'flex items-center gap-2 transition-colors',
-                  hasLiked ? 'text-pink' : 'text-white/60',
+                  hasLiked ? 'text-pink' : 'text-gray-400 hover:text-pink',
                 )}
               >
                 <Heart className={cn('w-5 h-5', hasLiked && 'fill-pink')} />
-                <span className="text-sm font-medium">{likesCount || 0}</span>
+                <span className="text-sm font-medium text-gray-600">{likesCount || 0}</span>
               </button>
             </div>
           )}
         </div>
       ))}
+
+      {/* Full-screen single image view */}
+      {zoomed && (
+        <div className="fixed inset-0 z-[60] bg-black overflow-y-auto">
+          <button
+            onClick={() => setZoomed(null)}
+            className="absolute top-4 right-4 z-10 text-white bg-black/50 rounded-full p-1.5 hover:bg-black/80 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <Image src={zoomed} alt="" width={1200} height={900} sizes="100vw" className="w-full h-auto block" />
+        </div>
+      )}
     </div>
   )
 }
