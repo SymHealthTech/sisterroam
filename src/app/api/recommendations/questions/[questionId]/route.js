@@ -56,7 +56,6 @@ export async function POST(request, { params }) {
     const { content } = body
 
     if (!content?.trim()) return fail('Answer content is required', 400)
-    if (content.trim().length < 30) return fail('Answer must be at least 30 characters', 400)
 
     const question = await RecommendationQuestion.findById(questionId)
       .populate('authorId', 'fullName email')

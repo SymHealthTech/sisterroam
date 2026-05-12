@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -36,7 +36,11 @@ const CATEGORIES = [
 ];
 
 async function apiFetchRecs(page, { category, search }) {
-  const params = new URLSearchParams({ page: String(page), limit: "15", sort: "upvotes" });
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: "15",
+    sort: "upvotes",
+  });
   if (search) params.set("search", search);
   if (category) params.set("category", category);
   const res = await fetch(`/api/recommendations?${params}`);
@@ -89,10 +93,7 @@ function QuestionCard({
 
   async function handleAnswer(e) {
     e.preventDefault();
-    if (answerText.trim().length < 30) {
-      toast.error("Answer must be at least 30 characters");
-      return;
-    }
+    if (!answerText.trim()) return;
     setSubmitting(true);
     try {
       const res = await fetch(
@@ -313,14 +314,22 @@ function QuestionCard({
             {isVerified ? (
               <form onSubmit={handleAnswer} className="space-y-2">
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={answerText}
                   onChange={(e) => setAnswerText(e.target.value)}
-                  placeholder={`Share what you know about ${question.city}...`}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 resize-none"
+                  placeholder={`Share what you know about ${question.city}…`}
+                  style={{ outline: "none" }}
+                  className="w-full px-4 py-3 text-sm text-gray-800 placeholder-gray-400 bg-white border border-gray-200 rounded-2xl resize-none focus:border-brand transition-colors shadow-sm"
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
+                  <span
+                    className={cn(
+                      "text-xs",
+                      answerText.length > 750
+                        ? "text-rose-400"
+                        : "text-gray-400",
+                    )}
+                  >
                     {answerText.length}/800
                   </span>
                   <Button
@@ -328,7 +337,7 @@ function QuestionCard({
                     variant="primary"
                     size="sm"
                     loading={submitting}
-                    disabled={answerText.trim().length < 30}
+                    disabled={!answerText.trim()}
                   >
                     Post answer
                   </Button>
@@ -379,13 +388,27 @@ export default function RecommendationsPage() {
   const verifApproved = appUser?.verifApproved ?? false;
 
   const [activeTab, setActiveTab] = useState(0);
+  const swipeTouchStartX = useRef(null);
+
+  function handleSwipeTouchStart(e) {
+    swipeTouchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleSwipeTouchEnd(e) {
+    if (swipeTouchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - swipeTouchStartX.current;
+    swipeTouchStartX.current = null;
+    if (Math.abs(delta) < 50) return;
+    if (delta < 0) setActiveTab((t) => Math.min(t + 1, TABS.length - 1));
+    else setActiveTab((t) => Math.max(t - 1, 0));
+  }
   const [showRecModal, setRecModal] = useState(false);
   const [showQModal, setQModal] = useState(false);
   const [editingRec, setEditingRec] = useState(null);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-const [recs, setRecs] = useState([]);
+  const [recs, setRecs] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [myRecs, setMyRecs] = useState([]);
   const [myQs, setMyQs] = useState([]);
@@ -514,7 +537,12 @@ const [recs, setRecs] = useState([]);
                 <PlusCircle className="w-4 h-4 mr-1.5" />
                 Share a recommendation
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setQModal(true)} className="hidden sm:inline-flex">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setQModal(true)}
+                className="hidden sm:inline-flex"
+              >
                 <MessageSquare className="w-4 h-4 mr-1.5" />
                 Ask a question
               </Button>
@@ -548,7 +576,11 @@ const [recs, setRecs] = useState([]);
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+      <div
+        className="max-w-3xl mx-auto px-4 py-5 space-y-4"
+        onTouchStart={handleSwipeTouchStart}
+        onTouchEnd={handleSwipeTouchEnd}
+      >
         {/* Search + filters (shared) */}
         {activeTab !== 2 && (
           <div className="space-y-3">
@@ -811,7 +843,10 @@ const [recs, setRecs] = useState([]);
         <AddRecommendationModal
           initialRec={editingRec}
           onClose={() => setEditingRec(null)}
-          onUpdated={(updated) => { handleRecUpdated(updated); setEditingRec(null); }}
+          onUpdated={(updated) => {
+            handleRecUpdated(updated);
+            setEditingRec(null);
+          }}
         />
       )}
       {showQModal && isVerified && (
