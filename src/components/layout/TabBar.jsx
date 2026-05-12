@@ -12,7 +12,7 @@ const TABS = [
   { href: '/feed',      icon: Home,   label: 'Home'      },
   { href: '/explore',   icon: Search, label: 'Explore'   },
   { href: '/cotraveller',       icon: UserPlus,      label: 'Co-traveller',    description: 'Find travel companions'    },
-  { href: '/recommendations',   icon: MapPin,        label: 'Recommendations', description: 'Community travel guide'    },
+  { href: '/recommendations',   icon: MapPin,        label: 'For You', description: 'Community travel guide'    },
   
 ]
 

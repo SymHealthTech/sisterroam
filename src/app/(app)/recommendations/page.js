@@ -34,14 +34,9 @@ const CATEGORIES = [
   { value: "activity", label: "Activity" },
   { value: "general", label: "General" },
 ];
-const SORT_OPTIONS = [
-  { value: "upvotes", label: "Most helpful" },
-  { value: "newest", label: "Newest" },
-  { value: "verified_first", label: "Verified first" },
-];
 
-async function apiFetchRecs(page, { category, sort, search }) {
-  const params = new URLSearchParams({ page: String(page), limit: "15", sort });
+async function apiFetchRecs(page, { category, search }) {
+  const params = new URLSearchParams({ page: String(page), limit: "15", sort: "upvotes" });
   if (search) params.set("search", search);
   if (category) params.set("category", category);
   const res = await fetch(`/api/recommendations?${params}`);
@@ -322,7 +317,7 @@ function QuestionCard({
                   value={answerText}
                   onChange={(e) => setAnswerText(e.target.value)}
                   placeholder={`Share what you know about ${question.city}...`}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand resize-none"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 resize-none"
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">
@@ -386,12 +381,11 @@ export default function RecommendationsPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [showRecModal, setRecModal] = useState(false);
   const [showQModal, setQModal] = useState(false);
+  const [editingRec, setEditingRec] = useState(null);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [sort, setSort] = useState("upvotes");
-
-  const [recs, setRecs] = useState([]);
+const [recs, setRecs] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [myRecs, setMyRecs] = useState([]);
   const [myQs, setMyQs] = useState([]);
@@ -408,7 +402,7 @@ export default function RecommendationsPage() {
       setLoading(true);
       try {
         if (activeTab === 0) {
-          const data = await apiFetchRecs(1, { category, sort, search });
+          const data = await apiFetchRecs(1, { category, search });
           if (!cancelled && data) {
             setRecs(data.recommendations ?? []);
             setRecTotal(data.total ?? 0);
@@ -423,7 +417,7 @@ export default function RecommendationsPage() {
           }
         } else if (activeTab === 2) {
           const [recsData, qsData] = await Promise.all([
-            apiFetchRecs(1, { category: "", sort, search: "" }),
+            apiFetchRecs(1, { category: "", search: "" }),
             apiFetchQs(1, { search: "", category: "" }),
           ]);
           if (!cancelled) {
@@ -444,8 +438,10 @@ export default function RecommendationsPage() {
       }
     }
     load();
-    return () => { cancelled = true; };
-  }, [activeTab, category, sort, search]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, category, search]);
 
   function handleSearch(e) {
     e.preventDefault();
@@ -454,7 +450,7 @@ export default function RecommendationsPage() {
   async function loadMoreRecs() {
     setLoading(true);
     try {
-      const data = await apiFetchRecs(recPage + 1, { category, sort, search });
+      const data = await apiFetchRecs(recPage + 1, { category, search });
       if (data) {
         setRecs((prev) => [...prev, ...(data.recommendations ?? [])]);
         setRecTotal(data.total ?? 0);
@@ -487,6 +483,15 @@ export default function RecommendationsPage() {
     );
   }
 
+  function handleRecUpdated(updated) {
+    setRecs((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+  }
+
+  function handleRecDeleted(id) {
+    setRecs((prev) => prev.filter((r) => r._id !== id));
+    setRecTotal((t) => t - 1);
+  }
+
   return (
     <AppLayout title="Place recommendations">
       {/* Header */}
@@ -509,7 +514,7 @@ export default function RecommendationsPage() {
                 <PlusCircle className="w-4 h-4 mr-1.5" />
                 Share a recommendation
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setQModal(true)}>
+              <Button variant="ghost" size="sm" onClick={() => setQModal(true)} className="hidden sm:inline-flex">
                 <MessageSquare className="w-4 h-4 mr-1.5" />
                 Ask a question
               </Button>
@@ -523,7 +528,7 @@ export default function RecommendationsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[52px] lg:top-14 z-10 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div className="flex max-w-3xl mx-auto">
           {TABS.map((label, i) => (
             <button
@@ -554,7 +559,7 @@ export default function RecommendationsPage() {
                 placeholder="Search city or country..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30"
               />
             </form>
 
@@ -575,26 +580,6 @@ export default function RecommendationsPage() {
                 </button>
               ))}
             </div>
-
-            {activeTab === 0 && (
-              <div className="flex gap-2">
-                {SORT_OPTIONS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setSort(value)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs border transition-colors",
-                      sort === value
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "border-gray-200 text-gray-600 hover:border-gray-400",
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -625,6 +610,8 @@ export default function RecommendationsPage() {
                       canEdit={
                         rec.authorId?._id === userId || rec.authorId === userId
                       }
+                      onEdit={setEditingRec}
+                      onDelete={handleRecDeleted}
                     />
                   ))}
                 </div>
@@ -769,6 +756,8 @@ export default function RecommendationsPage() {
                       rec={rec}
                       onUpvote={handleUpvote}
                       canEdit
+                      onEdit={setEditingRec}
+                      onDelete={handleRecDeleted}
                     />
                   ))}
               </div>
@@ -816,6 +805,13 @@ export default function RecommendationsPage() {
         <AddRecommendationModal
           onClose={() => setRecModal(false)}
           onCreated={(rec) => setRecs((prev) => [rec, ...prev])}
+        />
+      )}
+      {editingRec && (
+        <AddRecommendationModal
+          initialRec={editingRec}
+          onClose={() => setEditingRec(null)}
+          onUpdated={(updated) => { handleRecUpdated(updated); setEditingRec(null); }}
         />
       )}
       {showQModal && isVerified && (

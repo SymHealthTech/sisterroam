@@ -32,12 +32,25 @@ const EMPTY = {
 
 function Input({ className, ...props }) {
   return (
-    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition', className)} />
+    <input {...props} className={cn('w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 transition', className)} />
   )
 }
 
-export default function AddRecommendationModal({ onClose, onCreated }) {
-  const [form,    setForm]    = useState(EMPTY)
+export default function AddRecommendationModal({ onClose, onCreated, onUpdated, initialRec }) {
+  const isEditing = !!initialRec
+
+  const [form, setForm] = useState(() => isEditing ? {
+    city:             initialRec.city             ?? '',
+    country:          initialRec.country          ?? '',
+    category:         initialRec.category         ?? '',
+    title:            initialRec.title            ?? '',
+    description:      initialRec.description      ?? '',
+    priceRange:       initialRec.priceRange        ?? '',
+    approximatePrice: initialRec.approximatePrice  ?? '',
+    address:          initialRec.address           ?? '',
+    websiteUrl:       initialRec.websiteUrl        ?? '',
+  } : EMPTY)
+
   const [loading, setLoading] = useState(false)
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
@@ -55,16 +68,37 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      const data = await res.json()
-      if (!res.ok) { toast.error(data.error ?? 'Failed to add recommendation'); return }
-      toast.success('Recommendation added!')
-      onCreated?.(data.data)
-      onClose()
+      if (isEditing) {
+        const body = {
+          title:            form.title,
+          description:      form.description,
+          priceRange:       form.priceRange,
+          approximatePrice: form.approximatePrice,
+          address:          form.address,
+          websiteUrl:       form.websiteUrl,
+        }
+        const res = await fetch(`/api/recommendations/${initialRec._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json()
+        if (!res.ok) { toast.error(data.error ?? 'Failed to update recommendation'); return }
+        toast.success('Recommendation updated!')
+        onUpdated?.({ ...initialRec, ...data.data })
+        onClose()
+      } else {
+        const res = await fetch('/api/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+        const data = await res.json()
+        if (!res.ok) { toast.error(data.error ?? 'Failed to add recommendation'); return }
+        toast.success('Recommendation added!')
+        onCreated?.(data.data)
+        onClose()
+      }
     } finally {
       setLoading(false)
     }
@@ -75,7 +109,9 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col shadow-xl">
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Share a recommendation</h2>
+          <h2 className="text-base font-semibold text-gray-900">
+            {isEditing ? 'Edit recommendation' : 'Share a recommendation'}
+          </h2>
           <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
             <X className="w-5 h-5" />
           </button>
@@ -88,11 +124,11 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">City <span className="text-danger">*</span></label>
-                <Input placeholder="Lisbon" value={form.city} onChange={e => set('city', e.target.value)} required />
+                <Input placeholder="Lisbon" value={form.city} onChange={e => set('city', e.target.value)} required disabled={isEditing} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Country <span className="text-danger">*</span></label>
-                <Input placeholder="Portugal" value={form.country} onChange={e => set('country', e.target.value)} required />
+                <Input placeholder="Portugal" value={form.country} onChange={e => set('country', e.target.value)} required disabled={isEditing} />
               </div>
             </div>
 
@@ -104,12 +140,14 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
                   <button
                     key={value}
                     type="button"
-                    onClick={() => set('category', value)}
+                    onClick={() => !isEditing && set('category', value)}
+                    disabled={isEditing}
                     className={cn(
                       'flex flex-col items-center gap-1 p-2.5 rounded-xl border text-xs font-medium transition-colors',
                       form.category === value
                         ? 'bg-brand text-white border-brand'
-                        : 'border-gray-200 text-gray-600 hover:border-brand'
+                        : 'border-gray-200 text-gray-600 hover:border-brand',
+                      isEditing && 'opacity-60 cursor-not-allowed'
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -146,7 +184,7 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 focus:border-brand transition resize-none"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:border-brand focus:ring-0/30 transition resize-none"
               />
             </div>
 
@@ -187,14 +225,15 @@ export default function AddRecommendationModal({ onClose, onCreated }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Website (optional)</label>
-              <Input type="url" placeholder="https://..." value={form.websiteUrl} onChange={e => set('websiteUrl', e.target.value)} />
+              <Input type="text" placeholder="example.com" value={form.websiteUrl} onChange={e => set('websiteUrl', e.target.value)} />
+              <p className="mt-1 text-xs text-gray-400">Please enter a URL</p>
             </div>
           </div>
 
           <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-3">
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={loading}>Cancel</Button>
             <Button type="submit" variant="primary" size="sm" loading={loading}>
-              Add recommendation
+              {isEditing ? 'Save changes' : 'Add recommendation'}
             </Button>
           </div>
         </form>
