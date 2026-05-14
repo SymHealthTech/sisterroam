@@ -26,7 +26,9 @@ export async function GET() {
       stories = [...stories, ...fill]
     }
 
-    return ok({ stories })
+    const res = ok({ stories })
+    res.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300')
+    return res
   } catch (e) {
     return handleError(e)
   }

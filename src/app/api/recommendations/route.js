@@ -48,9 +48,10 @@ export async function GET(request) {
       Recommendation.countDocuments(query),
     ])
 
+    const uid = userId ? String(userId) : null
     const recsOut = recs.map(r => ({
       ...r,
-      hasUpvoted: r.upvotes?.some(id => id.toString() === userId) ?? false,
+      hasUpvoted: uid ? r.upvotes?.some(id => id.toString() === uid) ?? false : false,
     }))
 
     return ok({ recommendations: recsOut, total, page, totalPages: Math.ceil(total / limit) })

@@ -31,7 +31,8 @@ export async function POST(request) {
     }
 
     const otp = generateOtp()
-    const hashedOtp = await bcrypt.hash(otp, 10)
+    // Cost 8 (~20ms) is sufficient: OTPs are rate-limited, 6-digit, and expire in 10 min
+    const hashedOtp = await bcrypt.hash(otp, 8)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
     await OtpRecord.create({ email, otp: hashedOtp, expiresAt })

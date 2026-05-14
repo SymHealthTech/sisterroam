@@ -6,6 +6,7 @@ import { Upload, X, FileCheck, Clock, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
+import { directUpload } from '@/lib/uploadClient'
 
 async function compressImage(file, maxPx = 1920) {
   return new Promise((resolve) => {
@@ -56,18 +57,14 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
     setUploading(true)
     try {
       const compressed = await compressImage(preview.file)
-      const fd = new FormData()
-      fd.append('file',  compressed, 'document.webp')
-      fd.append('type',  'id_document')
-      fd.append('extra', documentType)
-
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+      const { url, publicId } = await directUpload(compressed, {
+        folder: 'sisterroam/verifications',
+        type: documentType,
+      })
 
       setStatus('uploaded')
       clearPreview()
-      onUploadComplete?.({ documentType, url: data.url, publicId: data.publicId })
+      onUploadComplete?.({ documentType, url, publicId })
       toast.success(`${label} uploaded`)
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')

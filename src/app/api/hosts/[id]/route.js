@@ -37,7 +37,9 @@ export async function GET(request, { params }) {
       .populate('reviewerId', 'fullName username profilePhotoUrl')
       .lean()
 
-    return ok({ ...profile, reviews })
+    const res = ok({ ...profile, reviews })
+    res.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=300')
+    return res
   } catch (e) {
     return handleError(e)
   }

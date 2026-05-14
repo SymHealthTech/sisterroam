@@ -77,7 +77,9 @@ export async function GET(request) {
     ])
 
     const total = countResult[0]?.total ?? 0
-    return ok({ hosts, total, page, totalPages: Math.ceil(total / limit) })
+    const res = ok({ hosts, total, page, totalPages: Math.ceil(total / limit) })
+    res.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=120')
+    return res
   } catch (e) {
     return handleError(e)
   }

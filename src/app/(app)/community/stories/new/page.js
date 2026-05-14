@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { calculateReadTime } from "@/lib/utils";
+import { directUpload } from "@/lib/uploadClient";
 
 const CATEGORIES = [
   { value: "solo_travel", label: "Solo Travel" },
@@ -83,14 +84,12 @@ export default function NewStoryPage() {
     e.target.value = "";
     setCoverUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("type", "blog_cover");
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setCoverImageUrl(data.url);
-      setCoverPubId(data.publicId);
+      const { url, publicId } = await directUpload(file, {
+        folder: "sisterroam/stories",
+        type: "blog_cover",
+      });
+      setCoverImageUrl(url);
+      setCoverPubId(publicId);
     } catch (err) {
       toast.error(err.message ?? "Upload failed. Try again.");
     } finally {

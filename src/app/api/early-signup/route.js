@@ -36,7 +36,9 @@ export async function GET() {
   try {
     await connectDB()
     const count = await EarlySignup.countDocuments()
-    return ok({ count })
+    const res = ok({ count })
+    res.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=300')
+    return res
   } catch (e) {
     return handleError(e)
   }

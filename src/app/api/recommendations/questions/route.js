@@ -33,7 +33,9 @@ export async function GET(request) {
       RecommendationQuestion.countDocuments(query),
     ])
 
-    return ok({ questions, total, page, totalPages: Math.ceil(total / limit) })
+    const res = ok({ questions, total, page, totalPages: Math.ceil(total / limit) })
+    res.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=300')
+    return res
   } catch (e) {
     return handleError(e)
   }

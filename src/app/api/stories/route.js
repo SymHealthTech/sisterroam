@@ -48,11 +48,10 @@ export async function GET(request) {
       TravelStory.countDocuments(filter),
     ])
 
-    // Attach isSaved for authenticated users
-    const userId = session?.user?.id
+    const uid = session?.user?.id ? String(session.user.id) : null
     const enriched = stories.map(s => ({
       ...s,
-      isSaved: userId ? s.saves?.some(id => id.toString() === userId) : false,
+      isSaved: uid ? s.saves?.some(id => id.toString() === uid) : false,
     }))
 
     return ok({ stories: enriched, total, page, totalPages: Math.ceil(total / limit) })

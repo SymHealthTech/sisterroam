@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
+import { directUpload } from '@/lib/uploadClient'
 
 const CATEGORIES = [
   { value: 'general',          label: 'General' },
@@ -195,17 +196,11 @@ export default function PostComposer({ onPost }) {
     for (const raw of files) {
       try {
         const compressed = await compressImage(raw)
-        const form = new FormData()
-        form.append('file', compressed)
-        form.append('type', 'community_image')
-        const res = await fetch('/api/upload', { method: 'POST', body: form })
-        if (res.ok) {
-          const d = await res.json()
-          setImages(prev => [...prev, { url: d.url, publicId: d.publicId }])
-        } else {
-          const err = await res.json().catch(() => ({}))
-          toast.error(err.error ?? 'Image upload failed')
-        }
+        const { url, publicId } = await directUpload(compressed, {
+          folder: 'sisterroam/community',
+          type: 'community_image',
+        })
+        setImages(prev => [...prev, { url, publicId }])
       } catch {
         toast.error('Image upload failed')
       }

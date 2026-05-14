@@ -6,6 +6,7 @@ import { Camera, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
+import { directUpload } from '@/lib/uploadClient'
 
 async function resizeToWebp(file, maxPx = 800) {
   return new Promise((resolve) => {
@@ -82,15 +83,19 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
     setUploading(true)
     try {
       const blob = await resizeToWebp(rawFile)
-      const fd = new FormData()
-      fd.append('file', blob, 'photo.webp')
-      fd.append('type', 'profile_photo')
+      const { url, publicId } = await directUpload(blob, {
+        folder: 'sisterroam/profiles',
+        type: 'profile_photo',
+      })
 
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+      // Update profile photo URL in DB
+      await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profilePhotoUrl: url, profilePhotoPublicId: publicId }),
+      })
 
-      onUploadComplete?.({ url: data.url, publicId: data.publicId })
+      onUploadComplete?.({ url, publicId })
       toast.success('Photo updated!')
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')

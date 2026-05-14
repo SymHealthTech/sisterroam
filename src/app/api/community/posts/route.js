@@ -30,9 +30,10 @@ export async function GET(request) {
       CommunityPost.countDocuments(filter),
     ])
 
+    const uid = userId ? String(userId) : null
     const postsOut = posts.map(p => ({
       ...p,
-      hasLiked: userId ? p.likes?.some(id => id.toString() === userId) : false,
+      hasLiked: uid ? p.likes?.some(id => id.toString() === uid) : false,
     }))
 
     return ok({ posts: postsOut, total, page, totalPages: Math.ceil(total / limit) })

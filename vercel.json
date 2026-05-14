@@ -40,6 +40,51 @@
       ]
     },
     {
+      "source": "/api/stories/featured",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/hosts",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=30, stale-while-revalidate=120"
+        }
+      ]
+    },
+    {
+      "source": "/api/hosts/:id",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=30, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/early-signup",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=30, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/recommendations/questions",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=30, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
       "source": "/_next/static/(.*)",
       "headers": [
         {
