@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
-import AppLayout from '@/components/layout/AppLayout'
-import VerificationGate from '@/components/ui/VerificationGate'
+import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
+import VerificationGate, { UnderReviewModal } from '@/components/ui/VerificationGate'
 import Button from '@/components/ui/Button'
 import Textarea from '@/components/ui/Textarea'
 import Toggle from '@/components/ui/Toggle'
@@ -189,10 +189,12 @@ function AddServiceForm({ onAdd, onCancel }) {
 
 export default function HostListingPage() {
   const { data: session } = useSession()
+  const appUser = useAppUser()
 
   const [loading,          setLoading]          = useState(true)
   const [saving,           setSaving]           = useState(false)
   const [hostId,           setHostId]           = useState(null) // null = create mode
+  const [showUnderReview,  setShowUnderReview]  = useState(false)
 
   const [accommodationType, setAccommodationType] = useState('')
   const [maxGuests,          setMaxGuests]         = useState(1)
@@ -243,6 +245,7 @@ export default function HostListingPage() {
   }
 
   async function handleSave() {
+    if (appUser?.verifPending) { setShowUnderReview(true); return }
     if (!accommodationType) { toast.error('Please select an accommodation type'); return }
     setSaving(true)
     try {
@@ -300,7 +303,8 @@ export default function HostListingPage() {
 
   return (
     <AppLayout title={hostId ? 'Edit Host Listing' : 'Create Host Listing'}>
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-4">
+      {showUnderReview && <UnderReviewModal onClose={() => setShowUnderReview(false)} />}
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
         {/* Accommodation type */}
         <Section title="Accommodation type" description="What kind of space will you offer guests?">
@@ -469,15 +473,10 @@ export default function HostListingPage() {
             </div>
           )}
         </Section>
-      </div>
 
-      {/* Sticky save bar — .above-tab-bar lifts it above the mobile TabBar (z-40) */}
-      <div className="above-tab-bar fixed left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-50">
-        <div className="max-w-2xl mx-auto">
-          <Button fullWidth loading={saving} onClick={handleSave}>
-            {hostId ? 'Save listing' : 'Create listing'}
-          </Button>
-        </div>
+        <Button fullWidth loading={saving} onClick={handleSave}>
+          {hostId ? 'Save listing' : 'Create listing'}
+        </Button>
       </div>
     </AppLayout>
   )

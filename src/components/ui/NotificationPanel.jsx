@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Bell, Check, ShieldCheck, MessageCircle,
-  Star, AlertTriangle, Calendar, Mail,
+  Star, AlertTriangle, Calendar, Clock,
 } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ const TYPE_ICON = {
   request_declined:          AlertTriangle,
   new_message:               MessageCircle,
   review_received:           Star,
+  verification_under_review: Clock,
   verification_approved:     ShieldCheck,
   verification_rejected:     AlertTriangle,
   checkin_reminder:          Bell,

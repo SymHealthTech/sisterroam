@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
     await Notification.create({
       recipientId: verif.userId,
       type:        isApproved ? 'verification_approved' : 'verification_rejected',
-      title:       isApproved ? 'Verification approved — full access unlocked!' : 'Verification not approved',
+      title:       isApproved ? 'Your verification badge is active now' : 'Verification not approved',
       body:        notifBody,
       link:        isApproved ? '/feed' : '/verification-rejected',
     })

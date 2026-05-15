@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/AppLayout";
 import Skeleton from "@/components/ui/Skeleton";
 import { CheckCircle, Clock, XCircle, ShieldCheck, Mail } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export default function VerificationStatusPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [verifData, setVerifData] = useState(null);
 
@@ -36,7 +34,6 @@ export default function VerificationStatusPage() {
   const verif = verifData?.verification;
   const user = verifData?.user;
   const status = verif?.status;
-  const isApproved = status === "approved";
   const isPending = status === "pending";
   const isRejected = status === "rejected";
   const isFullyVerified =
@@ -146,15 +143,22 @@ export default function VerificationStatusPage() {
         )}
 
         {/* Contact */}
-        <p className="text-xs text-gray-400 text-center">
-          Questions?{" "}
-          <a
-            href="mailto:admin.sisterroam@gmail.com"
-            className="text-brand hover:underline"
-          >
-            Contact support
-          </a>
-        </p>
+        <div className="text-center space-y-1">
+          <p className="text-xs text-gray-400">
+            Questions?{" "}
+            <a
+              href="mailto:admin.sisterroam@gmail.com"
+              className="text-brand hover:underline"
+            >
+              Contact support
+            </a>
+          </p>
+          <p className="text-xs text-gray-400">
+            <span className="select-all font-medium text-gray-500">
+              admin.sisterroam@gmail.com
+            </span>
+          </p>
+        </div>
       </div>
     </AppLayout>
   );

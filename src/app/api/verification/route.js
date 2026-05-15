@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/mongodb'
 import VerificationRequest from '@/models/VerificationRequest'
 import User from '@/models/User'
+import Notification from '@/models/Notification'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
 
@@ -65,6 +66,14 @@ export async function POST(request) {
       },
       { upsert: true, new: true },
     )
+
+    await Notification.create({
+      recipientId: session.user.id,
+      type:        'verification_under_review',
+      title:       'Verification under review',
+      body:        'Our team is reviewing your documents. You\'ll be notified once approved — usually within 24–48 hours.',
+      link:        '/profile/verification',
+    })
 
     const adminEmail = process.env.ADMIN_EMAIL
     if (adminEmail) {
