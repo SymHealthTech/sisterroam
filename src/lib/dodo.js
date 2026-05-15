@@ -8,12 +8,19 @@ const dodoClient = new DodoPayments({
 
 export default dodoClient
 
-export async function createCheckoutSession(userId, userEmail, userName, currency) {
+export async function createCheckoutSession(userId, userEmail, userName, currency, returnBase) {
   const productId = currency === 'INR'
     ? process.env.DODO_PRODUCT_ID_INR
     : process.env.DODO_PRODUCT_ID_USD
 
-  const returnBase = process.env.NEXTAUTH_URL
+  if (!productId) {
+    throw new Error(`Missing DODO_PRODUCT_ID_${currency} environment variable`)
+  }
+
+  const base = returnBase || process.env.NEXTAUTH_URL
+  if (!base) {
+    throw new Error('Missing NEXTAUTH_URL environment variable')
+  }
 
   const response = await dodoClient.checkoutSessions.create({
     product_cart: [{ product_id: productId, quantity: 1 }],
@@ -26,14 +33,18 @@ export async function createCheckoutSession(userId, userEmail, userName, currenc
       purpose: 'verified_badge',
       currency,
     },
-    return_url: `${returnBase}/profile/verification?payment=success`,
-    cancel_url: `${returnBase}/profile/verification?payment=cancelled`,
+    return_url: `${base}/onboarding/verify?payment=success`,
+    cancel_url: `${base}/onboarding/verify?payment=cancelled`,
   })
 
-  // response shape: { session_id, checkout_url }
+  const checkoutUrl = response.checkout_url
+  if (!checkoutUrl) {
+    throw new Error('Dodo did not return a checkout URL')
+  }
+
   return {
-    checkoutUrl: response.checkout_url,
-    sessionId:   response.session_id,
+    checkoutUrl,
+    sessionId: response.session_id,
   }
 }
 

@@ -8,7 +8,6 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, formatRelativeTime } from '@/lib/utils'
-import { useAppUser } from '@/components/layout/AppLayout'
 import toast from 'react-hot-toast'
 
 const CATEGORY_LABELS = {
@@ -22,11 +21,6 @@ const CATEGORY_LABELS = {
   family_tourist: 'Family traveller',
 }
 
-const TRIP_TYPE_LABELS = {
-  one_way: 'One way',
-  round_trip: 'Round trip',
-  open_ended: 'Open ended',
-}
 
 function formatDate(dateStr, flexible) {
   if (!dateStr) return ''
@@ -60,9 +54,6 @@ function SpotDots({ max, filled }) {
 }
 
 export default function TripPostCard({ post, currentUserTier, currentUserId, compact = false, onEdit, onDelete }) {
-  const appUser = useAppUser()
-  const verifPending  = appUser?.verifPending  ?? false
-  const verifApproved = appUser?.verifApproved ?? false
   const author = post.authorId ?? post.author ?? {}
   const authorId = author._id ?? author.id ?? post.authorId
   const isOwnPost = currentUserId && authorId && authorId.toString() === currentUserId.toString()
@@ -135,7 +126,7 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
         <div className="flex items-center gap-2">
           <Avatar src={author.profilePhotoUrl} name={author.fullName} size="xs" />
           <span className="text-xs text-gray-700 font-medium truncate">{author.fullName}</span>
-          {author.verificationTier && author.verificationTier !== 'basic' && (
+          {(author.verificationTier === 'verified' || author.verificationTier === 'trusted') && (
             <Badge variant="verified" size="sm">✓</Badge>
           )}
           {author.city && (
@@ -229,26 +220,10 @@ export default function TripPostCard({ post, currentUserTier, currentUserId, com
                     </div>
                   )}
                 </div>
-              ) : post.status === 'open' && !isFull && (
-                currentUserTier === 'basic' ? (
-                  verifPending ? (
-                    <Button variant="ghost" size="sm" disabled className="text-brand/50">
-                      Verification under review
-                    </Button>
-                  ) : verifApproved ? (
-                    <Button href="/profile/verification" variant="ghost" size="sm" className="text-teal">
-                      Activate badge to apply
-                    </Button>
-                  ) : (
-                    <Button href="/profile/verification" variant="ghost" size="sm" className="text-brand">
-                      Verify to apply
-                    </Button>
-                  )
-                ) : currentUserTier ? (
-                  <Button href={`/cotraveller/${post._id}`} variant="primary" size="sm">
-                    View Trip
-                  </Button>
-                ) : null
+              ) : post.status === 'open' && !isFull && currentUserTier && (
+                <Button href={`/cotraveller/${post._id}`} variant="primary" size="sm">
+                  View Trip
+                </Button>
               )}
             </div>
           )}

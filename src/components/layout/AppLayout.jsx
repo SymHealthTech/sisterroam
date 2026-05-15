@@ -19,6 +19,9 @@ import { useSSEContext } from '@/context/SSEContext'
 const AppUserContext = createContext(null)
 export function useAppUser() { return useContext(AppUserContext) }
 
+const FRESH_DATA_DEFAULT = { profilePhotoUrl: null, verificationTier: null, verifPending: false, verifRejected: false, tierLoaded: false }
+let freshDataCache = null
+
 function LoadingSkeleton() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50" style={{ height: '100dvh' }}>
@@ -37,7 +40,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar = false }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [freshData, setFreshData] = useState({ profilePhotoUrl: null, verificationTier: null, verifPending: false, verifApproved: false, tierLoaded: false })
+  const [freshData, setFreshData] = useState(() => freshDataCache ?? FRESH_DATA_DEFAULT)
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
   const { subscribe } = useSSEContext()
@@ -54,6 +57,15 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
       router.replace('/login')
     }
   }, [status, router])
+
+  // Enforce verification gate: basic users must complete /verify first
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    const tier = session?.user?.verificationTier
+    if (tier === 'basic') {
+      router.replace('/onboarding/verify')
+    }
+  }, [status, session, router])
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -74,19 +86,27 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
           profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
           verificationTier: tier,
           verifPending: false,
+          verifRejected: false,
         }
-        if (tier === 'basic') {
+        if (tier === 'paid') {
+          update.verifPending = true
           try {
             const vRes = await fetch('/api/verification/status', { signal })
             if (vRes.ok && !signal.aborted) {
               const vd = await vRes.json()
               const vs = vd.data?.verification?.status
-              update.verifPending  = vs === 'pending'
-              update.verifApproved = vs === 'approved'
+              update.verifRejected = vs === 'rejected'
+              if (vs === 'rejected' && !signal.aborted) {
+                router.replace('/verification-rejected')
+              }
             }
           } catch {}
         }
-        if (!signal.aborted) setFreshData({ ...update, tierLoaded: true })
+        if (!signal.aborted) {
+          const next = { ...update, tierLoaded: true }
+          freshDataCache = next
+          setFreshData(next)
+        }
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error('[AppLayout] loadFreshUser:', err.message)
@@ -97,7 +117,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
     loadFreshUser()
     return () => controller.abort()
-  }, [status])  
+  }, [status, router])
 
   useEffect(() => {
     const u1 = subscribe('new_cotraveller_interest', (d) => {
@@ -114,6 +134,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
   if (status === 'loading') return <LoadingSkeleton />
   if (!session) return null
+  if (session.user.verificationTier === 'basic') return null
 
   const user = session.user
   const avatarSrc = freshData.profilePhotoUrl ?? user.profilePhotoUrl ?? null
@@ -121,16 +142,16 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
     ...user,
     profilePhotoUrl:  avatarSrc,
     ...(freshData.tierLoaded ? { verificationTier: freshData.verificationTier } : {}),
-    verifPending:  freshData.verifPending  ?? false,
-    verifApproved: freshData.verifApproved ?? false,
-    tierLoaded:    freshData.tierLoaded,
+    verifPending:   freshData.verifPending  ?? false,
+    verifRejected:  freshData.verifRejected ?? false,
+    tierLoaded:     freshData.tierLoaded,
   }
 
   return (
     <AppUserContext.Provider value={freshUser}>
     <div className="flex h-screen overflow-hidden bg-gray-50" style={{ height: '100dvh' }}>
       {/* Desktop sidebar */}
-      <Sidebar user={{ ...user, profilePhotoUrl: avatarSrc }} />
+      <Sidebar user={freshUser} />
 
       {/* Main content column */}
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">

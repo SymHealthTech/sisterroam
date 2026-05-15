@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb'
 import VerificationRequest from '@/models/VerificationRequest'
+import User from '@/models/User'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
 
@@ -36,24 +37,34 @@ export async function POST(request) {
     const body = await request.json()
 
     const {
+      country,
       idDocumentUrl, idDocumentPublicId,
       idDocumentBackUrl,
       selfieVideoUrl, selfieVideoPublicId,
       socialMediaUrl,
     } = body
 
-    const existing = await VerificationRequest.findOne({ userId: session.user.id, status: 'pending' })
-    if (existing) return fail('You already have a pending verification request', 409)
+    if (country) {
+      await User.findByIdAndUpdate(session.user.id, { $set: { country } })
+    }
 
-    const verif = await VerificationRequest.create({
-      userId: session.user.id,
-      idDocumentUrl,
-      idDocumentPublicId,
-      idDocumentBackUrl,
-      selfieVideoUrl,
-      selfieVideoPublicId,
-      socialMediaUrl,
-    })
+    // Upsert: update existing pending request or create a new one.
+    // This lets the /verify page resubmit docs after a cancelled payment.
+    const verif = await VerificationRequest.findOneAndUpdate(
+      { userId: session.user.id, status: 'pending' },
+      {
+        $set: {
+          idDocumentUrl,
+          idDocumentPublicId,
+          idDocumentBackUrl,
+          selfieVideoUrl,
+          selfieVideoPublicId,
+          socialMediaUrl,
+        },
+        $setOnInsert: { userId: session.user.id },
+      },
+      { upsert: true, new: true },
+    )
 
     const adminEmail = process.env.ADMIN_EMAIL
     if (adminEmail) {

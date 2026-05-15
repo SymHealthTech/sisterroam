@@ -4,7 +4,6 @@ import User from '@/models/User'
 import Payment from '@/models/Payment'
 import Notification from '@/models/Notification'
 import { parseWebhookEvent } from '@/lib/dodo'
-import { sendVerificationBadgeEmail } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,9 +56,10 @@ export async function POST(request) {
         { new: true }
       )
 
+      // Set to 'paid' — user enters the app under admin review
       const user = await User.findByIdAndUpdate(
         userId,
-        { $set: { verificationTier: 'verified' } },
+        { $set: { verificationTier: 'paid' } },
         { new: true }
       )
 
@@ -67,12 +67,11 @@ export async function POST(request) {
         await Notification.create({
           recipientId: userId,
           type:        'verification_approved',
-          title:       'Your verified badge is now active!',
-          body:        'Your payment was successful. You can now send and receive hosting requests.',
-          link:        '/profile/verification',
+          title:       'Payment received — verification in progress',
+          body:        'Your payment was successful. Our team will review your documents within 24–48 hours.',
+          link:        '/feed',
           isRead:      false,
         })
-        sendVerificationBadgeEmail(user).catch(console.error)
       }
 
       console.log(`Payment succeeded for user ${userId}`)
@@ -93,7 +92,7 @@ export async function POST(request) {
           type:        'verification_rejected',
           title:       'Payment could not be processed',
           body:        'Your payment failed. Please try again or contact support.',
-          link:        '/profile/verification',
+          link:        '/verify',
         })
       }
 

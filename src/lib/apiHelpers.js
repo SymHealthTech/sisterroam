@@ -37,8 +37,9 @@ export function validateRequired(body, fields) {
 }
 
 export function requireVerified(session) {
-  if (session.user.verificationTier === 'basic') {
-    const e = new Error('Verification required. Complete payment to unlock this feature.')
+  const tier = session.user.verificationTier
+  if (tier === 'basic' || tier === 'paid') {
+    const e = new Error('Full verification required. Your documents are under review.')
     e.status = 403
     throw e
   }

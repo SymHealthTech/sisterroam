@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
-import VerificationRequest from '@/models/VerificationRequest'
 import { createCheckoutSession } from '@/lib/dodo'
 
 export async function POST(request) {
@@ -26,24 +25,15 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
-    // Block if already verified
-    if (user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
-      return NextResponse.json({ success: false, error: 'Already verified' }, { status: 400 })
-    }
-
-    // Must have KYC approved before paying
-    const verif = await VerificationRequest.findOne({ userId, status: 'approved' })
-    if (!verif) {
-      return NextResponse.json(
-        { success: false, error: 'Complete identity verification before payment' },
-        { status: 400 }
-      )
+    // Block if already paid/verified
+    if (user.verificationTier === 'paid' || user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
+      return NextResponse.json({ success: false, error: 'Already activated' }, { status: 400 })
     }
 
     // Block double payment
     const existingCompleted = await Payment.findOne({ userId, purpose: 'verified_badge', status: 'completed' })
     if (existingCompleted) {
-      return NextResponse.json({ success: false, error: 'Verified badge already purchased' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Verification fee already paid' }, { status: 400 })
     }
 
     // Reuse a recent pending session so the user doesn't see duplicate checkouts
@@ -59,11 +49,16 @@ export async function POST(request) {
       return NextResponse.json({ success: true, paymentUrl: recentPending.checkoutUrl, reused: true })
     }
 
+    const proto = request.headers.get('x-forwarded-proto') || 'https'
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+    const returnBase = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : '')
+
     const { checkoutUrl, sessionId } = await createCheckoutSession(
       userId.toString(),
       user.email,
       user.fullName,
-      currency
+      currency,
+      returnBase
     )
 
     const amount = currency === 'INR' ? 199 : 5

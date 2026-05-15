@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
-import VerificationGate from "@/components/ui/VerificationGate";
+import { UnderReviewModal } from "@/components/ui/VerificationGate";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import RecommendationCard from "@/components/recommendations/RecommendationCard";
@@ -61,8 +60,8 @@ function QuestionCard({
   question,
   userId,
   isVerified,
-  verifPending,
-  verifApproved,
+  isUnderReview,
+  onShowReviewModal,
   onAnswered,
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -343,33 +342,15 @@ function QuestionCard({
                   </Button>
                 </div>
               </form>
-            ) : verifPending ? (
-              <p className="text-xs text-brand/70 bg-brand-lighter rounded-xl px-3 py-2">
-                Verification under review — you&apos;ll be able to answer once
-                approved
-              </p>
-            ) : verifApproved ? (
-              <p className="text-xs text-teal bg-teal-lighter rounded-xl px-3 py-2">
-                Identity verified!{" "}
-                <a
-                  href="/profile/verification"
-                  className="font-medium text-teal-dark hover:underline"
-                >
-                  Activate your badge
-                </a>{" "}
-                to post answers
-              </p>
-            ) : (
-              <p className="text-xs text-brand/70 bg-brand-lighter rounded-xl px-3 py-2">
-                <a
-                  href="/profile/verification"
-                  className="font-medium text-brand hover:underline"
-                >
-                  Get verified
-                </a>{" "}
-                to post answers
-              </p>
-            )}
+            ) : isUnderReview ? (
+              <button
+                type="button"
+                onClick={onShowReviewModal}
+                className="w-full text-left px-4 py-3 text-sm text-gray-400 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
+              >
+                Share what you know about {question.city}…
+              </button>
+            ) : null}
           </div>
         </div>
       )}
@@ -381,11 +362,10 @@ export default function RecommendationsPage() {
   const { data: session } = useSession();
   const appUser = useAppUser();
   const userId = session?.user?.id;
-  const isVerified =
-    session?.user?.verificationTier &&
-    session.user.verificationTier !== "basic";
-  const verifPending = appUser?.verifPending ?? false;
-  const verifApproved = appUser?.verifApproved ?? false;
+  const tier = (appUser ?? session?.user)?.verificationTier;
+  const isVerified = tier === "verified" || tier === "trusted";
+  const isUnderReview = tier === "paid";
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState(0);
   const swipeStart = useRef(null);
@@ -412,8 +392,6 @@ export default function RecommendationsPage() {
   const [category, setCategory] = useState("");
   const [recs, setRecs] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [myRecs, setMyRecs] = useState([]);
-  const [myQs, setMyQs] = useState([]);
 
   const [recTotal, setRecTotal] = useState(0);
   const [qTotal, setQTotal] = useState(0);
@@ -529,31 +507,25 @@ export default function RecommendationsPage() {
           <p className="text-sm text-gray-500 mt-1">
             Real experiences shared by verified sisters
           </p>
-          {isVerified ? (
-            <div className="flex gap-3 mt-4">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setRecModal(true)}
-              >
-                <PlusCircle className="w-4 h-4 mr-1.5" />
-                Share a recommendation
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setQModal(true)}
-                className="hidden sm:inline-flex"
-              >
-                <MessageSquare className="w-4 h-4 mr-1.5" />
-                Ask a question
-              </Button>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <VerificationGate mode="banner" action="Adding recommendations" />
-            </div>
-          )}
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => isVerified ? setRecModal(true) : setShowReviewModal(true)}
+            >
+              <PlusCircle className="w-4 h-4 mr-1.5" />
+              Share a recommendation
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
+              className="hidden sm:inline-flex"
+            >
+              <MessageSquare className="w-4 h-4 mr-1.5" />
+              Ask a question
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -670,15 +642,13 @@ export default function RecommendationsPage() {
                     ? `No recommendations for "${search}"`
                     : "No recommendations yet"}
                 </p>
-                {isVerified && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setRecModal(true)}
-                  >
-                    Be the first to share
-                  </Button>
-                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => isVerified ? setRecModal(true) : setShowReviewModal(true)}
+                >
+                  Be the first to share
+                </Button>
               </div>
             )}
           </>
@@ -691,16 +661,14 @@ export default function RecommendationsPage() {
               <p className="text-xs text-gray-500">
                 {qTotal} question{qTotal !== 1 ? "s" : ""}
               </p>
-              {isVerified && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setQModal(true)}
-                >
-                  <PlusCircle className="w-3.5 h-3.5 mr-1" />
-                  Ask a question
-                </Button>
-              )}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
+              >
+                <PlusCircle className="w-3.5 h-3.5 mr-1" />
+                Ask a question
+              </Button>
             </div>
             {loading && questions.length === 0 ? (
               <div className="space-y-3">
@@ -720,8 +688,8 @@ export default function RecommendationsPage() {
                       question={q}
                       userId={userId}
                       isVerified={isVerified}
-                      verifPending={verifPending}
-                      verifApproved={verifApproved}
+                      isUnderReview={isUnderReview}
+                      onShowReviewModal={() => setShowReviewModal(true)}
                       onAnswered={() =>
                         setQuestions((prev) =>
                           prev.map((pq) =>
@@ -757,7 +725,7 @@ export default function RecommendationsPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => setQModal(true)}
+                  onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
                 >
                   Ask the first question
                 </Button>
@@ -835,6 +803,7 @@ export default function RecommendationsPage() {
         )}
       </div>
 
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
       {showRecModal && isVerified && (
         <AddRecommendationModal
           onClose={() => setRecModal(false)}

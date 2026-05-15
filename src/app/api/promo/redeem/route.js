@@ -4,9 +4,7 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
 import PromoCode from '@/models/PromoCode'
-import VerificationRequest from '@/models/VerificationRequest'
 import Notification from '@/models/Notification'
-import { sendVerificationBadgeEmail } from '@/lib/resend'
 
 export async function POST(req) {
   try {
@@ -28,14 +26,8 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
-    if (user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
+    if (user.verificationTier === 'paid' || user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
       return NextResponse.json({ success: true, verificationTier: user.verificationTier })
-    }
-
-    // KYC must be approved before badge can be activated
-    const verif = await VerificationRequest.findOne({ userId, status: 'approved' })
-    if (!verif) {
-      return NextResponse.json({ success: false, error: 'KYC not approved' }, { status: 400 })
     }
 
     // Atomically claim one use of the promo code
@@ -77,28 +69,19 @@ export async function POST(req) {
       paidAt: new Date(),
     })
 
-    // Activate badge
-    await User.findByIdAndUpdate(userId, { $set: { verificationTier: 'verified' } })
+    // Set tier to 'paid' — user enters the app under admin review
+    await User.findByIdAndUpdate(userId, { $set: { verificationTier: 'paid' } })
 
-    // Notify (skip if duplicate)
-    const existing = await Notification.findOne({
+    await Notification.create({
       recipientId: userId,
       type: 'verification_approved',
-      title: 'Your verified badge is now active!',
-    })
-    if (!existing) {
-      await Notification.create({
-        recipientId: userId,
-        type: 'verification_approved',
-        title: 'Your verified badge is now active!',
-        body: 'Your promo code was applied. You can now send and receive hosting requests.',
-        link: '/profile/verification',
-        isRead: false,
-      })
-      sendVerificationBadgeEmail(user).catch(console.error)
-    }
+      title: 'Verification fee waived!',
+      body: 'Your promo code was applied. Your documents are under review — you\'ll be notified once approved.',
+      link: '/feed',
+      isRead: false,
+    }).catch(console.error)
 
-    return NextResponse.json({ success: true, verificationTier: 'verified' })
+    return NextResponse.json({ success: true, verificationTier: 'paid' })
   } catch (error) {
     console.error('Promo redeem error:', error)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })

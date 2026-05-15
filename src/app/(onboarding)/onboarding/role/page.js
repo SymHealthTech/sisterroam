@@ -67,6 +67,7 @@ export default function OnboardingRolePage() {
   const router = useRouter()
   const [selected, setSelected] = useState('')
   const [saving,   setSaving]   = useState(false)
+  const [done,     setDone]     = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.replace('/login')
@@ -84,18 +85,19 @@ export default function OnboardingRolePage() {
       if (!res.ok) {
         const data = await res.json()
         toast.error(data.error ?? 'Failed to save. Please try again.')
+        setSaving(false)
         return
       }
+      setDone(true)
       await update({ onboardingCompleted: true, role: selected })
-      router.push('/onboarding/complete')
+      router.push('/feed')
     } catch {
       toast.error('Network error. Please try again.')
-    } finally {
       setSaving(false)
     }
   }
 
-  if (status === 'loading') return null
+  if (status === 'loading' || done) return null
 
   return (
     <div className="min-h-screen bg-gray-50">

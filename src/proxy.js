@@ -49,6 +49,11 @@ export default auth((request) => {
       return NextResponse.next()
     }
 
+    const tier = session.user.verificationTier
+    if (!tier || tier === 'basic') {
+      return NextResponse.redirect(new URL('/onboarding/verify', request.url))
+    }
+
     const step = session.user.onboardingStep || 2
 
     if (step <= 2) {

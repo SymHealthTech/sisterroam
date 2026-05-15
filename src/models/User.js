@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
 
     verificationTier: {
       type: String,
-      enum: ['basic', 'verified', 'trusted'],
+      enum: ['basic', 'paid', 'verified', 'trusted'],
       default: 'basic',
     },
     role: { type: String, enum: ['guest', 'host', 'both'], default: 'guest' },

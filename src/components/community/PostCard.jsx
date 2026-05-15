@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useAppUser } from '@/components/layout/AppLayout'
 import Image from 'next/image'
 import {
   Heart, MessageCircle, Share2, MoreHorizontal,
-  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight,
+  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Lock,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
+import { UnderReviewModal } from '@/components/ui/VerificationGate'
 import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -22,12 +22,6 @@ const CATEGORY_LABELS = {
   hosting_offer: 'Hosting Offer',
   achievements:  'Achievements',
   questions:     'Questions',
-}
-
-const TIER_COLORS = {
-  basic:   'gray',
-  verified: 'teal',
-  trusted:  'brand',
 }
 
 /* ── Lightbox ──────────────────────────────────────────────── */
@@ -433,9 +427,7 @@ function CommentItem({ comment }) {
 
 /* ── Main card ─────────────────────────────────────────────── */
 export default function PostCard({ post: initialPost, currentUserId, currentUserTier, onDelete, priority = false }) {
-  const appUser = useAppUser()
-  const verifPending  = appUser?.verifPending  ?? false
-  const verifApproved = appUser?.verifApproved ?? false
+  const isUnderReview = currentUserTier === 'paid'
   const [post,         setPost]         = useState(initialPost)
   const [expanded,     setExpanded]     = useState(false)
   const [showComments, setShowComments] = useState(false)
@@ -448,6 +440,7 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
   const [editContent,  setEditContent]  = useState(post.content)
   const [deleting,     setDeleting]     = useState(false)
   const [confirmOpen,  setConfirmOpen]  = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const menuRef = useRef(null)
 
   const isOwn = post.authorId?._id?.toString() === currentUserId || post.authorId?.toString() === currentUserId
@@ -552,6 +545,7 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
 
   return (
     <>
+    {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
     <ConfirmDialog
       open={confirmOpen}
       onCancel={() => setConfirmOpen(false)}
@@ -576,10 +570,8 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
               >
                 {post.authorId?.fullName}
               </Link>
-              {post.authorId?.verificationTier && post.authorId.verificationTier !== 'basic' && (
-                <Badge variant={TIER_COLORS[post.authorId.verificationTier]} size="xs">
-                  {post.authorId.verificationTier}
-                </Badge>
+              {(post.authorId?.verificationTier === 'verified' || post.authorId?.verificationTier === 'trusted') && (
+                <Badge variant="teal" size="xs">✓</Badge>
               )}
             </div>
             <p className="text-xs text-gray-400">
@@ -720,15 +712,17 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
               View all {post.commentsCount} comments
             </button>
           )}
-          {currentUserTier && currentUserTier === 'basic' ? (
-            <p className="text-xs text-brand/70 bg-brand-lighter rounded-full px-3 py-2 mt-2">
-              {verifPending
-                ? 'Verification under review — comments unlock once approved'
-                : verifApproved
-                ? <>Identity verified! <a href="/profile/verification" className="font-medium text-teal-dark hover:underline">Activate badge</a> to comment</>
-                : <><a href="/profile/verification" className="font-medium text-brand hover:underline">Get verified</a> to comment</>
-              }
-            </p>
+          {isUnderReview ? (
+            <button
+              type="button"
+              onClick={() => setShowReviewModal(true)}
+              className="flex gap-2 mt-2 w-full text-left"
+            >
+              <div className="flex-1 flex items-center gap-2 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 text-gray-400">
+                <Lock className="w-3 h-3 text-brand/40 shrink-0" />
+                Add a comment…
+              </div>
+            </button>
           ) : (
             <form onSubmit={sendComment} className="flex gap-2 mt-2">
               <input
@@ -736,7 +730,7 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
                 onChange={e => setCommentInput(e.target.value)}
                 placeholder="Add a comment…"
                 maxLength={500}
-                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none  focus:ring-0/20 focus:border-brand/30"
+                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-0/20 focus:border-brand/30"
               />
               <button
                 type="submit"

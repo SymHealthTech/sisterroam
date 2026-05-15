@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import TripPostCard from "@/components/cotraveller/TripPostCard";
 import PostTripModal from "@/components/cotraveller/PostTripModal";
-import Badge from "@/components/ui/Badge";
-import VerificationGate from "@/components/ui/VerificationGate";
+import { UnderReviewModal } from "@/components/ui/VerificationGate";
 import {
   Search,
   SlidersHorizontal,
@@ -23,7 +21,7 @@ import {
   Trash2,
   ChevronDown,
 } from "lucide-react";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 const TABS = ["Browse trips", "My posts", "My interests"];
 
@@ -357,12 +355,11 @@ function InterestCard({ item }) {
 export default function CoTravellerPage() {
   const { data: session } = useSession();
   const appUser = useAppUser();
-  // Prefer freshUser from AppLayout context (DB data); fall back to JWT session
   const userTier = (appUser ?? session?.user)?.verificationTier;
 
-  const isVerified = userTier && userTier !== "basic";
-  const verifPending = (appUser ?? session?.user)?.verifPending ?? false;
-  const verifApproved = (appUser ?? session?.user)?.verifApproved ?? false;
+  const isVerified = userTier === "verified" || userTier === "trusted";
+  const isUnderReview = userTier === "paid";
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState(0);
   const swipeStart = useRef(null);
@@ -683,25 +680,13 @@ export default function CoTravellerPage() {
                   >
                     Post a trip
                   </Button>
-                ) : verifPending ? (
-                  <Button variant="ghost" size="sm" disabled>
-                    Verification under review
-                  </Button>
-                ) : verifApproved ? (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    href="/profile/verification"
-                  >
-                    Activate badge to post
-                  </Button>
                 ) : (
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     size="sm"
-                    href="/profile/verification"
+                    onClick={() => setShowReviewModal(true)}
                   >
-                    Get verified to post
+                    Post a trip
                   </Button>
                 )}
               </div>
@@ -712,10 +697,7 @@ export default function CoTravellerPage() {
         {/* ── My posts tab ── */}
         {activeTab === 1 && (
           <div className="space-y-4" id="my-activity">
-            {!isVerified && (
-              <VerificationGate mode="banner" action="Posting trips" />
-            )}
-            {isVerified && (
+            {(isVerified || isUnderReview) && (
               <>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-700">
@@ -725,7 +707,7 @@ export default function CoTravellerPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => setModal(true)}
+                    onClick={() => isVerified ? setModal(true) : setShowReviewModal(true)}
                   >
                     + Post a new trip
                   </Button>
@@ -754,7 +736,7 @@ export default function CoTravellerPage() {
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => setModal(true)}
+                      onClick={() => isVerified ? setModal(true) : setShowReviewModal(true)}
                     >
                       Post your first trip
                     </Button>
@@ -808,6 +790,7 @@ export default function CoTravellerPage() {
         )}
       </div>
 
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
       {showModal && isVerified && (
         <PostTripModal
           onClose={() => setModal(false)}

@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
-import VerificationRequest from '@/models/VerificationRequest'
 import Notification from '@/models/Notification'
 import { sendVerificationBadgeEmail } from '@/lib/resend'
 
@@ -26,18 +25,9 @@ export async function POST() {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
-    // Already verified — nothing to do
-    if (user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
+    // Already paid/verified — nothing to do
+    if (user.verificationTier === 'paid' || user.verificationTier === 'verified' || user.verificationTier === 'trusted') {
       return NextResponse.json({ success: true, verificationTier: user.verificationTier })
-    }
-
-    // KYC must be approved before the badge can be activated
-    const verif = await VerificationRequest.findOne({ userId, status: 'approved' })
-    if (!verif) {
-      return NextResponse.json(
-        { success: false, error: 'KYC not approved' },
-        { status: 400 }
-      )
     }
 
     // A payment record (pending or completed) must exist — proves the user
@@ -55,8 +45,8 @@ export async function POST() {
       )
     }
 
-    // Activate badge in DB
-    await User.findByIdAndUpdate(userId, { $set: { verificationTier: 'verified' } })
+    // Set tier to 'paid' — user enters the app under admin review
+    await User.findByIdAndUpdate(userId, { $set: { verificationTier: 'paid' } })
 
     // Mark payment completed if it was still pending (webhook may arrive later)
     if (payment.status === 'pending') {
@@ -83,7 +73,7 @@ export async function POST() {
       sendVerificationBadgeEmail(user).catch(console.error)
     }
 
-    return NextResponse.json({ success: true, verificationTier: 'verified' })
+    return NextResponse.json({ success: true, verificationTier: 'paid' })
   } catch (error) {
     console.error('Payment activate error:', error)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })

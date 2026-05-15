@@ -13,8 +13,6 @@ import NotificationPanel from "@/components/ui/NotificationPanel";
 import {
   ShieldCheck,
   Copy,
-  AlertCircle,
-  Clock,
   ArrowLeft,
 } from "lucide-react";
 import { FeedTab } from "@/app/(app)/community/page";
@@ -155,9 +153,6 @@ export default function FeedPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [activeStay, setActiveStay] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [verifPending, setVerifPending] = useState(false);
-  const [verifApproved, setVerifApproved] = useState(false);
-
   async function loadFeedData() {
     try {
       const userRes = await fetch("/api/users");
@@ -166,13 +161,9 @@ export default function FeedPage() {
         const profile = userData.data ?? {};
         setUserProfile(profile);
 
-        const [requestsRes, verifRes] = await Promise.allSettled([
-          fetch("/api/requests"),
-          fetch("/api/verification/status"),
-        ]);
-
-        if (requestsRes.status === "fulfilled" && requestsRes.value.ok) {
-          const d = await requestsRes.value.json();
+        const requestsRes = await fetch("/api/requests").catch(() => null);
+        if (requestsRes?.ok) {
+          const d = await requestsRes.json();
           const today = new Date();
           const requests = Array.isArray(d.data) ? d.data : [];
           const active = requests.find(
@@ -182,12 +173,6 @@ export default function FeedPage() {
               new Date(r.checkOutDate) >= today,
           );
           setActiveStay(active ?? null);
-        }
-        if (verifRes.status === "fulfilled" && verifRes.value.ok) {
-          const d = await verifRes.value.json();
-          const vs = d.data?.verification?.status;
-          setVerifPending(vs === "pending");
-          setVerifApproved(vs === "approved");
         }
       }
     } finally {
@@ -203,9 +188,6 @@ export default function FeedPage() {
   const firstName =
     (userProfile?.fullName ?? sessionUser?.fullName ?? "").split(" ")[0] ||
     "there";
-  const verTier =
-    userProfile?.verificationTier ?? sessionUser?.verificationTier;
-  const isBasicTier = !loading && verTier === "basic";
   const hostName = activeStay?.hostId?.fullName ?? "your host";
   const hostCity = activeStay?.hostId?.city ?? "";
 
@@ -244,64 +226,6 @@ export default function FeedPage() {
       <div className="lg:flex lg:gap-0 max-w-5xl mx-auto">
         {/* Main feed */}
         <div className="flex-1 min-w-0 px-4 py-5 lg:px-8 space-y-6">
-          {/* Identity approved — payment needed */}
-          {isBasicTier && verifApproved && !loading && (
-            <div className="flex items-start gap-3 p-4 bg-teal-lighter border border-teal/30 rounded-xl">
-              <ShieldCheck className="w-5 h-5 text-teal shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-teal-dark">
-                  Identity verified!
-                </p>
-                <p className="text-xs text-teal mt-0.5">
-                  Activate your verified badge for ₹199 to unlock hosting,
-                  messaging and more.
-                </p>
-              </div>
-              <Button
-                href="/profile/verification"
-                variant="ghost"
-                size="sm"
-                className="shrink-0 border-teal/30 text-teal-dark hover:bg-teal/10"
-              >
-                Activate →
-              </Button>
-            </div>
-          )}
-
-          {/* Verification alert — not started yet */}
-          {isBasicTier && !verifPending && !verifApproved && (
-            <div className="flex items-start gap-3 p-4 bg-amber-lighter border border-amber-light rounded-xl">
-              <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
-              <p className="flex-1 text-sm text-amber-dark font-medium">
-                Get your verified badge — ₹199 one-time · Unlocks everything
-              </p>
-              <Button
-                href="/profile/verification"
-                variant="ghost"
-                size="sm"
-                className="shrink-0 border-amber-dark/30 text-amber-dark hover:bg-amber/10"
-              >
-                Get verified
-              </Button>
-            </div>
-          )}
-
-          {/* Verification under review */}
-          {verifPending && !loading && (
-            <div className="flex items-start gap-3 p-4 bg-brand-lighter border border-brand-light rounded-xl">
-              <Clock className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-brand-dark">
-                  Verification under review
-                </p>
-                <p className="text-xs text-brand mt-0.5">
-                  We&apos;re reviewing your documents. You&apos;ll be notified
-                  by email once approved — usually within 24 to 48 hours.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Quick actions */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap scrollbar-hide">
             {QUICK_ACTIONS.map(({ label, href }) => (

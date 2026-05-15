@@ -40,26 +40,30 @@ export async function PATCH(request, { params }) {
 
     await verif.save()
 
-    // Do NOT promote tier here — payment webhook does that after payment succeeds.
-
     const isApproved = status === 'approved'
-    const notifBody  = isApproved
-      ? 'Your identity has been verified! Complete payment on the verification page to activate your badge.'
-      : `Your verification was not approved.${reviewerNotes ? ` Notes: ${reviewerNotes}` : ' Please resubmit with clearer documents.'}`
+
+    // On approval: promote user to fully verified tier
+    if (isApproved) {
+      await User.findByIdAndUpdate(verif.userId, { $set: { verificationTier: 'verified' } })
+    }
+
+    const notifBody = isApproved
+      ? 'Your identity has been verified! You now have full access to SisterRoam.'
+      : `Your verification was not approved.${reviewerNotes ? ` Reason: ${reviewerNotes}` : ''} We will communicate further via your registered email.`
 
     await Notification.create({
       recipientId: verif.userId,
       type:        isApproved ? 'verification_approved' : 'verification_rejected',
-      title:       isApproved ? 'Identity verified!' : 'Verification update',
+      title:       isApproved ? 'Verification approved — full access unlocked!' : 'Verification not approved',
       body:        notifBody,
-      link:        '/profile/verification',
+      link:        isApproved ? '/feed' : '/verification-rejected',
     })
 
     const user = await User.findById(verif.userId).select('email fullName emailNotifications').lean()
     if (user?.emailNotifications?.verificationUpdate !== false) {
       sendEmail({
         to:      user.email,
-        subject: `Verification ${status} – SisterRoam`,
+        subject: isApproved ? 'You\'re verified on SisterRoam! 🎉' : `Verification update – SisterRoam`,
         html:    `<p>Hi ${user.fullName},</p><p>${notifBody}</p>`,
       }).catch(console.error)
     }

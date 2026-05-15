@@ -18,11 +18,12 @@ const NAV_LINKS = [
 ]
 
 export default function PublicNavbar() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [scrolled,     setScrolled]     = useState(false)
   const [mobileOpen,   setMobileOpen]   = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [freshPhotoUrl, setFreshPhotoUrl] = useState(null)
+  const [appHref, setAppHref] = useState('/feed')
   const dropdownRef = useRef(null)
 
   useEffect(() => {
@@ -37,9 +38,30 @@ export default function PublicNavbar() {
     if (status !== 'authenticated') return
     fetch('/api/users')
       .then(r => r.json())
-      .then(d => { if (d.success) setFreshPhotoUrl(d.data.profilePhotoUrl ?? null) })
+      .then(async d => {
+        if (!d.success) return
+        setFreshPhotoUrl(d.data.profilePhotoUrl ?? null)
+
+        const dbTier = d.data.verificationTier
+        const onboardingDone = d.data.onboardingCompleted
+        const step = d.data.onboardingStep
+
+        // Refresh stale JWT if payment updated the tier externally
+        if (dbTier && dbTier !== session?.user?.verificationTier) {
+          await updateSession({ verificationTier: dbTier })
+        }
+
+        // Compute the right destination
+        if (!dbTier || dbTier === 'basic') {
+          setAppHref('/onboarding/verify')
+        } else if (!onboardingDone) {
+          setAppHref(step === 3 ? '/onboarding/role' : '/onboarding/profile')
+        } else {
+          setAppHref('/feed')
+        }
+      })
       .catch(() => {})
-  }, [status])  
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -99,7 +121,7 @@ export default function PublicNavbar() {
             <div className="w-8 h-8 rounded-full bg-white/30 animate-pulse" />
           ) : isAuth ? (
             <>
-              <Button variant={scrolled ? 'primary' : 'white'} size="sm" href="/feed">Go to app</Button>
+              <Button variant={scrolled ? 'primary' : 'white'} size="sm" href={appHref}>Go to app</Button>
 
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -201,7 +223,7 @@ export default function PublicNavbar() {
         <div className="px-6 py-8 border-t border-gray-100 space-y-3">
           {isAuth ? (
             <>
-              <Button variant="primary" fullWidth href="/feed" onClick={() => setMobileOpen(false)}>
+              <Button variant="primary" fullWidth href={appHref} onClick={() => setMobileOpen(false)}>
                 Go to app
               </Button>
               <button

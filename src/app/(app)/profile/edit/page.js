@@ -590,7 +590,7 @@ export default function ProfileEditPage() {
 
   return (
     <AppLayout title="Edit Profile">
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {savedAt && (
           <div className="flex items-center gap-1.5 text-xs text-teal font-medium">
             <Check className="w-3.5 h-3.5" /> Saved just now
@@ -848,11 +848,9 @@ export default function ProfileEditPage() {
             </div>
           )}
         </Section>
-      </div>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2.5 z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-end gap-2">
+        {/* Action buttons */}
+        <div className="flex items-center justify-end gap-2 mb-20 sm:mb-6">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             Cancel
           </Button>

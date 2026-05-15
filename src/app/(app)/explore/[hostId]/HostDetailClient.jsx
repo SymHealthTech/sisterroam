@@ -6,9 +6,10 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import {
   MapPin, Home, Star, Users, CheckCircle, Shield, Globe,
-  ChevronDown, ChevronUp, ArrowLeft, ThumbsUp,
+  ChevronDown, ChevronUp, ArrowLeft, ThumbsUp, Lock,
 } from 'lucide-react'
 import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
+import { UnderReviewModal } from '@/components/ui/VerificationGate'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -463,8 +464,8 @@ function ReviewsTab({ host, reviews: initialReviews }) {
 function RequestCard({ host, className }) {
   const { data: session } = useSession()
   const appUser = useAppUser()
-  const verifPending  = appUser?.verifPending  ?? false
-  const verifApproved = appUser?.verifApproved ?? false
+  const isUnderReview = (appUser?.verificationTier ?? session?.user?.verificationTier) === 'paid'
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const user = host.userId ?? host.user ?? {}
   const accepting = host.isAcceptingGuests !== false && host.isListingActive !== false
   const rating = user.averageRating ?? 0
@@ -474,64 +475,60 @@ function RequestCard({ host, className }) {
   if (isOwnProfile) return null
 
   return (
-    <div className={cn('bg-white rounded-2xl border border-gray-100 p-5 space-y-4', className)}>
-      {!session ? (
-        <>
-          <h3 className="font-semibold text-gray-900">Connect with {user.fullName?.split(' ')[0]}</h3>
-          <p className="text-sm text-gray-500">Log in or create an account to send a hosting request.</p>
-          <Button href="/signup" fullWidth>Join free</Button>
-          <p className="text-center text-sm text-gray-500">
-            Already a member?{' '}
-            <Link href="/login" className="text-brand hover:text-brand-dark font-medium">Log in</Link>
-          </p>
-        </>
-      ) : session.user.verificationTier === 'basic' ? (
-        verifPending ? (
+    <>
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      <div className={cn('bg-white rounded-2xl border border-gray-100 p-5 space-y-4', className)}>
+        {!session ? (
           <>
-            <h3 className="font-semibold text-gray-900">Verification under review</h3>
-            <p className="text-sm text-gray-500">Our team is reviewing your documents. You&apos;ll be notified once approved.</p>
+            <h3 className="font-semibold text-gray-900">Connect with {user.fullName?.split(' ')[0]}</h3>
+            <p className="text-sm text-gray-500">Log in or create an account to send a hosting request.</p>
+            <Button href="/signup" fullWidth>Join free</Button>
+            <p className="text-center text-sm text-gray-500">
+              Already a member?{' '}
+              <Link href="/login" className="text-brand hover:text-brand-dark font-medium">Log in</Link>
+            </p>
           </>
-        ) : verifApproved ? (
+        ) : isUnderReview ? (
           <>
-            <h3 className="font-semibold text-gray-900">Identity verified!</h3>
-            <p className="text-sm text-gray-500">Activate your badge for ₹199 to send hosting requests.</p>
-            <Button href="/profile/verification" fullWidth>Activate badge — ₹199</Button>
+            <h3 className="font-semibold text-gray-900">Connect with {user.fullName?.split(' ')[0]}</h3>
+            <button
+              type="button"
+              onClick={() => setShowReviewModal(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-100 transition-colors"
+            >
+              <Lock className="w-4 h-4 text-brand/40" />
+              Request a stay
+            </button>
           </>
         ) : (
           <>
-            <h3 className="font-semibold text-gray-900">Verify your profile first</h3>
-            <p className="text-sm text-gray-500">Complete verification to send hosting requests.</p>
-            <Button href="/profile/verification" fullWidth>Get verified</Button>
+            {rating > 0 && (
+              <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                <Star className="w-4 h-4 fill-amber text-amber" />
+                <span className="font-semibold">{rating.toFixed(1)}</span>
+                <span className="text-gray-400">· {total} review{total !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+            <p className="text-xs text-gray-500">
+              Responds within {host.responseTimeHours ?? 24} hours · {host.responseRate ?? 100}% response rate
+            </p>
+            <Button
+              href={accepting ? `/request/${host._id}` : undefined}
+              disabled={!accepting}
+              fullWidth
+              size="lg"
+            >
+              {accepting ? `Request a stay with ${user.fullName?.split(' ')[0]}` : 'Not currently accepting guests'}
+            </Button>
           </>
-        )
-      ) : (
-        <>
-          {rating > 0 && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <Star className="w-4 h-4 fill-amber text-amber" />
-              <span className="font-semibold">{rating.toFixed(1)}</span>
-              <span className="text-gray-400">· {total} review{total !== 1 ? 's' : ''}</span>
-            </div>
-          )}
-          <p className="text-xs text-gray-500">
-            Responds within {host.responseTimeHours ?? 24} hours · {host.responseRate ?? 100}% response rate
-          </p>
-          <Button
-            href={accepting ? `/request/${host._id}` : undefined}
-            disabled={!accepting}
-            fullWidth
-            size="lg"
-          >
-            {accepting ? `Request a stay with ${user.fullName?.split(' ')[0]}` : 'Not currently accepting guests'}
-          </Button>
-        </>
-      )}
+        )}
 
-      <div className="flex items-center justify-center gap-1.5 pt-1">
-        <Shield className="w-4 h-4 text-teal" />
-        <span className="text-xs text-gray-500">Verified by SisterRoam team</span>
+        <div className="flex items-center justify-center gap-1.5 pt-1">
+          <Shield className="w-4 h-4 text-teal" />
+          <span className="text-xs text-gray-500">Verified by SisterRoam team</span>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -539,7 +536,11 @@ function RequestCard({ host, className }) {
 
 export default function HostDetailClient({ host }) {
   const router = useRouter()
+  const { data: session } = useSession()
+  const appUser = useAppUser()
+  const isUnderReview = (appUser?.verificationTier ?? session?.user?.verificationTier) === 'paid'
   const [activeTab, setActiveTab] = useState('About')
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const [now] = useState(() => Date.now())
 
   const user = host.userId ?? host.user ?? {}
@@ -602,9 +603,6 @@ export default function HostDetailClient({ host }) {
 
                 {/* Verification badges */}
                 <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  {user.verificationTier === 'trusted' && (
-                    <Badge variant="trusted">Trusted</Badge>
-                  )}
                   {(user.verificationTier === 'verified' || user.verificationTier === 'trusted') && (
                     <Badge variant="verified">✓ Verified</Badge>
                   )}
@@ -686,8 +684,18 @@ export default function HostDetailClient({ host }) {
       </div>
 
       {/* Mobile fixed bottom CTA */}
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        {host.isAcceptingGuests !== false && host.isListingActive !== false ? (
+        {isUnderReview ? (
+          <button
+            type="button"
+            onClick={() => setShowReviewModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-200 transition-colors"
+          >
+            <Lock className="w-4 h-4 text-brand/40" />
+            Request a stay with {user.fullName?.split(' ')[0]}
+          </button>
+        ) : host.isAcceptingGuests !== false && host.isListingActive !== false ? (
           <Button href={`/request/${host._id}`} fullWidth size="lg">
             Request a stay with {user.fullName?.split(' ')[0]}
           </Button>

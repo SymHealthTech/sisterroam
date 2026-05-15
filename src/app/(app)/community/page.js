@@ -5,7 +5,9 @@ import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import PostCard from "@/components/community/PostCard";
 import PostComposer from "@/components/community/PostComposer";
 import Skeleton from "@/components/ui/Skeleton";
-import VerificationGate from "@/components/ui/VerificationGate";
+import { UnderReviewModal } from "@/components/ui/VerificationGate";
+import Avatar from "@/components/ui/Avatar";
+import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -75,17 +77,28 @@ export function FeedTab() {
   }
 
   const tierKnown = user?.tierLoaded ?? false;
-  const isVerified = tierKnown && user.verificationTier && user.verificationTier !== "basic";
+  const isVerified = tierKnown && (user.verificationTier === "verified" || user.verificationTier === "trusted");
+  const isUnderReview = tierKnown && user.verificationTier === "paid";
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   return (
     <div className="space-y-4">
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
       {!tierKnown ? (
         <Skeleton variant="card" className="h-16" />
       ) : isVerified ? (
         <PostComposer user={user} onPost={handleNewPost} />
-      ) : (
-        <VerificationGate mode="banner" action="Posting" />
-      )}
+      ) : isUnderReview ? (
+        <button
+          type="button"
+          onClick={() => setShowReviewModal(true)}
+          className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        >
+          <Avatar src={user.profilePhotoUrl} name={user.fullName} size="sm" />
+          <span className="text-sm text-gray-400 flex-1">Share something with the community...</span>
+          <Lock className="w-4 h-4 text-brand/40 shrink-0" />
+        </button>
+      ) : null}
 
       {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

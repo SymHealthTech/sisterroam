@@ -21,8 +21,9 @@ import {
   CheckCircle,
   AlertCircle,
   MessageSquare,
-  ShieldCheck,
+  Lock,
 } from "lucide-react";
+import { UnderReviewModal } from "@/components/ui/VerificationGate";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 const CATEGORY_LABELS = {
@@ -89,15 +90,15 @@ export default function TripDetailPage({ params }) {
   const appUser = useAppUser();
   const router = useRouter();
   const userId = session?.user?.id;
-  const userTier = session?.user?.verificationTier;
-  const verifPending = appUser?.verifPending ?? false;
-  const verifApproved = appUser?.verifApproved ?? false;
+  const userTier = appUser?.verificationTier ?? session?.user?.verificationTier;
+  const isUnderReview = userTier === 'paid';
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -175,6 +176,7 @@ export default function TripDetailPage({ params }) {
 
   return (
     <AppLayout title="Trip details">
+      {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
       <div className="max-w-3xl mx-auto px-4 py-5 space-y-5">
         {/* Back */}
         <button
@@ -273,12 +275,9 @@ export default function TripDetailPage({ params }) {
                   <p className="text-sm font-semibold text-gray-900">
                     {author.fullName}
                   </p>
-                  {author.verificationTier === "trusted" && (
-                    <Badge variant="trusted">Trusted</Badge>
+                  {(author.verificationTier === "verified" || author.verificationTier === "trusted") && (
+                    <Badge variant="verified">✓ Verified</Badge>
                   )}
-                  {["verified", "trusted"].includes(
-                    author.verificationTier,
-                  ) && <Badge variant="verified">✓ Verified</Badge>}
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {[author.city, author.country].filter(Boolean).join(", ")}
@@ -429,56 +428,20 @@ export default function TripDetailPage({ params }) {
                   </div>
                 )}
               </div>
-            ) : userTier === "basic" && post.lookingFor?.verifiedOnly ? (
-              verifPending ? (
-                <div className="bg-brand-lighter rounded-2xl border border-brand/20 p-5 space-y-2">
-                  <Clock className="w-5 h-5 text-brand" />
-                  <p className="text-sm font-semibold text-brand-dark">
-                    Verification under review
-                  </p>
-                  <p className="text-xs text-brand/70">
-                    Our team is reviewing your documents. You&apos;ll be
-                    notified once approved.
-                  </p>
-                </div>
-              ) : verifApproved ? (
-                <div className="bg-teal-lighter rounded-2xl border border-teal/20 p-5 space-y-2">
-                  <ShieldCheck className="w-5 h-5 text-teal" />
-                  <p className="text-sm font-semibold text-teal-dark">
-                    Identity verified!
-                  </p>
-                  <p className="text-xs text-teal">
-                    Activate your badge for ₹199 to apply for this trip.
-                  </p>
-                  <Button
-                    href="/profile/verification"
-                    variant="primary"
-                    fullWidth
-                    size="sm"
-                  >
-                    Activate badge — ₹199
-                  </Button>
-                </div>
-              ) : (
-                <div className="bg-amber-lighter rounded-2xl border border-amber-light p-5 space-y-3">
-                  <AlertCircle className="w-5 h-5 text-amber" />
-                  <p className="text-sm font-semibold text-amber-dark">
-                    Verification required
-                  </p>
-                  <p className="text-xs text-amber-dark">
-                    This trip poster prefers verified members. Complete your
-                    verification to apply.
-                  </p>
-                  <Button
-                    href="/profile/verification"
-                    variant="primary"
-                    fullWidth
-                    size="sm"
-                  >
-                    Get verified
-                  </Button>
-                </div>
-              )
+            ) : isUnderReview ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-800">
+                  Join this trip
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-100 transition-colors"
+                >
+                  <Lock className="w-4 h-4 text-brand/40" />
+                  Express interest
+                </button>
+              </div>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-gray-800">

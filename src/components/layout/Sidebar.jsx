@@ -107,7 +107,7 @@ export default function Sidebar({ user }) {
           href="/"
           title={collapsed ? 'Go to Website' : undefined}
           className={cn(
-            'flex items-center gap-2 w-full rounded-xl py-2.5 px-3 text-sm font-medium text-brand border border-brand-lighter bg-brand-lighter/50 hover:bg-brand-lighter transition-colors',
+            'flex items-center gap-2 w-full rounded-xl py-2.5 px-3 text-sm font-medium text-brand hover:bg-brand-lighter/50 transition-colors',
             collapsed && 'justify-center px-0',
           )}
         >
@@ -144,13 +144,12 @@ export default function Sidebar({ user }) {
                 <p className="text-xs font-semibold text-gray-900 truncate max-w-full text-center leading-tight mt-0.5">
                   {user.fullName}
                 </p>
-                {user.verificationTier && user.verificationTier !== 'basic' && (
-                  <Badge
-                    variant={user.verificationTier === 'trusted' ? 'trusted' : 'verified'}
-                    size="sm"
-                  >
-                    {user.verificationTier === 'trusted' ? 'Trusted' : 'Verified'}
-                  </Badge>
+                {user.tierLoaded && (
+                  user.verificationTier === 'paid' ? (
+                    <Badge variant="pending" size="sm">Verification under review</Badge>
+                  ) : (user.verificationTier === 'verified' || user.verificationTier === 'trusted') ? (
+                    <Badge variant="verified" size="sm">Verified</Badge>
+                  ) : null
                 )}
               </>
             )}

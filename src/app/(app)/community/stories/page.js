@@ -6,7 +6,8 @@ import Link from 'next/link'
 import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import StoryCard from '@/components/stories/StoryCard'
 import Skeleton from '@/components/ui/Skeleton'
-import { BookOpen, Lock, Pencil, Clock, ShieldCheck } from 'lucide-react'
+import { BookOpen, Lock, Pencil } from 'lucide-react'
+import { UnderReviewModal } from '@/components/ui/VerificationGate'
 
 const CATEGORY_LABELS = {
   solo_travel: 'Solo Travel', cycling: 'Cycling', trekking: 'Trekking',
@@ -30,9 +31,10 @@ export default function CommunityStoriesPage() {
   const loading = fetchedCat !== category
 
   const appUser = useAppUser()
-  const isVerified = ['verified', 'trusted'].includes(session?.user?.verificationTier)
-  const verifPending  = appUser?.verifPending  ?? false
-  const verifApproved = appUser?.verifApproved ?? false
+  const tier = appUser?.verificationTier ?? session?.user?.verificationTier
+  const isVerified = tier === 'verified' || tier === 'trusted'
+  const isUnderReview = tier === 'paid'
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -97,56 +99,19 @@ export default function CommunityStoriesPage() {
               Share story
             </Link>
           )}
+          {isUnderReview && (
+            <button
+              type="button"
+              onClick={() => setShowReviewModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 text-gray-400 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Share story
+            </button>
+          )}
         </div>
 
-        {/* Basic member prompt */}
-        {!isVerified && (
-          verifPending ? (
-            <div className="flex items-start gap-3 p-4 bg-brand-lighter border border-brand/20 rounded-xl">
-              <Clock className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-brand">Verification under review</p>
-                <p className="text-xs text-brand/70 mt-0.5">
-                  You&apos;ll be able to share stories once your verification is approved.
-                </p>
-              </div>
-            </div>
-          ) : verifApproved ? (
-            <div className="flex items-start gap-3 p-4 bg-teal-lighter border border-teal/20 rounded-xl">
-              <ShieldCheck className="w-4 h-4 text-teal shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-teal-dark">Identity verified!</p>
-                <p className="text-xs text-teal mt-0.5">
-                  Activate your badge for ₹199 to start sharing stories.
-                </p>
-              </div>
-              <Link
-                href="/profile/verification"
-                className="text-xs font-medium text-teal-dark hover:underline shrink-0"
-              >
-                Activate →
-              </Link>
-            </div>
-          ) : (
-            <div className="flex items-start gap-3 p-4 bg-amber-lighter/50 border border-amber/20 rounded-xl">
-              <Lock className="w-4 h-4 text-amber shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-amber-dark">
-                  Share your travel story when you get verified
-                </p>
-                <p className="text-xs text-amber-dark/70 mt-0.5">
-                  Verified members can share stories that appear on the public SisterRoam website.
-                </p>
-              </div>
-              <Link
-                href="/profile/verification"
-                className="text-xs font-medium text-brand hover:underline shrink-0"
-              >
-                Get verified →
-              </Link>
-            </div>
-          )
-        )}
+        {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
 
         {/* Drafts section */}
         {drafts.length > 0 && (

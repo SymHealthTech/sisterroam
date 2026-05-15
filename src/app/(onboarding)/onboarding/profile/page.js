@@ -302,6 +302,16 @@ export default function OnboardingProfilePage() {
   }, [status, router]);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/users")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data.country) setCountry(d.data.country);
+      })
+      .catch(() => {});
+  }, [status]);
+
+  useEffect(() => {
     if (!country) return;
     let cancelled = false;
     fetch("https://countriesnow.space/api/v0.1/countries/cities", {
