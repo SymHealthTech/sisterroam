@@ -11,6 +11,7 @@ const notificationSchema = new mongoose.Schema({
       'request_declined',
       'new_message',
       'review_received',
+      'verification_under_review',
       'verification_approved',
       'verification_rejected',
       'checkin_reminder',
