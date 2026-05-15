@@ -4,7 +4,6 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
 import Notification from '@/models/Notification'
-import { sendVerificationBadgeEmail } from '@/lib/resend'
 
 // Called immediately when user returns from Dodo payment with ?payment=success.
 // Activates the badge without waiting for the webhook — the webhook remains an
@@ -58,19 +57,18 @@ export async function POST() {
     // Notify user (skip if one already exists for this event)
     const existing = await Notification.findOne({
       recipientId: userId,
-      type: 'verification_approved',
-      title: 'Your verified badge is now active!',
+      type: 'verification_under_review',
+      title: 'Payment received — verification in progress',
     })
     if (!existing) {
       await Notification.create({
         recipientId: userId,
-        type: 'verification_approved',
-        title: 'Your verified badge is now active!',
-        body: 'Your payment was successful. You can now send and receive hosting requests.',
+        type: 'verification_under_review',
+        title: 'Payment received — verification in progress',
+        body: 'Your payment was successful. Our team will review your documents within 24–48 hours.',
         link: '/profile/verification',
         isRead: false,
       })
-      sendVerificationBadgeEmail(user).catch(console.error)
     }
 
     return NextResponse.json({ success: true, verificationTier: 'paid' })
