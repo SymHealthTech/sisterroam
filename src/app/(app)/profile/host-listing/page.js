@@ -418,7 +418,7 @@ export default function HostListingPage() {
   if (tier === "basic") {
     return (
       <AppLayout title="Become a Host">
-        <VerificationGate mode="page" />
+        <VerificationGate />
       </AppLayout>
     );
   }
@@ -635,7 +635,12 @@ export default function HostListingPage() {
           )}
         </Section>
 
-        <Button fullWidth loading={saving} onClick={handleSave}>
+        <Button
+          fullWidth
+          loading={saving}
+          onClick={handleSave}
+          className={appUser?.verifPending ? "opacity-50 cursor-not-allowed" : ""}
+        >
           {hostId ? "Save listing" : "Create listing"}
         </Button>
       </div>
