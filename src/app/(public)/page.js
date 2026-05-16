@@ -419,8 +419,7 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <p className="text-white/55 text-xs leading-relaxed">
-                    Verified female solo travellers from across the globe —
-                    hosting and exploring together.
+                    Verified female solo travellers from across the globe
                   </p>
                 </div>
 
@@ -879,7 +878,7 @@ export default async function HomePage() {
             {featuredHosts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {featuredHosts.map((host) => (
-                  <HostCard key={host._id} host={host} />
+                  <HostCard key={host._id} host={host} blurred />
                 ))}
               </div>
             ) : (
@@ -897,12 +896,20 @@ export default async function HomePage() {
                         <Avatar
                           name={h.name}
                           size="lg"
-                          className="ring-4 ring-white shadow-sm"
+                          className="ring-4 ring-white shadow-sm blur-[2px]"
                         />
                       </div>
                     </div>
                     <div className="pt-10 pb-5 px-5 space-y-3 text-center">
-                      <p className="font-semibold text-gray-900">{h.name}</p>
+                      <p className="font-semibold text-gray-900">
+                        {h.name.slice(0, Math.ceil(h.name.length / 2))}
+                        <span
+                          className="blur-[2px] select-none"
+                          aria-hidden="true"
+                        >
+                          {h.name.slice(Math.ceil(h.name.length / 2))}
+                        </span>
+                      </p>
                       <div className="flex justify-center gap-1.5">
                         <Badge
                           variant={

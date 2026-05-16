@@ -47,7 +47,18 @@ function HostCardSkeleton() {
   )
 }
 
-export default function HostCard({ host, variant = 'full' }) {
+function halfBlurredName(name) {
+  if (!name) return name
+  const half = Math.ceil(name.length / 2)
+  return (
+    <>
+      {name.slice(0, half)}
+      <span className="blur-[2px] select-none" aria-hidden="true">{name.slice(half)}</span>
+    </>
+  )
+}
+
+export default function HostCard({ host, variant = 'full', blurred = false }) {
   const { user, accommodationType, femaleOnly } = host
   const rating  = user?.averageRating ?? 0
   const reviews = user?.totalReviews  ?? 0
@@ -98,7 +109,7 @@ export default function HostCard({ host, variant = 'full' }) {
             src={user?.profilePhotoUrl}
             name={user?.fullName}
             size="lg"
-            className="ring-[3px] ring-white"
+            className={cn('ring-[3px] ring-white', blurred && 'blur-[2px]')}
           />
         </div>
       </div>
@@ -108,7 +119,7 @@ export default function HostCard({ host, variant = 'full' }) {
         {/* Name + verification badges */}
         <div className="text-center space-y-1.5">
           <h3 className="font-semibold text-gray-900 text-sm leading-snug">
-            {user?.fullName ?? 'Sister Host'}
+            {blurred ? halfBlurredName(user?.fullName ?? 'Sister Host') : (user?.fullName ?? 'Sister Host')}
           </h3>
           <div className="flex items-center justify-center gap-1 flex-wrap">
             {user?.verificationTier === 'trusted' && (
