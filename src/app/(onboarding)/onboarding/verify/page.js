@@ -181,6 +181,9 @@ function PaymentStep({
   videoUrl,
   videoPubId,
   onSuccess,
+  onPayAttempt,
+  isProcessing,
+  onCheckStatus,
 }) {
   const [promoInput, setPromoInput] = useState("");
   const [promoState, setPromoState] = useState("idle");
@@ -206,6 +209,7 @@ function PaymentStep({
         idDocumentUrl: idFrontUrl,
         idDocumentPublicId: idFrontPubId,
         idDocumentBackUrl: idBackUrl,
+        idDocumentBackPublicId: idBackPubId,
         selfieVideoUrl: videoUrl || undefined,
         selfieVideoPublicId: videoPubId || undefined,
       }),
@@ -264,6 +268,7 @@ function PaymentStep({
   }
 
   async function handlePay() {
+    onPayAttempt?.();
     setIsCreatingPayment(true);
     setPaymentError(null);
     try {
@@ -356,7 +361,11 @@ function PaymentStep({
 
       {/* CTA */}
       <div className="space-y-2">
-        {isPromoValid ? (
+        {isProcessing ? (
+          <Button fullWidth size="lg" onClick={onCheckStatus}>
+            Check payment status
+          </Button>
+        ) : isPromoValid ? (
           <Button fullWidth size="lg" loading={isActivatingPromo} onClick={handlePromoActivate}>
             {isActivatingPromo ? "Activating…" : "Activate — Free"}
           </Button>
@@ -390,36 +399,35 @@ export default function VerifyPage() {
   const searchParams = useSearchParams();
   const paymentResult = searchParams.get("payment");
 
-  // All payment-return state is computed once from the URL + cookies so that
-  // no effect needs to call setState synchronously (which triggers cascading renders).
-  const [isPwaReturnInBrowser] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const payResult = new URLSearchParams(window.location.search).get("payment");
+  // isPwaReturnInBrowser and shouldActivate depend on cookies (document-only), so they
+  // must be false on SSR and computed in an effect — avoids hydration mismatch.
+  const [isPwaReturnInBrowser, setIsPwaReturnInBrowser] = useState(false);
+  const [shouldActivate, setShouldActivate] = useState(false);
+
+  // paymentResult comes from useSearchParams which is SSR-consistent, so it is safe
+  // to use directly in useState — server and client see the same URL value.
+  const [step, setStep] = useState(paymentResult === "cancelled" ? 3 : 1);
+
+  useEffect(() => {
+    // Restore country from before the Dodo redirect so currency shows correctly
+    const savedCountry = sessionStorage.getItem("sr_verify_country");
+    if (savedCountry) setCountry(savedCountry);
+
     const pwa = isPwaStandalone();
-    if ((payResult === "success" || payResult === "cancelled") && !pwa && getCookie("sr_pwa_checkout")) {
+    if ((paymentResult === "return" || paymentResult === "cancelled") && !pwa && getCookie("sr_pwa_checkout")) {
       deleteCookie("sr_pwa_checkout");
-      if (payResult === "success") setCookie("sr_payment_result", "success", 3600);
-      return true;
+      if (paymentResult === "return") setCookie("sr_payment_result", "return", 3600);
+      setIsPwaReturnInBrowser(true);
+      return;
     }
-    return false;
-  });
-
-  const [shouldActivate] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const payResult = new URLSearchParams(window.location.search).get("payment");
-    const pwa = isPwaStandalone();
-    if (pwa && getCookie("sr_payment_result") === "success") {
+    if (pwa && getCookie("sr_payment_result") === "return") {
       deleteCookie("sr_payment_result");
-      return true;
+      setShouldActivate(true);
+      return;
     }
-    return payResult === "success";
-  });
-
-  // Start at step 3 with the cancelled banner if returning from a cancelled payment.
-  const [step, setStep] = useState(() => {
-    if (typeof window === "undefined") return 1;
-    return new URLSearchParams(window.location.search).get("payment") === "cancelled" ? 3 : 1;
-  });
+    if (paymentResult === "return") setShouldActivate(true);
+    setInitialized(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [country, setCountry] = useState("");
   const [idFrontUrl, setIdFrontUrl] = useState("");
@@ -431,6 +439,9 @@ export default function VerifyPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoPubId, setVideoPubId] = useState("");
   const [activating, setActivating] = useState(false);
+  const [paymentFailedMessage, setPaymentFailedMessage] = useState(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Redirect already-paid/verified users — also handles stale JWT
   useEffect(() => {
@@ -456,27 +467,48 @@ export default function VerifyPage() {
       .catch(() => {});
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function runActivate() {
+    setActivating(true);
+    let redirecting = false;
+    try {
+      const res = await fetch("/api/payments/activate", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        redirecting = true;
+        sessionStorage.removeItem("sr_verify_country");
+        if (!data.onboardingCompleted) sessionStorage.setItem("sr_show_welcome", "1");
+        await updateSession({ verificationTier: data.verificationTier || "paid" });
+        router.replace(data.onboardingCompleted ? "/feed" : "/onboarding/profile");
+      } else {
+        const msg = data.error ?? "Activation failed. Contact support.";
+        setPaymentFailedMessage(msg);
+        setPaymentProcessing(!!data.processing);
+        setStep(3);
+        if (data.processing) {
+          toast(msg, { icon: "⏳" });
+        } else {
+          toast.error(msg);
+        }
+      }
+    } catch {
+      setPaymentFailedMessage("Network error. Please try again.");
+      setPaymentProcessing(false);
+      setStep(3);
+      toast.error("Network error. Please try again.");
+    } finally {
+      // Keep the loading state active if navigation was triggered — clearing it
+      // before the route change completes would flash step 1 for one frame.
+      if (!redirecting) {
+        setActivating(false);
+        setShouldActivate(false);
+      }
+    }
+  }
+
   // Activate after successful payment
   useEffect(() => {
     if (!shouldActivate) return;
-    async function activate() {
-      setActivating(true);
-      try {
-        const res = await fetch("/api/payments/activate", { method: "POST" });
-        const data = await res.json();
-        if (data.success) {
-          await updateSession({ verificationTier: "paid" });
-          router.replace("/onboarding/profile");
-        } else {
-          toast.error(data.error ?? "Activation failed. Contact support.");
-        }
-      } catch {
-        toast.error("Network error. Please try again.");
-      } finally {
-        setActivating(false);
-      }
-    }
-    activate();
+    runActivate();
   }, [shouldActivate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUpload({ documentType, url, publicId }) {
@@ -492,15 +524,16 @@ export default function VerifyPage() {
   }
 
   function handlePaymentSuccess() {
+    sessionStorage.setItem("sr_show_welcome", "1");
     router.replace("/onboarding/profile");
   }
 
-  if (status === "loading" || shouldActivate || activating) {
+  if (status === "loading" || (paymentResult === "return" && !initialized) || shouldActivate || activating) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-gray-500">{shouldActivate || activating ? "Activating your account…" : "Loading…"}</p>
+          <p className="text-sm text-gray-500">{shouldActivate || activating ? "Verifying payment…" : "Loading…"}</p>
         </div>
       </div>
     );
@@ -516,12 +549,12 @@ export default function VerifyPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-6">
-          <div className="w-20 h-20 bg-teal-lighter rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-10 h-10 text-teal" />
+          <div className="w-20 h-20 bg-brand-lighter rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="w-10 h-10 text-brand" />
           </div>
           <div className="space-y-2">
-            <p className="text-xl font-bold text-gray-900">Payment successful!</p>
-            <p className="text-sm text-gray-500">Return to the SisterRoam app to continue.</p>
+            <p className="text-xl font-bold text-gray-900">Checkout complete</p>
+            <p className="text-sm text-gray-500">Return to the SisterRoam app to confirm your payment.</p>
           </div>
           <a
             href="/onboarding/verify"
@@ -565,7 +598,10 @@ export default function VerifyPage() {
             <Button
               fullWidth
               disabled={!country}
-              onClick={() => setStep(2)}
+              onClick={() => {
+                sessionStorage.setItem("sr_verify_country", country);
+                setStep(2);
+              }}
             >
               Continue
             </Button>
@@ -638,6 +674,25 @@ export default function VerifyPage() {
                 </div>
               </div>
             )}
+            {paymentFailedMessage && (
+              paymentProcessing ? (
+                <div className="flex items-start gap-3 p-4 bg-amber-lighter border border-amber/30 rounded-2xl">
+                  <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-dark">Payment still processing</p>
+                    <p className="text-xs text-amber-dark/80 mt-0.5">{paymentFailedMessage}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 p-4 bg-danger-lighter border border-danger/30 rounded-2xl">
+                  <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-danger">Payment failed</p>
+                    <p className="text-xs text-danger/80 mt-0.5">{paymentFailedMessage}</p>
+                  </div>
+                </div>
+              )
+            )}
 
             <PaymentStep
               country={country}
@@ -649,6 +704,9 @@ export default function VerifyPage() {
               videoUrl={videoUrl}
               videoPubId={videoPubId}
               onSuccess={handlePaymentSuccess}
+              onPayAttempt={() => { setPaymentFailedMessage(null); setPaymentProcessing(false); }}
+              isProcessing={paymentProcessing}
+              onCheckStatus={runActivate}
             />
 
             <button

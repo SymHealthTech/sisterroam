@@ -4,6 +4,7 @@ import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
+import { deleteFile } from '@/lib/cloudinary'
 
 export async function GET(request) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request) {
     const {
       country,
       idDocumentUrl, idDocumentPublicId,
-      idDocumentBackUrl,
+      idDocumentBackUrl, idDocumentBackPublicId,
       selfieVideoUrl, selfieVideoPublicId,
       socialMediaUrl,
     } = body
@@ -49,8 +50,21 @@ export async function POST(request) {
       await User.findByIdAndUpdate(session.user.id, { $set: { country } })
     }
 
+    // Before upserting, delete any Cloudinary assets that are about to be replaced.
+    // Without this, every re-upload leaves orphaned files in storage.
+    const existing = await VerificationRequest.findOne({ userId: session.user.id, status: 'pending' })
+    if (existing) {
+      const toDelete = []
+      if (existing.idDocumentPublicId     && existing.idDocumentPublicId     !== idDocumentPublicId)
+        toDelete.push(deleteFile(existing.idDocumentPublicId, 'image'))
+      if (existing.idDocumentBackPublicId && existing.idDocumentBackPublicId !== idDocumentBackPublicId)
+        toDelete.push(deleteFile(existing.idDocumentBackPublicId, 'image'))
+      if (existing.selfieVideoPublicId    && existing.selfieVideoPublicId    !== selfieVideoPublicId)
+        toDelete.push(deleteFile(existing.selfieVideoPublicId, 'video'))
+      if (toDelete.length) await Promise.allSettled(toDelete)
+    }
+
     // Upsert: update existing pending request or create a new one.
-    // This lets the /verify page resubmit docs after a cancelled payment.
     const verif = await VerificationRequest.findOneAndUpdate(
       { userId: session.user.id, status: 'pending' },
       {
@@ -58,6 +72,7 @@ export async function POST(request) {
           idDocumentUrl,
           idDocumentPublicId,
           idDocumentBackUrl,
+          idDocumentBackPublicId,
           selfieVideoUrl,
           selfieVideoPublicId,
           socialMediaUrl,

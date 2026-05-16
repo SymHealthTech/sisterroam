@@ -33,7 +33,7 @@ export async function createCheckoutSession(userId, userEmail, userName, currenc
       purpose: 'verified_badge',
       currency,
     },
-    return_url: `${base}/onboarding/verify?payment=success`,
+    return_url: `${base}/onboarding/verify?payment=return`,
     cancel_url: `${base}/onboarding/verify?payment=cancelled`,
   })
 

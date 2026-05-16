@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, X } from 'lucide-react'
+import { Camera, X, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
@@ -116,7 +116,13 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
           className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           aria-label="Change profile photo"
         >
-          <Avatar src={currentImageUrl} name={name} size="xl" />
+          {currentImageUrl ? (
+            <Avatar src={currentImageUrl} name={name} size="xl" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-brand-lighter/50 flex items-center justify-center">
+              <User className="w-10 h-10 text-brand/40" />
+            </div>
+          )}
 
           {/* Hover overlay */}
           <div

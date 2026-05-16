@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
-import { createCheckoutSession } from '@/lib/dodo'
+import dodoClient, { createCheckoutSession } from '@/lib/dodo'
 
 export async function POST(request) {
   try {
@@ -36,17 +36,30 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Verification fee already paid' }, { status: 400 })
     }
 
-    // Reuse a recent pending session so the user doesn't see duplicate checkouts
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
+    // Reuse a session only within a 2-minute window (double-click protection).
+    // Shorter than Dodo's session TTL, so the URL is guaranteed fresh.
+    // Anything older gets a brand-new checkout to avoid serving stale/expired URLs.
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000)
     const recentPending = await Payment.findOne({
       userId,
       purpose: 'verified_badge',
       status: 'pending',
-      createdAt: { $gte: tenMinutesAgo },
+      createdAt: { $gte: twoMinutesAgo },
     })
 
-    if (recentPending?.checkoutUrl) {
-      return NextResponse.json({ success: true, paymentUrl: recentPending.checkoutUrl, reused: true })
+    if (recentPending?.checkoutUrl && recentPending.dodoPaymentLinkId) {
+      try {
+        const dodoSession = await dodoClient.checkoutSessions.retrieve(recentPending.dodoPaymentLinkId)
+        const isTerminal = ['failed', 'cancelled', 'succeeded', 'requires_payment_method'].includes(dodoSession.payment_status)
+        if (!isTerminal) {
+          return NextResponse.json({ success: true, paymentUrl: recentPending.checkoutUrl, reused: true })
+        }
+        // Session reached a terminal state — update our record and fall through to a fresh session
+        const finalStatus = dodoSession.payment_status === 'succeeded' ? 'completed' : 'failed'
+        await Payment.findByIdAndUpdate(recentPending._id, { $set: { status: finalStatus } })
+      } catch {
+        // Dodo verify failed — fall through to create a fresh session
+      }
     }
 
     const proto = request.headers.get('x-forwarded-proto') || 'https'

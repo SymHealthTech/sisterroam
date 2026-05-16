@@ -415,7 +415,7 @@ export default function HostListingPage() {
     );
   }
 
-  if (tier === "basic") {
+  if (tier === "basic" || tier === "paid") {
     return (
       <AppLayout title="Become a Host">
         <VerificationGate />

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, X, ChevronRight } from "lucide-react";
+import { ChevronDown, X, ChevronRight, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button";
@@ -272,6 +272,12 @@ export default function OnboardingProfilePage() {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const flag = sessionStorage.getItem("sr_show_welcome") === "1";
+    if (flag) sessionStorage.removeItem("sr_show_welcome");
+    return flag;
+  });
   const [showHobbies, setShowHobbies] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
   const [bioLength, setBioLength] = useState(0);
@@ -410,6 +416,29 @@ export default function OnboardingProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Welcome modal — shown once after successful payment */}
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowWelcome(false)} aria-hidden="true" />
+          <div className="relative bg-white rounded-3xl w-full max-w-sm p-7 text-center space-y-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-brand-lighter flex items-center justify-center mx-auto">
+              <CheckCircle className="w-8 h-8 text-brand" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Payment successful!</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Welcome to SisterRoam</p>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Your identity documents are being reviewed by our team.
+              You&apos;ll hear back within <strong className="text-gray-800">24–48 hours</strong>.
+              In the meantime, let&apos;s set up your profile!
+            </p>
+            <Button fullWidth onClick={() => setShowWelcome(false)}>
+              Build my profile
+            </Button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">

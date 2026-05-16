@@ -29,9 +29,8 @@ export async function PATCH(request, { params }) {
     verif.reviewedBy    = session.user.id
     if (status === 'rejected') verif.rejectionCount += 1
 
-    // Delete selfie video from Cloudinary now that review is complete.
-    // Videos are only needed for the review itself; holding them longer
-    // would accumulate storage and retain sensitive biometric data unnecessarily.
+    // Delete selfie video after review — it is only needed during the review
+    // window. ID document photos are intentionally kept for safety/legal reference.
     if (verif.selfieVideoPublicId) {
       deleteFile(verif.selfieVideoPublicId, 'video').catch(console.error)
       verif.selfieVideoUrl      = undefined
