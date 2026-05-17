@@ -58,14 +58,18 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
     }
   }, [status, router])
 
-  // Enforce verification gate: basic users must complete /verify first
+  // Enforce verification gate: basic users must complete /verify first.
+  // Wait for fresh API data (freshData.tierLoaded) before redirecting — the session JWT
+  // can be stale (e.g. right after promo redemption) and would otherwise cause a false
+  // flash to /onboarding/verify even for paid users.
   useEffect(() => {
     if (status !== 'authenticated') return
-    const tier = session?.user?.verificationTier
+    if (!freshData.tierLoaded) return
+    const tier = freshData.verificationTier ?? session?.user?.verificationTier
     if (tier === 'basic') {
       router.replace('/onboarding/verify')
     }
-  }, [status, session, router])
+  }, [status, session, freshData, router])
 
   useEffect(() => {
     if (status !== 'authenticated') return

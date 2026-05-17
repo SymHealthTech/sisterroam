@@ -524,8 +524,10 @@ export default function VerifyPage() {
     setVideoUrl(url); setVideoPubId(publicId);
   }
 
-  function handlePaymentSuccess() {
+  async function handlePaymentSuccess() {
     sessionStorage.setItem("sr_show_welcome", "1");
+    // Update JWT immediately so AppLayout never sees stale 'basic' tier on next page
+    await updateSession({ verificationTier: "paid" }).catch(() => {});
     router.replace("/onboarding/profile");
   }
 
