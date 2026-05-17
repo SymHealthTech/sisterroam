@@ -68,6 +68,27 @@ body {
     /* Block pull-to-refresh in installed PWA — feels wrong in an app shell */
     overscroll-behavior: none;
   }
+
+  /*
+   * CSS splash cover — visible immediately on first paint (before JS loads)
+   * so there is zero flash of page content before the React SplashScreen mounts.
+   * The React SplashScreen (z-index 9999) sits on top with the logo.
+   * When JS marks body.sr-splash-done, this fades out and disappears.
+   */
+  #pwa-splash-bg {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #5D1A8B;
+    z-index: 9997;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  body.sr-splash-done #pwa-splash-bg {
+    opacity: 0;
+  }
 }
 
 /* ── Utility: safe bottom padding helper ──────────────────── */

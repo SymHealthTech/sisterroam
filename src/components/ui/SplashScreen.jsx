@@ -1,21 +1,25 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Logo from './Logo'
 
 export default function SplashScreen() {
-  const isStandalone = useRef(
-    typeof window !== 'undefined' &&
-    window.matchMedia('(display-mode: standalone)').matches
-  )
-
-  const [show,   setShow]   = useState(isStandalone.current)
+  const [show,   setShow]   = useState(false)
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
-    if (!isStandalone.current) return
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      // Not a PWA install — remove the CSS background cover immediately
+      document.body.classList.add('sr-splash-done')
+      return
+    }
+    setShow(true)
     const fadeTimer = setTimeout(() => setFading(true), 1400)
-    const hideTimer = setTimeout(() => setShow(false), 1800)
+    const hideTimer = setTimeout(() => {
+      setShow(false)
+      // Triggers CSS fade-out of the #pwa-splash-bg div
+      document.body.classList.add('sr-splash-done')
+    }, 1800)
     return () => {
       clearTimeout(fadeTimer)
       clearTimeout(hideTimer)
