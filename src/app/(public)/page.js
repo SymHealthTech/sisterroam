@@ -12,10 +12,6 @@ import {
   MapPin,
   ArrowRight,
   ArrowLeft,
-  Bike,
-  Mountain,
-  Activity,
-  Car,
   Globe,
   Smartphone,
   Bell,
@@ -55,36 +51,36 @@ export const metadata = {
 
 // ── Static content ─────────────────────────────────────────────────────────
 
-const HERO_HOSTS = [
-  {
-    name: "Ananya K.",
-    city: "Bengaluru",
-    country: "India",
-    tier: "verified",
-    femaleOnly: true,
-    rating: 4.9,
-    type: "Private room",
-  },
-  {
-    name: "Maria H.",
-    city: "Barcelona",
-    country: "Spain",
-    tier: "trusted",
-    femaleOnly: false,
-    rating: 5.0,
-    type: "Couch",
-  },
-  {
-    name: "Soo-Jin K.",
-    city: "Seoul",
-    country: "South Korea",
-    tier: "verified",
-    femaleOnly: false,
-    rating: 4.8,
-    type: "Shared room",
-    cyclingNote: true,
-  },
-];
+// const HERO_HOSTS = [
+//   {
+//     name: "Ananya K.",
+//     city: "Bengaluru",
+//     country: "India",
+//     tier: "verified",
+//     femaleOnly: true,
+//     rating: 4.9,
+//     type: "Private room",
+//   },
+//   {
+//     name: "Maria H.",
+//     city: "Barcelona",
+//     country: "Spain",
+//     tier: "trusted",
+//     femaleOnly: false,
+//     rating: 5.0,
+//     type: "Couch",
+//   },
+//   {
+//     name: "Soo-Jin K.",
+//     city: "Seoul",
+//     country: "South Korea",
+//     tier: "verified",
+//     femaleOnly: false,
+//     rating: 4.8,
+//     type: "Shared room",
+//     cyclingNote: true,
+//   },
+// ];
 
 const HOW_IT_WORKS = [
   {
@@ -159,12 +155,55 @@ const TESTIMONIALS = [
   },
 ];
 
-const CATEGORIES = [
-  { icon: Globe, name: "Solo Travel", members: "2,300+" },
-  { icon: Bike, name: "Cycling", members: "890+" },
-  { icon: Mountain, name: "Trekking", members: "1,100+" },
-  { icon: Activity, name: "Running", members: "650+" },
-  { icon: Car, name: "Road Trip", members: "420+" },
+const CATEGORY_LABELS = {
+  solo_travel: "Solo Travel",
+  cycling: "Cycling",
+  trekking: "Trekking",
+  running: "Running",
+  safety_experience: "Safety",
+  cultural_immersion: "Culture",
+  food_journey: "Food",
+  budget_travel: "Budget Travel",
+  tips_and_advice: "Tips",
+  co_traveller_experience: "Co-Travel",
+  hosting_experience: "Hosting",
+  destination_guide: "Destination",
+};
+
+const STATIC_STORIES = [
+  {
+    _id: "static-1",
+    title: "Solo in Japan: My 21-day adventure",
+    slug: "stories",
+    excerpt:
+      "From Kyoto temples to Tokyo neon lights — how SisterRoam helped me travel Japan fearlessly.",
+    coverImageUrl: null,
+    category: "solo_travel",
+    readTimeMinutes: 5,
+    author: { fullName: "Keiko T.", profilePhotoUrl: null },
+  },
+  {
+    _id: "static-2",
+    title: "Finding home in Marrakech",
+    slug: "stories",
+    excerpt:
+      "My host Fatima turned a strange city into the most memorable stop of my trip.",
+    coverImageUrl: null,
+    category: "hosting_experience",
+    readTimeMinutes: 3,
+    author: { fullName: "Valentina R.", profilePhotoUrl: null },
+  },
+  {
+    _id: "static-3",
+    title: "Cycling solo across Portugal",
+    slug: "stories",
+    excerpt:
+      "1,200 km, six SisterRoam stays, and the kindest women I have ever met on the road.",
+    coverImageUrl: null,
+    category: "cycling",
+    readTimeMinutes: 7,
+    author: { fullName: "Amara O.", profilePhotoUrl: null },
+  },
 ];
 
 // ── Data fetching ───────────────────────────────────────────────────────────
@@ -231,6 +270,23 @@ async function getPageData() {
         },
       }));
 
+    const recentStories = recentPosts.map((s) => ({
+      _id: s._id.toString(),
+      title: s.title,
+      slug: s.slug,
+      excerpt: s.excerpt ?? null,
+      coverImageUrl: s.coverImageUrl ?? null,
+      category: s.category ?? null,
+      readTimeMinutes: s.readTimeMinutes ?? null,
+      publishedAt: s.publishedAt?.toISOString() ?? null,
+      author: s.authorId
+        ? {
+            fullName: s.authorId.fullName,
+            profilePhotoUrl: s.authorId.profilePhotoUrl ?? null,
+          }
+        : null,
+    }));
+
     return {
       stats: {
         memberCount,
@@ -239,6 +295,7 @@ async function getPageData() {
         activeHostCount,
       },
       featuredHosts,
+      recentStories,
     };
   } catch {
     // Graceful fallback — page renders with zero stats if DB is unreachable
@@ -250,6 +307,7 @@ async function getPageData() {
         activeHostCount: 0,
       },
       featuredHosts: [],
+      recentStories: [],
     };
   }
 }
@@ -257,7 +315,8 @@ async function getPageData() {
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
-  const { stats, featuredHosts } = await getPageData();
+  const { stats, featuredHosts, recentStories } = await getPageData();
+  const stories = recentStories.length > 0 ? recentStories : STATIC_STORIES;
 
   return (
     <>
@@ -591,22 +650,6 @@ export default async function HomePage() {
                     exchange built on trust.
                   </p>
                 </div>
-                <div className="relative z-10 flex flex-wrap gap-3 mt-6">
-                  <Link
-                    href="/browse"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-brand text-sm font-medium rounded-xl hover:bg-white/90 transition-colors"
-                  >
-                    <Search className="w-4 h-4" aria-hidden="true" />
-                    Find a Host
-                  </Link>
-                  <Link
-                    href="/host"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-xl transition-colors border border-white/20"
-                  >
-                    <UserPlus className="w-4 h-4" aria-hidden="true" />
-                    Become a Host
-                  </Link>
-                </div>
               </div>
 
               {/* 2. Safety */}
@@ -668,13 +711,6 @@ export default async function HomePage() {
                     </span>
                   ))}
                 </div>
-                <Link
-                  href="/cotraveller"
-                  className="text-sm text-teal font-medium hover:underline flex items-center gap-1"
-                >
-                  Browse trips{" "}
-                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                </Link>
               </div>
 
               {/* 4. Community Messages */}
@@ -775,13 +811,6 @@ export default async function HomePage() {
                     </div>
                   ))}
                 </div>
-                <Link
-                  href="/recommendations"
-                  className="text-sm text-pink font-medium hover:underline flex items-center gap-1"
-                >
-                  Browse tips{" "}
-                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                </Link>
               </div>
 
               {/* 7. Travel Stories — large card */}
@@ -801,13 +830,6 @@ export default async function HomePage() {
                     travellers. Get inspired, share your journey, and learn from
                     sisters who have been where you are going.
                   </p>
-                  <Link
-                    href="/stories"
-                    className="inline-flex items-center gap-2 mt-4 text-sm text-pink font-medium hover:underline"
-                  >
-                    Read stories{" "}
-                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  </Link>
                 </div>
                 {/* Story preview cards */}
                 <div className="flex flex-col gap-3 sm:w-64 shrink-0 self-center">
@@ -841,10 +863,6 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* CTA below */}
-            <div className="mt-12 text-center">
-              <HowItWorksCta />
-            </div>
           </div>
         </section>
 
@@ -1354,44 +1372,116 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── S7: Community categories ─────────────────────────────────── */}
+        {/* ── S7: Travel stories ───────────────────────────────────────── */}
         <section
           className="py-14 lg:py-24 bg-gradient-to-b from-gray-50 to-white"
-          aria-labelledby="categories-title"
+          aria-labelledby="stories-title"
         >
           <div className="max-w-5xl mx-auto px-6">
             {/* Header */}
-            <div className="text-center mb-14">
-              <span className="inline-flex items-center gap-2 bg-brand-lighter text-brand text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-5">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-brand shrink-0"
-                  aria-hidden="true"
-                />
-                Community
-              </span>
-              <h2
-                id="categories-title"
-                className="text-3xl font-medium text-gray-900"
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+              <div>
+                <span className="inline-flex items-center gap-2 bg-pink-lighter text-pink text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-4">
+                  <BookOpen className="w-3 h-3" aria-hidden="true" />
+                  Travel Stories
+                </span>
+                <h2
+                  id="stories-title"
+                  className="text-3xl font-medium text-gray-900"
+                >
+                  Stories from the road
+                </h2>
+                <p className="text-gray-500 mt-2 max-w-md leading-relaxed">
+                  Authentic journeys written by verified female solo travellers.
+                  Get inspired before your next adventure.
+                </p>
+              </div>
+              <Link
+                href="/stories"
+                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 border-2 border-brand text-brand font-medium text-sm rounded-[10px] hover:bg-brand hover:text-white transition-colors shrink-0"
               >
-                Find your tribe
-              </h2>
-              <p className="text-gray-500 mt-3 max-w-md mx-auto leading-relaxed">
-                Connect with sisters who share your travel style.
-              </p>
+                Show more stories
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {CATEGORIES.map(({ icon: Icon, name }) => (
-                <div
-                  key={name}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm"
+            {/* Story cards grid — 2 on mobile, 3 on desktop */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+              {stories.map((story, i) => (
+                <Link
+                  key={story._id}
+                  href={`/stories/${story.slug}`}
+                  className={`group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200${i === 2 ? " hidden lg:block" : ""}`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-brand-lighter flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-6 h-6 text-brand" aria-hidden="true" />
+                  {/* Cover */}
+                  <div className="h-36 sm:h-44 relative overflow-hidden">
+                    {story.coverImageUrl ? (
+                      <Image
+                        src={story.coverImageUrl}
+                        alt={story.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(min-width: 1024px) 33vw, 50vw"
+                      />
+                    ) : (
+                      <div
+                        className={`absolute inset-0 ${
+                          i === 0
+                            ? "bg-gradient-to-br from-brand-lighter via-brand-lighter/60 to-pink-lighter"
+                            : i === 1
+                            ? "bg-gradient-to-br from-teal-lighter via-teal-lighter/60 to-brand-lighter"
+                            : "bg-gradient-to-br from-pink-lighter via-pink-lighter/60 to-teal-lighter"
+                        }`}
+                      />
+                    )}
+                    {story.category && (
+                      <span className="absolute top-3 left-3 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/90 text-brand">
+                        {CATEGORY_LABELS[story.category] ?? story.category}
+                      </span>
+                    )}
                   </div>
-                  <p className="font-semibold text-sm text-gray-900">{name}</p>
-                </div>
+
+                  {/* Content */}
+                  <div className="p-4 sm:p-5">
+                    <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1.5 line-clamp-2 group-hover:text-brand transition-colors">
+                      {story.title}
+                    </h3>
+                    {story.excerpt && (
+                      <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 mb-3 hidden sm:block">
+                        {story.excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Avatar
+                          name={story.author?.fullName ?? "Sister"}
+                          src={story.author?.profilePhotoUrl}
+                          size="xs"
+                        />
+                        <span className="text-xs text-gray-600 truncate max-w-[80px] sm:max-w-none">
+                          {story.author?.fullName ?? "Sister"}
+                        </span>
+                      </div>
+                      {story.readTimeMinutes && (
+                        <span className="text-[11px] text-gray-400 shrink-0">
+                          {story.readTimeMinutes} min
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
               ))}
+            </div>
+
+            {/* Mobile CTA */}
+            <div className="mt-8 text-center sm:hidden">
+              <Link
+                href="/stories"
+                className="inline-flex items-center gap-2 px-6 py-2.5 border-2 border-brand text-brand font-medium text-sm rounded-[10px] hover:bg-brand hover:text-white transition-colors"
+              >
+                Show more stories
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
             </div>
           </div>
         </section>

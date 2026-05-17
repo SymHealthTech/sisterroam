@@ -208,28 +208,6 @@ export default async function StoryPage({ params }) {
               <p className="font-bold text-gray-900">{author?.fullName}</p>
               {author?.city && <p className="text-sm text-gray-500">{author.city}</p>}
               {author?.bio && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{author.bio}</p>}
-              <div className="flex gap-2 mt-3 flex-wrap">
-                <Link
-                  href={`/host/${author?.username ?? author?._id}`}
-                  className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl hover:border-brand/30 hover:text-brand transition-colors"
-                >
-                  View profile
-                </Link>
-                <Link
-                  href={`/stories?authorId=${author?._id}`}
-                  className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-xl hover:border-brand/30 hover:text-brand transition-colors"
-                >
-                  More stories by {author?.fullName?.split(' ')[0]}
-                </Link>
-                {author?.role !== 'guest' && (
-                  <Link
-                    href={`/explore/${author?._id}`}
-                    className="px-3 py-1.5 bg-brand text-white text-sm rounded-xl hover:bg-brand-dark transition-colors"
-                  >
-                    Stay with {author?.fullName?.split(' ')[0]}
-                  </Link>
-                )}
-              </div>
             </div>
           </div>
         </article>

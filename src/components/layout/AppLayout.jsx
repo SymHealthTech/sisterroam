@@ -38,7 +38,7 @@ function LoadingSkeleton() {
 }
 
 function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar = false }) {
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const router = useRouter()
   const [freshData, setFreshData] = useState(() => freshDataCache ?? FRESH_DATA_DEFAULT)
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
@@ -82,6 +82,9 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
           return
         }
         const tier = d.data.verificationTier ?? null
+        if (tier && tier !== session?.user?.verificationTier) {
+          updateSession({ verificationTier: tier }).catch(() => {})
+        }
         const update = {
           profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
           verificationTier: tier,
@@ -117,7 +120,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
     loadFreshUser()
     return () => controller.abort()
-  }, [status, router])
+  }, [status, router, session?.user?.verificationTier, updateSession])
 
   useEffect(() => {
     const u1 = subscribe('new_cotraveller_interest', (d) => {
