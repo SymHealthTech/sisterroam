@@ -281,41 +281,33 @@ export default function VideoCapture({ onUploadComplete }) {
               </div>
 
               {camError === 'hard-blocked' && (
-                <div className="text-xs text-gray-600 space-y-2">
-                  <p>Chrome is blocking camera access for this site. Fix it in <strong>2 steps</strong>:</p>
-                  <ol className="list-decimal list-inside space-y-1.5 pl-1">
-                    <li>Click the <strong>🔒 lock icon</strong> in the address bar → <strong>Site settings</strong> → set <strong>Camera</strong> and <strong>Microphone</strong> to <strong>Allow</strong></li>
-                    <li>Come back here and click <strong>Try again</strong> below (no reload needed)</li>
-                  </ol>
-                  <p className="text-gray-400">
-                    If Camera still shows &quot;Allow&quot; but nothing happens, also check{' '}
-                    <strong>Windows Settings → Privacy → Camera</strong> and make sure Chrome is allowed.
-                  </p>
-                </div>
+                <p className="text-xs text-gray-600">
+                  Click the <strong>lock icon</strong> in your address bar → <strong>Site settings</strong> → set <strong>Camera</strong> &amp; <strong>Microphone</strong> to <strong>Allow</strong>, then click <strong>Try again</strong>.
+                </p>
+              )}
+              {camError !== 'hard-blocked' && (
+                <p className="text-xs text-gray-600">
+                  {camError === 'in-use'
+                    ? 'Camera is open in another app or tab. Close it, then click Try again.'
+                    : 'No camera found or access unavailable. Use Upload video instead.'}
+                </p>
               )}
 
-              {camError === 'insecure' && (
-                <p className="text-xs text-gray-600">Camera requires an HTTPS connection. Make sure you are on <strong>https://sisterroam.com</strong>.</p>
-              )}
-
-              {camError === 'no-device' && (
-                <p className="text-xs text-gray-600">No camera was detected on this device. Use the <strong>&quot;Upload file&quot;</strong> tab to submit a pre-recorded video.</p>
-              )}
-
-              {camError === 'in-use' && (
-                <p className="text-xs text-gray-600">Your camera is already open in another app or browser tab. Close it and try again.</p>
-              )}
-
-              {!['hard-blocked','insecure','no-device','in-use'].includes(camError) && (
-                <p className="text-xs text-gray-600">Could not access camera ({camError || 'unknown error'}). Use the <strong>&quot;Upload file&quot;</strong> tab instead.</p>
-              )}
-
-              <button
-                className="text-xs font-medium text-brand underline"
-                onClick={() => { setCamState('idle'); setCamError('') }}
-              >
-                Try again
-              </button>
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  className="text-xs font-medium text-brand underline"
+                  onClick={() => { setCamState('idle'); setCamError('') }}
+                >
+                  Try again
+                </button>
+                <span className="text-gray-300 text-xs">or</span>
+                <button
+                  className="text-xs font-medium text-brand underline"
+                  onClick={() => setTab('upload')}
+                >
+                  Upload video instead
+                </button>
+              </div>
             </div>
           )}
 
