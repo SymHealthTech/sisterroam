@@ -56,7 +56,11 @@ export default function AdminLayout({ children }) {
     fetchCounts()
   }, [session])
 
-  if (status === 'loading' || !session?.user?.isAdmin) return null
+  if (status === 'loading' || !session?.user?.isAdmin) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
 
   const NAV = [
     { href: '/admin',           icon: LayoutDashboard, label: 'Dashboard',            badge: 0             },

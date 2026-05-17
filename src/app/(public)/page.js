@@ -1389,7 +1389,7 @@ export default async function HomePage() {
                   id="stories-title"
                   className="text-3xl font-medium text-gray-900"
                 >
-                  Stories from the road
+                  Real Roads. Real Women. Real Stories.
                 </h2>
                 <p className="text-gray-500 mt-2 max-w-md leading-relaxed">
                   Authentic journeys written by verified female solo travellers.
@@ -1406,7 +1406,7 @@ export default async function HomePage() {
             </div>
 
             {/* Story cards grid — 2 on mobile, 3 on desktop */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
               {stories.map((story, i) => (
                 <Link
                   key={story._id}

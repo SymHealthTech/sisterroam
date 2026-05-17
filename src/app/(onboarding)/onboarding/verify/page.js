@@ -409,8 +409,9 @@ export default function VerifyPage() {
   const [step, setStep] = useState(paymentResult === "cancelled" ? 3 : 1);
 
   useEffect(() => {
-    // Restore country from before the Dodo redirect so currency shows correctly
-    const savedCountry = sessionStorage.getItem("sr_verify_country");
+    // Restore country from before the Dodo redirect so currency shows correctly.
+    // localStorage persists across external navigation (unlike sessionStorage on iOS Safari).
+    const savedCountry = localStorage.getItem("sr_verify_country");
     if (savedCountry) setCountry(savedCountry);
 
     const pwa = isPwaStandalone();
@@ -475,7 +476,7 @@ export default function VerifyPage() {
       const data = await res.json();
       if (data.success) {
         redirecting = true;
-        sessionStorage.removeItem("sr_verify_country");
+        localStorage.removeItem("sr_verify_country");
         if (!data.onboardingCompleted) sessionStorage.setItem("sr_show_welcome", "1");
         await updateSession({ verificationTier: data.verificationTier || "paid" });
         router.replace(data.onboardingCompleted ? "/feed" : "/onboarding/profile");
@@ -528,7 +529,7 @@ export default function VerifyPage() {
     router.replace("/onboarding/profile");
   }
 
-  if (status === "loading" || (paymentResult === "return" && !initialized) || shouldActivate || activating) {
+  if (status === "loading" || ((paymentResult === "return" || paymentResult === "cancelled") && !initialized) || shouldActivate || activating) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-3">
@@ -541,7 +542,11 @@ export default function VerifyPage() {
 
   if (status === "unauthenticated") {
     router.replace("/login");
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
+      </div>
+    );
   }
 
   // PWA bridge screen
@@ -599,7 +604,7 @@ export default function VerifyPage() {
               fullWidth
               disabled={!country}
               onClick={() => {
-                sessionStorage.setItem("sr_verify_country", country);
+                localStorage.setItem("sr_verify_country", country);
                 setStep(2);
               }}
             >

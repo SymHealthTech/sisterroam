@@ -165,7 +165,7 @@ export default function PublicNavbar() {
               >
                 Log in
               </Button>
-              <Button variant={scrolled ? 'primary' : 'white'} size="sm" href="/signup">Join Free</Button>
+              <Button variant={scrolled ? 'primary' : 'white'} size="sm" href="/signup">Join Now</Button>
             </>
           )}
         </div>
@@ -236,7 +236,7 @@ export default function PublicNavbar() {
           ) : (
             <>
               <Button variant="primary" fullWidth href="/signup" onClick={() => setMobileOpen(false)}>
-                Join Free
+                Join Now
               </Button>
               <Button variant="ghost" fullWidth href="/login" onClick={() => setMobileOpen(false)}>
                 Log in

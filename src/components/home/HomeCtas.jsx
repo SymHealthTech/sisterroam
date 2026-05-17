@@ -35,7 +35,7 @@ export function HeroCta() {
         href="/signup"
         className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] bg-white text-brand font-medium text-sm hover:bg-white/90 transition-colors"
       >
-        Join free — it takes 2 minutes
+        Join now — it takes 2 minutes
       </Link>
       <Link
         href="/browse"
@@ -70,7 +70,7 @@ export function HowItWorksCta() {
       href="/signup"
       className="inline-flex items-center gap-2 px-7 py-3 bg-brand text-white font-medium text-sm rounded-[10px] hover:opacity-90 transition-opacity"
     >
-      Get started — it&apos;s free
+      Join now
       <ArrowRight className="w-4 h-4" aria-hidden="true" />
     </Link>
   )
@@ -114,7 +114,7 @@ export function FinalCta() {
         href="/signup"
         className="inline-flex items-center justify-center px-6 py-3 rounded-[10px] bg-brand text-white font-medium text-sm hover:bg-brand-dark transition-colors"
       >
-        Join SisterRoam — it&apos;s free
+        Join SisterRoam now
       </Link>
       <Link
         href="/signup?role=host"
