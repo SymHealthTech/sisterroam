@@ -9,10 +9,20 @@ import Recommendation from '@/models/Recommendation'
 import RecommendationQuestion from '@/models/RecommendationQuestion'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 
+// Cache admin stats for 60s — these 9 countDocuments are expensive and the
+// data doesn't need to be real-time on the dashboard.
+let _statsCache = null
+let _statsCacheAt = 0
+const STATS_TTL = 60_000
+
 export async function GET() {
   try {
     const session = await connectAndAuth()
     if (!session.user.isAdmin) return fail('Admin access required', 403)
+
+    if (_statsCache && Date.now() - _statsCacheAt < STATS_TTL) {
+      return ok(_statsCache)
+    }
 
     const [
       totalMembers,
@@ -36,7 +46,7 @@ export async function GET() {
       RecommendationQuestion.countDocuments({ status: 'open' }),
     ])
 
-    return ok({
+    _statsCache = {
       totalMembers,
       verifiedMembers,
       pendingKyc,
@@ -46,7 +56,10 @@ export async function GET() {
       openCoTravelPosts,
       totalRecommendations,
       openQuestions,
-    })
+    }
+    _statsCacheAt = Date.now()
+
+    return ok(_statsCache)
   } catch (e) {
     return handleError(e)
   }

@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
       .populate('authorId', 'fullName username profilePhotoUrl verificationTier')
       .lean()
 
-    return ok(comments)
+    return ok(comments, { 'Cache-Control': 's-maxage=30, stale-while-revalidate=120' })
   } catch (e) {
     return handleError(e)
   }

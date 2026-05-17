@@ -5,6 +5,10 @@ export const metadata = {
   title: "Terms of Service — SisterRoam",
   description:
     "The rules and conditions that govern use of the SisterRoam platform.",
+  robots: { index: true, follow: false },
+  alternates: {
+    canonical: "https://sisterroam.com/terms",
+  },
 };
 
 function Section({ title, children }) {

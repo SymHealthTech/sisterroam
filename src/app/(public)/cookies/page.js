@@ -4,6 +4,10 @@ import PublicFooter from "@/components/layout/PublicFooter";
 export const metadata = {
   title: "Cookie Policy — SisterRoam",
   description: "How SisterRoam uses cookies and similar technologies.",
+  robots: { index: true, follow: false },
+  alternates: {
+    canonical: "https://sisterroam.com/cookies",
+  },
 };
 
 function Section({ title, children }) {
@@ -99,7 +103,7 @@ export default function CookiesPage() {
             <Section title="3. Third-party cookies">
               <p>
                 We do not load any third-party scripts that set their own
-                cookies. Our payment provider (Cashfree) and media host
+                cookies. Our payment provider (Dodo Payments) and media host
                 (Cloudinary) process data on their own domains and are subject
                 to their own cookie policies.
               </p>

@@ -18,16 +18,13 @@ export async function GET(request, { params }) {
     await connectDB()
     const { id } = await params
 
-    let user = null
-    // Try by ObjectId, fall back to username
-    if (/^[a-f\d]{24}$/i.test(id)) {
-      user = await User.findById(id).select(PUBLIC).lean()
-    }
-    if (!user) {
-      user = await User.findOne({ username: id }).select(PUBLIC).lean()
-    }
+    // Single query: match by _id (if valid ObjectId) or username
+    const filter = /^[a-f\d]{24}$/i.test(id)
+      ? { $or: [{ _id: id }, { username: id }] }
+      : { username: id }
+    const user = await User.findOne(filter).select(PUBLIC).lean()
     if (!user) return fail('User not found', 404)
-    return ok(user)
+    return ok(user, { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' })
   } catch (e) {
     return handleError(e)
   }

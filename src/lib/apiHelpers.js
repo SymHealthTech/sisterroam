@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 
-export function ok(data = null) {
-  return NextResponse.json({ success: true, data })
+export function ok(data = null, headers = {}) {
+  return NextResponse.json({ success: true, data }, { headers })
 }
 
 export function fail(message, status = 400) {

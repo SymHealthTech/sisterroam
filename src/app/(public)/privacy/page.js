@@ -4,7 +4,11 @@ import PublicFooter from "@/components/layout/PublicFooter";
 export const metadata = {
   title: "Privacy Policy — SisterRoam",
   description:
-    "How SisterRoam collects, uses, and protects your personal data.",
+    "How SisterRoam collects, uses, and protects your personal data. Your privacy matters to our women travel community.",
+  robots: { index: true, follow: false },
+  alternates: {
+    canonical: "https://sisterroam.com/privacy",
+  },
 };
 
 function Section({ title, children }) {

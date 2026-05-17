@@ -46,11 +46,8 @@ export async function GET(request) {
     let total
 
     if (verifiedOnly) {
-      const verifiedUsers = await User.find(
-        { verificationTier: { $in: ['verified', 'trusted'] } },
-        '_id'
-      ).lean()
-      const verifiedIds = verifiedUsers.map(u => u._id)
+      // distinct returns only the _id values — no document deserialization or JS map needed
+      const verifiedIds = await User.distinct('_id', { verificationTier: { $in: ['verified', 'trusted'] } })
       query.authorId = { $in: verifiedIds }
     }
 

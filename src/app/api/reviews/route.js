@@ -28,7 +28,10 @@ export async function GET(request) {
         .lean(),
       Review.countDocuments(filter),
     ])
-    return ok({ reviews, total, page, totalPages: Math.ceil(total / limit) })
+    return ok(
+      { reviews, total, page, totalPages: Math.ceil(total / limit) },
+      { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' }
+    )
   } catch (e) {
     return handleError(e)
   }

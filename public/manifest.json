@@ -13,73 +13,64 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/icon-72.png",
+      "src": "/sisterroam-icon-72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-96.png",
+      "src": "/sisterroam-icon-96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-128.png",
+      "src": "/sisterroam-icon-128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-144.png",
+      "src": "/sisterroam-icon-144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-152.png",
+      "src": "/sisterroam-icon-152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/sisterroam-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-384.png",
+      "src": "/sisterroam-icon-384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/sisterroam-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-192.png",
+      "src": "/sisterroam-icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-maskable-512.png",
+      "src": "/sisterroam-icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/pwa-screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "SisterRoam — Find verified female hosts worldwide"
     }
   ],
   "shortcuts": [
@@ -88,28 +79,28 @@
       "short_name": "Browse",
       "description": "Find verified female hosts near you",
       "url": "/explore",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/sisterroam-icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Find Co-traveller",
       "short_name": "Co-travel",
       "description": "Find a travel companion for your next trip",
       "url": "/cotraveller",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/sisterroam-icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Travel Stories",
       "short_name": "Stories",
       "description": "Read authentic stories from verified sisters",
       "url": "/stories",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/sisterroam-icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Safety Centre",
       "short_name": "Safety",
       "description": "Access SOS button and safety check-ins",
       "url": "/safety",
-      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/sisterroam-icon-96.png", "sizes": "96x96" }]
     }
   ],
   "related_applications": [],

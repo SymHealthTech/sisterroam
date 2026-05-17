@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /feed
+Disallow: /explore
+Disallow: /messages
+Disallow: /profile
+Disallow: /safety
+Disallow: /community
+Disallow: /cotraveller
+Disallow: /recommendations
+Disallow: /request
+Disallow: /notifications
+Disallow: /onboarding
+Disallow: /admin
+Disallow: /verify
+
+Sitemap: https://sisterroam.com/sitemap.xml

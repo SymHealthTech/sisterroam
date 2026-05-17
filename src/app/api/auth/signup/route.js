@@ -29,17 +29,13 @@ export async function POST(request) {
 
     await connectDB()
 
-    const emailExists = await User.findOne({ email: email.toLowerCase().trim() })
-    if (emailExists) {
-      return Response.json({ error: 'Email already registered' }, { status: 409 })
-    }
-
-    if (phone) {
-      const phoneExists = await User.findOne({ phone })
-      if (phoneExists) {
-        return Response.json({ error: 'Phone already registered' }, { status: 409 })
-      }
-    }
+    // Run both uniqueness checks in parallel to save one DB round-trip
+    const [emailExists, phoneExists] = await Promise.all([
+      User.findOne({ email: email.toLowerCase().trim() }, '_id').lean(),
+      phone ? User.findOne({ phone }, '_id').lean() : null,
+    ])
+    if (emailExists) return Response.json({ error: 'Email already registered' }, { status: 409 })
+    if (phoneExists) return Response.json({ error: 'Phone already registered' }, { status: 409 })
 
     // Pass plain password — the User model's pre('save') hook hashes it
     const user = new User({

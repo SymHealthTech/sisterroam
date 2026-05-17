@@ -22,17 +22,23 @@ export const metadata = {
   description:
     "SisterRoam was founded by Dr Manisha Sonawane — homeopathic consultant, international mountaineer who has climbed Kilimanjaro and Elbrus, NGO president, and passionate traveller — to create the safest hosting community for female solo travellers worldwide.",
   openGraph: {
+    type: "profile",
+    url: "https://sisterroam.com/about",
+    siteName: "SisterRoam",
     title: "About SisterRoam — Dr Manisha Sonawane",
     description:
       "Meet the founder. Doctor. Mountaineer. NGO President. Two of the Seven Summits.",
-    images: ["/founder-manisha-og.jpg"],
-    type: "profile",
+    images: [{ url: "/founder-manisha-og.jpg", width: 1200, height: 630, alt: "Dr Manisha Sonawane — Founder of SisterRoam" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Dr Manisha Sonawane — Founder of SisterRoam",
     description:
       "Doctor. Mountaineer. NGO President. Dr Manisha Sonawane climbed Mount Kilimanjaro and Mount Elbrus and founded SisterRoam — the verified hosting community for female solo travellers.",
+    images: ["/founder-manisha-og.jpg"],
+  },
+  alternates: {
+    canonical: "https://sisterroam.com/about",
   },
   keywords: [
     "Dr Manisha Sonawane",
@@ -148,14 +154,6 @@ const TIMELINE = [
     desc: "Launched Canada's Holistic Health Practitioner Directory — nutracare360.ca. Taking Indian holistic health expertise to the world.",
   },
   {
-    year: "2026",
-    icon: Bike,
-    iconBg: "bg-amber-lighter",
-    iconColor: "text-amber",
-    title: "Hero Xpulse 210",
-    desc: "Took on the Himalayas on two wheels. Adventure has no finish line.",
-  },
-  {
     year: "2025",
     icon: Star,
     iconBg: "bg-amber-lighter",
@@ -163,6 +161,14 @@ const TIMELINE = [
     title: "Founded SisterRoam",
     desc: "Built the platform every solo female traveller needed but did not have.",
     special: true,
+  },
+  {
+    year: "2026",
+    icon: Bike,
+    iconBg: "bg-amber-lighter",
+    iconColor: "text-amber",
+    title: "Hero Xpulse 210",
+    desc: "Took on the Himalayas on two wheels. Adventure has no finish line.",
   },
 ];
 
@@ -252,7 +258,7 @@ export default function AboutPage() {
                 "@id": "https://sisterroam.com/#organization",
                 name: "SisterRoam",
                 url: "https://sisterroam.com",
-                logo: "https://sisterroam.com/logo.png",
+                logo: "https://sisterroam.com/sisterroam-icon-512.png",
                 description:
                   "The verified hosting community for female solo travellers",
                 founder: { "@id": "https://sisterroam.com/#founder" },

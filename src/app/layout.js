@@ -32,7 +32,7 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/sisterroam-favicon-32.svg', type: 'image/svg+xml' },
       { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
@@ -40,7 +40,7 @@ export const metadata = {
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
     other: [
-      { rel: 'mask-icon', url: '/favicon.svg', color: '#5D1A8B' },
+      { rel: 'mask-icon', url: '/sisterroam-favicon-32.svg', color: '#5D1A8B' },
     ],
   },
 
@@ -56,7 +56,7 @@ export const metadata = {
       'The verified hosting community for female solo travellers. Stay with verified sisters. Host fearless women. Explore together.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/sisterroam-og-image.png',
         width: 1200,
         height: 630,
         alt: 'SisterRoam — The verified hosting community for female solo travellers',
@@ -69,7 +69,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'SisterRoam — Explore Fearlessly, Together',
     description: 'The verified hosting community for female solo travellers.',
-    images: ['/og-image.png'],
+    images: ['/sisterroam-og-image.png'],
     creator: '@sisterroam',
     site: '@sisterroam',
   },
@@ -84,10 +84,6 @@ export const metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-
-  verification: {
-    google: 'add-your-google-verification-code-here',
   },
 
   alternates: {

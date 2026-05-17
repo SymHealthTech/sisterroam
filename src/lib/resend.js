@@ -1,9 +1,7 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-// const FROM =
-//   process.env.RESEND_FROM_EMAIL ?? "SisterRoam <noreply@sisterroam.com>";
-const FROM = "SisterRoam <noreply@sisterroam.com>";
+const FROM = process.env.RESEND_FROM_EMAIL ?? "SisterRoam <noreply@sisterroam.com>";
 const BRAND = "#5D1A8B";
 const SITE = process.env.NEXTAUTH_URL ?? "https://sisterroam.com";
 
@@ -504,6 +502,22 @@ export async function sendVerificationBadgeEmail(user) {
         Welcome to the verified sisterhood.<br>
         — Dr Manisha Sonawane &amp; the SisterRoam team
       </span>`)}
+    `),
+  })
+}
+
+/* ── Password reset ─────────────────────────────────────────── */
+
+export async function sendPasswordResetEmail({ to, name, resetUrl }) {
+  const firstName = name?.split(' ')[0] ?? 'there'
+  return sendEmail({
+    to,
+    subject: 'Reset your SisterRoam password',
+    html: layout(`
+      ${hi(firstName)}
+      ${p("We received a request to reset your password. Click the button below to choose a new one.")}
+      <div style="text-align:center;">${btn('Reset password', resetUrl)}</div>
+      ${p('<span style="color:#9ca3af;font-size:12px;">This link expires in <strong>1 hour</strong>. If you didn\'t request a password reset, you can safely ignore this email — your password won\'t change.</span>')}
     `),
   })
 }

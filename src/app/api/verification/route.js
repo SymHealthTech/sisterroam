@@ -25,7 +25,6 @@ export async function GET(request) {
       .populate('userId', 'fullName email profilePhotoUrl verificationTier')
       .lean()
 
-    // Rename userId → userId (keep populated) for easier frontend use
     return ok({ verifications })
   } catch (e) {
     return handleError(e)

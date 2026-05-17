@@ -42,45 +42,55 @@ export const metadata = {
   openGraph: {
     type: "website",
     url: "https://sisterroam.com",
+    siteName: "SisterRoam",
     title: "SisterRoam — Safe Hosting Community for Female Solo Travellers",
     description:
       "Join 1,200+ verified women hosting and travelling fearlessly. The verified hospitality exchange community for female solo travellers worldwide.",
-    images: [{ url: "/og-image.png" }],
+    images: [{ url: "/sisterroam-og-image.png", width: 1200, height: 630, alt: "SisterRoam — Safe Hosting Community for Female Solo Travellers" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SisterRoam — Safe Hosting Community for Female Solo Travellers",
+    description: "Join 1,200+ verified women hosting and travelling fearlessly. The verified community for female solo travellers worldwide.",
+    images: ["/sisterroam-og-image.png"],
+  },
+  alternates: {
+    canonical: "https://sisterroam.com",
   },
 };
 
 // ── Static content ─────────────────────────────────────────────────────────
 
-// const HERO_HOSTS = [
-//   {
-//     name: "Ananya K.",
-//     city: "Bengaluru",
-//     country: "India",
-//     tier: "verified",
-//     femaleOnly: true,
-//     rating: 4.9,
-//     type: "Private room",
-//   },
-//   {
-//     name: "Maria H.",
-//     city: "Barcelona",
-//     country: "Spain",
-//     tier: "trusted",
-//     femaleOnly: false,
-//     rating: 5.0,
-//     type: "Couch",
-//   },
-//   {
-//     name: "Soo-Jin K.",
-//     city: "Seoul",
-//     country: "South Korea",
-//     tier: "verified",
-//     femaleOnly: false,
-//     rating: 4.8,
-//     type: "Shared room",
-//     cyclingNote: true,
-//   },
-// ];
+const HERO_HOSTS = [
+  {
+    name: "Ananya K.",
+    city: "Bengaluru",
+    country: "India",
+    tier: "verified",
+    femaleOnly: true,
+    rating: 4.9,
+    type: "Private room",
+  },
+  {
+    name: "Maria H.",
+    city: "Barcelona",
+    country: "Spain",
+    tier: "trusted",
+    femaleOnly: false,
+    rating: 5.0,
+    type: "Couch",
+  },
+  {
+    name: "Soo-Jin K.",
+    city: "Seoul",
+    country: "South Korea",
+    tier: "verified",
+    femaleOnly: false,
+    rating: 4.8,
+    type: "Shared room",
+    cyclingNote: true,
+  },
+];
 
 const HOW_IT_WORKS = [
   {
@@ -218,7 +228,6 @@ async function getPageData() {
       staysCount,
       activeHostCount,
       rawHosts,
-      // blog posts fetched per spec; available for future sections
       recentPosts,
     ] = await Promise.all([
       User.countDocuments({
@@ -318,8 +327,34 @@ export default async function HomePage() {
   const { stats, featuredHosts, recentStories } = await getPageData();
   const stories = recentStories.length > 0 ? recentStories : STATIC_STORIES;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "SisterRoam",
+    url: "https://sisterroam.com",
+    description:
+      "The verified hospitality exchange community for female solo travellers. Find a verified female host, a co-traveller, or local recommendations — all from sisters you can trust.",
+    applicationCategory: "TravelApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      description: "Free to join",
+    },
+    creator: {
+      "@type": "Organization",
+      name: "SisterRoam",
+      url: "https://sisterroam.com",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <PublicNavbar />
 
       <main>

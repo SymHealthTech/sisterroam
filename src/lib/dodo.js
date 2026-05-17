@@ -3,7 +3,7 @@ import DodoPayments from 'dodopayments'
 const dodoClient = new DodoPayments({
   bearerToken: process.env.DODO_SECRET_KEY,
   webhookKey:  process.env.DODO_WEBHOOK_SECRET,
-  environment: 'test_mode',
+  environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode',
 })
 
 export default dodoClient

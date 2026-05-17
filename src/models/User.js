@@ -80,6 +80,9 @@ const userSchema = new mongoose.Schema(
     totalReviews: { type: Number, default: 0 },
 
     lastActive: { type: Date, default: Date.now },
+
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   {
     timestamps: true,
