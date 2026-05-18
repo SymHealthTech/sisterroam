@@ -38,20 +38,20 @@ export const revalidate = 3600;
 export const metadata = {
   title: "SisterRoam — Safe Hosting Community for Female Solo Travellers",
   description:
-    "Join 1,200+ verified women hosting and travelling fearlessly. The verified hospitality exchange community for female solo travellers worldwide.",
+    "A verified hospitality exchange community for female solo travellers worldwide. Host and travel fearlessly with women who get it.",
   openGraph: {
     type: "website",
     url: "https://sisterroam.com",
     siteName: "SisterRoam",
     title: "SisterRoam — Safe Hosting Community for Female Solo Travellers",
     description:
-      "Join 1,200+ verified women hosting and travelling fearlessly. The verified hospitality exchange community for female solo travellers worldwide.",
+      "A verified hospitality exchange community for female solo travellers worldwide. Host and travel fearlessly with women who get it.",
     images: [{ url: "/sisterroam-og-image.png", width: 1200, height: 630, alt: "SisterRoam — Safe Hosting Community for Female Solo Travellers" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "SisterRoam — Safe Hosting Community for Female Solo Travellers",
-    description: "Join 1,200+ verified women hosting and travelling fearlessly. The verified community for female solo travellers worldwide.",
+    description: "A verified hospitality exchange community for female solo travellers worldwide. Host and travel fearlessly with women who get it.",
     images: ["/sisterroam-og-image.png"],
   },
   alternates: {
@@ -1893,8 +1893,8 @@ export default async function HomePage() {
               Ready to travel fearlessly?
             </h2>
             <p className="text-brand-dark leading-relaxed">
-              Join thousands of verified women hosting and staying safely around
-              the world. It&apos;s free, fast, and built just for you.
+              Join a growing community of verified women hosting and staying
+              safely around the world. It&apos;s free, fast, and built just for you.
             </p>
             <FinalCta />
             <p className="text-xs text-brand-light">

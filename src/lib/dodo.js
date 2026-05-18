@@ -28,6 +28,8 @@ export async function createCheckoutSession(userId, userEmail, userName, currenc
       email: userEmail,
       name:  userName,
     },
+    billing_currency: currency,
+    billing_address: currency === 'INR' ? { country: 'IN' } : undefined,
     metadata: {
       userId:  userId.toString(),
       purpose: 'verified_badge',
