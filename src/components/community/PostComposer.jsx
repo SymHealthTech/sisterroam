@@ -16,7 +16,6 @@ const CATEGORIES = [
   { value: 'questions',        label: 'Questions' },
 ]
 
-const MAX_CHARS  = 500
 const MAX_IMAGES = 7
 
 async function compressImage(file, maxWidth = 1200, quality = 0.75) {
@@ -268,13 +267,9 @@ export default function PostComposer({ onPost }) {
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Share your travel experience, tips, or questions…"
-              maxLength={MAX_CHARS}
               rows={3}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 resize-none text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-brand/30 focus:ring-2 focus:ring-brand/10 leading-relaxed transition-colors"
             />
-            <p className={`text-right text-[11px] mt-1 ${content.length > MAX_CHARS * 0.9 ? 'text-amber' : 'text-gray-300'}`}>
-              {content.length}/{MAX_CHARS}
-            </p>
           </div>
         </div>
 
