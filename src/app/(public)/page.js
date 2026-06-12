@@ -1743,11 +1743,33 @@ export default async function HomePage() {
                 One giant leap for sisterhood.
               </h2>
 
-              <p className="text-gray-500 text-sm leading-relaxed max-w-md mb-8">
+              <p className="text-gray-500 text-sm leading-relaxed max-w-md mb-5">
                 A small one-time fee covers real identity verification — keeping
                 every member genuine and every connection trustworthy. No
                 subscriptions, no hidden charges, full transparency.
               </p>
+
+              {/* Early launch promo banner */}
+              <div className="relative overflow-hidden rounded-2xl bg-red-800 px-5 py-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <span className="relative flex shrink-0 mt-1">
+                    <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-white opacity-60" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-white">
+                      Early Launch Offer — Verification is FREE for new members!
+                    </p>
+                    <p className="text-xs text-white/80 mt-1 leading-relaxed">
+                      Use promo code{" "}
+                      <span className="font-mono font-bold bg-white/20 px-2 py-0.5 rounded-lg tracking-widest">
+                        NEWSIS100
+                      </span>{" "}
+                      at checkout — no payment required.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Pricing cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">

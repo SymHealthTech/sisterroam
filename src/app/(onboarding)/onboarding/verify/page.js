@@ -590,6 +590,28 @@ export default function VerifyPage() {
       <div className="max-w-lg mx-auto px-4 py-8 pb-16">
         <StepIndicator current={step} />
 
+        {/* Early launch promo banner — shown on all steps */}
+        <div className="relative overflow-hidden rounded-2xl bg-red-800 px-4 py-3.5 mb-6">
+          <div className="flex items-start gap-3">
+            <span className="relative flex shrink-0 mt-0.5">
+              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-white opacity-60" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-white leading-snug">
+                Early Launch Offer — Verification is FREE!
+              </p>
+              <p className="text-xs text-white/80 mt-0.5 leading-relaxed">
+                No payment required. At the payment step, apply code{" "}
+                <span className="font-mono font-bold bg-white/20 px-1.5 py-0.5 rounded tracking-widest">
+                  NEWSIS100
+                </span>{" "}
+                to get verified for free.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* ── STEP 1: Country ── */}
         {step === 1 && (
           <div className="space-y-6">
