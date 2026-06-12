@@ -4,7 +4,7 @@ const communityPostSchema = new mongoose.Schema(
   {
     authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-    content: { type: String, required: true, maxlength: 2000 },
+    content: { type: String, required: true },
 
     category: {
       type: String,
