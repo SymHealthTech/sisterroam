@@ -117,7 +117,7 @@ export default function PricingPage() {
                 },
                 {
                   q: "Can I browse before paying?",
-                  a: "Yes. You can sign up for free and browse verified hosts. The verification fee is only required to send stay requests, post, or message other members.",
+                  a: "Yes. You can sign up for free, browse verified hosts, and share posts & comments in the community. The verification fee is only required to send stay requests or message other members.",
                 },
                 {
                   q: "What payment methods are accepted?",

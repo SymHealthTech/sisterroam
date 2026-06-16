@@ -8,7 +8,7 @@ import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import TripPostCard from "@/components/cotraveller/TripPostCard";
 import PostTripModal from "@/components/cotraveller/PostTripModal";
-import { UnderReviewModal } from "@/components/ui/VerificationGate";
+import { UnderReviewModal, VerificationRequiredModal } from "@/components/ui/VerificationGate";
 import {
   Search,
   SlidersHorizontal,
@@ -360,6 +360,12 @@ export default function CoTravellerPage() {
   const isVerified = userTier === "verified" || userTier === "trusted";
   const isUnderReview = userTier === "paid";
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true)
+    else setShowVerifyModal(true)
+  }
 
   const [activeTab, setActiveTab] = useState(0);
   const swipeStart = useRef(null);
@@ -684,7 +690,7 @@ export default function CoTravellerPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowReviewModal(true)}
+                    onClick={openGate}
                   >
                     Post a trip
                   </Button>
@@ -697,7 +703,7 @@ export default function CoTravellerPage() {
         {/* ── My posts tab ── */}
         {activeTab === 1 && (
           <div className="space-y-4" id="my-activity">
-            {(isVerified || isUnderReview) && (
+            {userTier && (
               <>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-700">
@@ -707,7 +713,7 @@ export default function CoTravellerPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => isVerified ? setModal(true) : setShowReviewModal(true)}
+                    onClick={() => isVerified ? setModal(true) : openGate()}
                   >
                     + Post a new trip
                   </Button>
@@ -736,7 +742,7 @@ export default function CoTravellerPage() {
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => isVerified ? setModal(true) : setShowReviewModal(true)}
+                      onClick={() => isVerified ? setModal(true) : openGate()}
                     >
                       Post your first trip
                     </Button>
@@ -791,6 +797,7 @@ export default function CoTravellerPage() {
       </div>
 
       {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
       {showModal && isVerified && (
         <PostTripModal
           onClose={() => setModal(false)}

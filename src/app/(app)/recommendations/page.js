@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
-import { UnderReviewModal } from "@/components/ui/VerificationGate";
+import { UnderReviewModal, VerificationRequiredModal } from "@/components/ui/VerificationGate";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import RecommendationCard from "@/components/recommendations/RecommendationCard";
@@ -366,6 +366,12 @@ export default function RecommendationsPage() {
   const isVerified = tier === "verified" || tier === "trusted";
   const isUnderReview = tier === "paid";
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true)
+    else setShowVerifyModal(true)
+  }
 
   const [activeTab, setActiveTab] = useState(0);
   const swipeStart = useRef(null);
@@ -511,7 +517,7 @@ export default function RecommendationsPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => isVerified ? setRecModal(true) : setShowReviewModal(true)}
+              onClick={() => isVerified ? setRecModal(true) : openGate()}
             >
               <PlusCircle className="w-4 h-4 mr-1.5" />
               Share a recommendation
@@ -519,7 +525,7 @@ export default function RecommendationsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
+              onClick={() => isVerified ? setQModal(true) : openGate()}
               className="hidden sm:inline-flex"
             >
               <MessageSquare className="w-4 h-4 mr-1.5" />
@@ -645,7 +651,7 @@ export default function RecommendationsPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => isVerified ? setRecModal(true) : setShowReviewModal(true)}
+                  onClick={() => isVerified ? setRecModal(true) : openGate()}
                 >
                   Be the first to share
                 </Button>
@@ -664,7 +670,7 @@ export default function RecommendationsPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
+                onClick={() => isVerified ? setQModal(true) : openGate()}
               >
                 <PlusCircle className="w-3.5 h-3.5 mr-1" />
                 Ask a question
@@ -689,7 +695,7 @@ export default function RecommendationsPage() {
                       userId={userId}
                       isVerified={isVerified}
                       isUnderReview={isUnderReview}
-                      onShowReviewModal={() => setShowReviewModal(true)}
+                      onShowReviewModal={openGate}
                       onAnswered={() =>
                         setQuestions((prev) =>
                           prev.map((pq) =>
@@ -725,7 +731,7 @@ export default function RecommendationsPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => isVerified ? setQModal(true) : setShowReviewModal(true)}
+                  onClick={() => isVerified ? setQModal(true) : openGate()}
                 >
                   Ask the first question
                 </Button>
@@ -804,6 +810,7 @@ export default function RecommendationsPage() {
       </div>
 
       {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
       {showRecModal && isVerified && (
         <AddRecommendationModal
           onClose={() => setRecModal(false)}

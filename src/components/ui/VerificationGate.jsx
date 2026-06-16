@@ -10,7 +10,6 @@ import { useAppUser } from '@/components/layout/AppLayout'
 const PERKS = [
   'Message hosts & request stays',
   'Post and join co-traveller trips',
-  'Share community posts & comments',
   'Write travel stories',
   'Add place recommendations & answer questions',
   'Become a verified host',
@@ -43,6 +42,44 @@ export function UnderReviewModal({ onClose }) {
           </p>
         </div>
         <Button variant="primary" fullWidth onClick={onClose}>Got it</Button>
+      </div>
+    </div>
+  )
+
+  if (typeof document === 'undefined') return content
+  return createPortal(content, document.body)
+}
+
+export function VerificationRequiredModal({ onClose }) {
+  const mounted = useRef(false)
+  useEffect(() => { mounted.current = true }, [])
+
+  const content = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <div className="w-14 h-14 rounded-full bg-brand-lighter flex items-center justify-center mx-auto">
+          <Lock className="w-7 h-7 text-brand" />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-base font-bold text-gray-900">Verification required</h3>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Complete your identity verification to unlock this feature.
+          </p>
+        </div>
+        <Button variant="primary" fullWidth href="/onboarding/verify">Get verified</Button>
+        <button onClick={onClose} className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          Maybe later
+        </button>
       </div>
     </div>
   )
