@@ -23,7 +23,7 @@ import {
   MessageSquare,
   Lock,
 } from "lucide-react";
-import { UnderReviewModal } from "@/components/ui/VerificationGate";
+import { UnderReviewModal, VerificationRequiredModal } from "@/components/ui/VerificationGate";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 const CATEGORY_LABELS = {
@@ -92,6 +92,7 @@ export default function TripDetailPage({ params }) {
   const userId = session?.user?.id;
   const userTier = appUser?.verificationTier ?? session?.user?.verificationTier;
   const isUnderReview = userTier === 'paid';
+  const isBasic = userTier === 'basic';
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +100,12 @@ export default function TripDetailPage({ params }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true);
+    else setShowVerifyModal(true);
+  }
 
   useEffect(() => {
     async function load() {
@@ -177,6 +184,7 @@ export default function TripDetailPage({ params }) {
   return (
     <AppLayout title="Trip details">
       {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
       <div className="max-w-3xl mx-auto px-4 py-5 space-y-5">
         {/* Back */}
         <button
@@ -428,14 +436,14 @@ export default function TripDetailPage({ params }) {
                   </div>
                 )}
               </div>
-            ) : isUnderReview ? (
+            ) : (isUnderReview || isBasic) ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-gray-800">
                   Join this trip
                 </h3>
                 <button
                   type="button"
-                  onClick={() => setShowReviewModal(true)}
+                  onClick={openGate}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-100 transition-colors"
                 >
                   <Lock className="w-4 h-4 text-brand/40" />

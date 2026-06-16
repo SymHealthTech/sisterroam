@@ -9,7 +9,7 @@ import {
   ChevronDown, ChevronUp, ArrowLeft, ThumbsUp, Lock,
 } from 'lucide-react'
 import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
-import { UnderReviewModal } from '@/components/ui/VerificationGate'
+import { UnderReviewModal, VerificationRequiredModal } from '@/components/ui/VerificationGate'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -464,8 +464,16 @@ function ReviewsTab({ host, reviews: initialReviews }) {
 function RequestCard({ host, className }) {
   const { data: session } = useSession()
   const appUser = useAppUser()
-  const isUnderReview = (appUser?.verificationTier ?? session?.user?.verificationTier) === 'paid'
+  const tier = appUser?.verificationTier ?? session?.user?.verificationTier
+  const isUnderReview = tier === 'paid'
+  const isBasic = tier === 'basic'
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showVerifyModal, setShowVerifyModal] = useState(false)
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true)
+    else setShowVerifyModal(true)
+  }
   const user = host.userId ?? host.user ?? {}
   const accepting = host.isAcceptingGuests !== false && host.isListingActive !== false
   const rating = user.averageRating ?? 0
@@ -477,6 +485,7 @@ function RequestCard({ host, className }) {
   return (
     <>
       {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
       <div className={cn('bg-white rounded-2xl border border-gray-100 p-5 space-y-4', className)}>
         {!session ? (
           <>
@@ -488,12 +497,12 @@ function RequestCard({ host, className }) {
               <Link href="/login" className="text-brand hover:text-brand-dark font-medium">Log in</Link>
             </p>
           </>
-        ) : isUnderReview ? (
+        ) : (isUnderReview || isBasic) ? (
           <>
             <h3 className="font-semibold text-gray-900">Connect with {user.fullName?.split(' ')[0]}</h3>
             <button
               type="button"
-              onClick={() => setShowReviewModal(true)}
+              onClick={openGate}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-100 transition-colors"
             >
               <Lock className="w-4 h-4 text-brand/40" />
@@ -538,9 +547,17 @@ export default function HostDetailClient({ host }) {
   const router = useRouter()
   const { data: session } = useSession()
   const appUser = useAppUser()
-  const isUnderReview = (appUser?.verificationTier ?? session?.user?.verificationTier) === 'paid'
+  const tier = appUser?.verificationTier ?? session?.user?.verificationTier
+  const isUnderReview = tier === 'paid'
+  const isBasic = tier === 'basic'
   const [activeTab, setActiveTab] = useState('About')
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showVerifyModal, setShowVerifyModal] = useState(false)
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true)
+    else setShowVerifyModal(true)
+  }
   const [now] = useState(() => Date.now())
 
   const user = host.userId ?? host.user ?? {}
@@ -685,11 +702,12 @@ export default function HostDetailClient({ host }) {
 
       {/* Mobile fixed bottom CTA */}
       {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        {isUnderReview ? (
+        {(isUnderReview || isBasic) ? (
           <button
             type="button"
-            onClick={() => setShowReviewModal(true)}
+            onClick={openGate}
             className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 hover:bg-gray-200 transition-colors"
           >
             <Lock className="w-4 h-4 text-brand/40" />

@@ -7,7 +7,7 @@ import AppLayout, { useAppUser } from '@/components/layout/AppLayout'
 import StoryCard from '@/components/stories/StoryCard'
 import Skeleton from '@/components/ui/Skeleton'
 import { BookOpen, Lock, Pencil } from 'lucide-react'
-import { UnderReviewModal } from '@/components/ui/VerificationGate'
+import { UnderReviewModal, VerificationRequiredModal } from '@/components/ui/VerificationGate'
 
 const CATEGORY_LABELS = {
   solo_travel: 'Solo Travel', cycling: 'Cycling', trekking: 'Trekking',
@@ -35,6 +35,12 @@ export default function CommunityStoriesPage() {
   const isVerified = tier === 'verified' || tier === 'trusted'
   const isUnderReview = tier === 'paid'
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showVerifyModal, setShowVerifyModal] = useState(false)
+
+  function openGate() {
+    if (isUnderReview) setShowReviewModal(true)
+    else setShowVerifyModal(true)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -90,7 +96,7 @@ export default function CommunityStoriesPage() {
             <h1 className="text-xl font-bold text-gray-900">Travel Stories</h1>
             <p className="text-sm text-gray-500 mt-0.5">Shared by verified sisters from around the world</p>
           </div>
-          {isVerified && (
+          {isVerified ? (
             <Link
               href="/community/stories/new"
               className="flex items-center gap-1.5 px-3.5 py-2 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-dark transition-colors"
@@ -98,11 +104,10 @@ export default function CommunityStoriesPage() {
               <Pencil className="w-3.5 h-3.5" />
               Share story
             </Link>
-          )}
-          {isUnderReview && (
+          ) : (
             <button
               type="button"
-              onClick={() => setShowReviewModal(true)}
+              onClick={openGate}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 text-gray-400 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
             >
               <Lock className="w-3.5 h-3.5" />
@@ -112,6 +117,7 @@ export default function CommunityStoriesPage() {
         </div>
 
         {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
+        {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
 
         {/* Drafts section */}
         {drafts.length > 0 && (
@@ -161,10 +167,14 @@ export default function CommunityStoriesPage() {
           <div className="text-center py-12 text-gray-400">
             <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-200" />
             <p className="font-medium">No stories yet</p>
-            {isVerified && (
+            {isVerified ? (
               <Link href="/community/stories/new" className="text-sm text-brand mt-2 block hover:underline">
                 Be the first to share →
               </Link>
+            ) : (
+              <button onClick={openGate} className="text-sm text-brand mt-2 hover:underline">
+                Be the first to share →
+              </button>
             )}
           </div>
         ) : (
