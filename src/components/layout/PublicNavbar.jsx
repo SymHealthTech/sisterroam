@@ -52,9 +52,7 @@ export default function PublicNavbar() {
         }
 
         // Compute the right destination
-        if (!dbTier || dbTier === 'basic') {
-          setAppHref('/onboarding/verify')
-        } else if (!onboardingDone) {
+        if (!onboardingDone) {
           setAppHref(step === 3 ? '/onboarding/role' : '/onboarding/profile')
         } else {
           setAppHref('/feed')

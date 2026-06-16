@@ -373,7 +373,7 @@ export default function SignUpPage() {
       });
 
       if (result?.ok) {
-        router.replace("/onboarding/verify");
+        router.replace("/onboarding/profile");
       } else {
         toast.error("Sign in failed. Please log in manually.");
         router.replace("/login");

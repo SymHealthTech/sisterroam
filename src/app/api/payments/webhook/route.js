@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
+import PromoCode from '@/models/PromoCode'
 import Notification from '@/models/Notification'
 import { parseWebhookEvent } from '@/lib/dodo'
 
@@ -41,7 +42,7 @@ export async function POST(request) {
         return NextResponse.json({ received: true })
       }
 
-      await Payment.findOneAndUpdate(
+      const completedPayment = await Payment.findOneAndUpdate(
         { $or: [{ dodoPaymentId: payment_id }, { userId, status: 'pending' }] },
         {
           $set: {
@@ -62,6 +63,24 @@ export async function POST(request) {
         { $set: { verificationTier: 'paid' } },
         { new: true }
       )
+
+      // Record promo code usage for discount payments (type='discount' codes)
+      if (completedPayment?.promoCode && user) {
+        await PromoCode.findOneAndUpdate(
+          { code: completedPayment.promoCode, isActive: true, type: 'discount' },
+          {
+            $inc: { usedCount: 1 },
+            $push: {
+              usedBy: {
+                userId,
+                userName:  user.fullName,
+                userEmail: user.email,
+                usedAt:    new Date(),
+              },
+            },
+          }
+        ).catch((err) => console.error('PromoCode usage record error:', err))
+      }
 
       if (user) {
         await Notification.create({

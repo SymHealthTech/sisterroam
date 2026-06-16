@@ -12,7 +12,7 @@ const PromoCodeSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['brand_ambassador', 'first_100'],
+      enum: ['brand_ambassador', 'first_100', 'discount'],
       required: true,
     },
     maxUses: { type: Number, required: true, default: 100 },

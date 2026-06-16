@@ -230,11 +230,11 @@ async function getPageData() {
       rawHosts,
       recentPosts,
     ] = await Promise.all([
-      User.countDocuments({
-        verificationTier: { $in: ["verified", "trusted"] },
-      }),
+      User.countDocuments({ isActive: { $ne: false } }),
       User.distinct("country", {
         country: { $exists: true, $nin: [null, ""] },
+        isActive: { $ne: false },
+        onboardingCompleted: true,
       }),
       HostingRequest.countDocuments({ status: "completed" }),
       HostProfile.countDocuments({
@@ -398,8 +398,10 @@ export default async function HomePage() {
                     aria-hidden="true"
                   />
                   {stats.memberCount > 0
-                    ? `${stats.memberCount.toLocaleString()}+ verified women in ${stats.countriesCount} countries`
-                    : "A verified sisterhood for female solo travellers"}
+                    ? stats.countriesCount > 1
+                      ? `${stats.memberCount.toLocaleString()}+ sisters in ${stats.countriesCount} countries`
+                      : `${stats.memberCount.toLocaleString()}+ sisters worldwide`
+                    : "A growing sisterhood for female solo travellers"}
                 </div>
 
                 {/* Headline */}
@@ -1730,7 +1732,7 @@ export default async function HomePage() {
                   aria-hidden="true"
                 />
                 <p className="text-[10px] font-bold text-brand uppercase tracking-widest">
-                  One-time verification fee
+                  Membership
                 </p>
               </div>
 
@@ -1738,67 +1740,87 @@ export default async function HomePage() {
                 id="pricing-title"
                 className="text-2xl lg:text-3xl font-medium text-gray-900 mb-3 leading-snug"
               >
-                One small step for safety.
+                Free to join.
                 <br />
-                One giant leap for sisterhood.
+                Verify to host &amp; travel together.
               </h2>
 
-              <p className="text-gray-500 text-sm leading-relaxed max-w-md mb-5">
-                A small one-time fee covers real identity verification — keeping
-                every member genuine and every connection trustworthy. No
-                subscriptions, no hidden charges, full transparency.
+              <p className="text-gray-500 text-sm leading-relaxed max-w-md mb-6">
+                Start connecting with sisters for free — no card needed. Verify
+                your identity once to unlock hosting, messaging, and co-travel
+                features.
               </p>
 
-              {/* Early launch promo banner */}
-              <div className="relative overflow-hidden rounded-2xl bg-red-800 px-5 py-4 mb-8">
-                <div className="flex items-start gap-3">
-                  <span className="relative flex shrink-0 mt-1">
-                    <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-white opacity-60" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+              {/* Free tier */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-teal uppercase tracking-wider">
+                    Free Member
                   </span>
-                  <div>
-                    <p className="text-sm font-bold text-white">
-                      Early Launch Offer — Verification is FREE for new members!
-                    </p>
-                    <p className="text-xs text-white/80 mt-1 leading-relaxed">
-                      Use promo code{" "}
-                      <span className="font-mono font-bold bg-white/20 px-2 py-0.5 rounded-lg tracking-widest">
-                        NEWSIS100
-                      </span>{" "}
-                      at checkout — no payment required.
-                    </p>
-                  </div>
+                  <span className="text-[10px] px-2 py-0.5 bg-teal-lighter text-teal rounded-full font-semibold">
+                    Always free
+                  </span>
                 </div>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  {[
+                    "Community feed & posts",
+                    "Comments & reactions",
+                    "Place recommendations",
+                    "Travel Q&A",
+                    "Browse verified hosts",
+                    "SOS button & safety tools",
+                  ].map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-center gap-2 text-xs text-gray-700"
+                    >
+                      <CheckCircle
+                        className="w-3.5 h-3.5 text-teal shrink-0"
+                        aria-hidden="true"
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Verified tier divider */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-gray-200" aria-hidden="true" />
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                  One-time verification fee
+                </p>
+                <div className="flex-1 h-px bg-gray-200" aria-hidden="true" />
               </div>
 
               {/* Pricing cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 {/* India */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-6 text-white">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-5 text-white">
                   <div
-                    className="absolute top-0 right-0 w-28 h-28 rounded-full bg-white/5 translate-x-1/3 -translate-y-1/3 pointer-events-none"
+                    className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 translate-x-1/3 -translate-y-1/3 pointer-events-none"
                     aria-hidden="true"
                   />
-                  <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-2">
+                  <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
                     India
                   </p>
-                  <p className="text-4xl font-bold leading-none mb-1">₹199</p>
-                  <p className="text-white/60 text-xs mb-5">
-                    one-time · lifetime verified status
+                  <p className="text-3xl font-bold leading-none mb-0.5">₹299</p>
+                  <p className="text-white/50 text-[11px] mb-4">
+                    one-time · lifetime
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5">
                     {[
-                      "Government ID verification",
-                      "Verified profile badge",
-                      "Full community access",
-                      "SOS button & safety check-ins",
+                      "Government ID verified badge",
+                      "Host & accept stay requests",
+                      "Message any sister directly",
+                      "Join co-traveller trips",
                     ].map((f) => (
                       <li
                         key={f}
-                        className="flex items-start gap-2 text-xs text-white/85"
+                        className="flex items-start gap-1.5 text-[11px] text-white/85"
                       >
                         <CheckCircle
-                          className="w-3.5 h-3.5 text-white shrink-0 mt-0.5"
+                          className="w-3 h-3 text-white/70 shrink-0 mt-0.5"
                           aria-hidden="true"
                         />
                         {f}
@@ -1808,33 +1830,33 @@ export default async function HomePage() {
                 </div>
 
                 {/* International */}
-                <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-brand p-6">
+                <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-brand p-5">
                   <div
-                    className="absolute top-0 right-0 w-28 h-28 rounded-full bg-brand-lighter/60 translate-x-1/3 -translate-y-1/3 pointer-events-none"
+                    className="absolute top-0 right-0 w-24 h-24 rounded-full bg-brand-lighter/60 translate-x-1/3 -translate-y-1/3 pointer-events-none"
                     aria-hidden="true"
                   />
-                  <p className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider mb-2">
+                  <p className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
                     Outside India
                   </p>
-                  <p className="text-4xl font-bold leading-none text-brand mb-1">
-                    $5
+                  <p className="text-3xl font-bold leading-none text-brand mb-0.5">
+                    $7
                   </p>
-                  <p className="text-gray-400 text-xs mb-5">
-                    one-time · lifetime verified status
+                  <p className="text-gray-400 text-[11px] mb-4">
+                    one-time · lifetime
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5">
                     {[
-                      "Government ID verification",
-                      "Verified profile badge",
-                      "Full community access",
-                      "SOS button & safety check-ins",
+                      "Government ID verified badge",
+                      "Host & accept stay requests",
+                      "Message any sister directly",
+                      "Join co-traveller trips",
                     ].map((f) => (
                       <li
                         key={f}
-                        className="flex items-start gap-2 text-xs text-gray-600"
+                        className="flex items-start gap-1.5 text-[11px] text-gray-600"
                       >
                         <CheckCircle
-                          className="w-3.5 h-3.5 text-teal shrink-0 mt-0.5"
+                          className="w-3 h-3 text-teal shrink-0 mt-0.5"
                           aria-hidden="true"
                         />
                         {f}
@@ -1845,7 +1867,7 @@ export default async function HomePage() {
               </div>
 
               {/* Community appeal strip */}
-              <div className="bg-brand-lighter rounded-2xl px-5 py-4 mb-6">
+              <div className="bg-brand-lighter rounded-2xl px-5 py-4">
                 <p className="text-brand-dark text-sm font-semibold mb-1">
                   Be among the first verified sisters
                 </p>

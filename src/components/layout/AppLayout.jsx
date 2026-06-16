@@ -58,16 +58,16 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
     }
   }, [status, router])
 
-  // Enforce verification gate: basic users must complete /verify first.
+  // Redirect new users who haven't finished profile/role setup to the profile step.
+  // Basic-tier users who have completed onboarding are Free Members and can use the app.
   // Wait for fresh API data (freshData.tierLoaded) before redirecting — the session JWT
-  // can be stale (e.g. right after promo redemption) and would otherwise cause a false
-  // flash to /onboarding/verify even for paid users.
+  // can be stale and would otherwise cause a false redirect flash.
   useEffect(() => {
     if (status !== 'authenticated') return
     if (!freshData.tierLoaded) return
     const tier = freshData.verificationTier ?? session?.user?.verificationTier
-    if (tier === 'basic') {
-      router.replace('/onboarding/verify')
+    if (tier === 'basic' && !session?.user?.onboardingCompleted) {
+      router.replace('/onboarding/profile')
     }
   }, [status, session, freshData, router])
 

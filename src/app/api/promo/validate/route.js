@@ -23,7 +23,9 @@ export async function POST(req) {
       return NextResponse.json({ valid: false, error: 'This promo code has reached its limit' })
     }
 
-    return NextResponse.json({ valid: true, type: promo.type })
+    // 'discount' type codes apply a price reduction but still require Dodo payment.
+    // All other types (brand_ambassador, first_100) waive the fee entirely.
+    return NextResponse.json({ valid: true, type: promo.type, isFree: promo.type !== 'discount' })
   } catch (error) {
     console.error('Promo validate error:', error)
     return NextResponse.json({ valid: false, error: 'Server error. Try again.' })

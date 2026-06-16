@@ -1,6 +1,6 @@
 import CommunityPost from '@/models/CommunityPost'
 import CommunityComment from '@/models/CommunityComment'
-import { ok, fail, connectAndAuth, requireVerified, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 
 export async function GET(request, { params }) {
   try {
@@ -24,7 +24,6 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     const session = await connectAndAuth()
-    requireVerified(session)
     const { id } = await params
     const { content } = await request.json()
 

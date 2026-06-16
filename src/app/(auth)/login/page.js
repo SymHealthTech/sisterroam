@@ -48,8 +48,6 @@ export default function LoginPage() {
 
       if (sessionData?.user?.onboardingCompleted) {
         router.replace("/feed");
-      } else if (sessionData?.user?.verificationTier === "basic") {
-        router.replace("/onboarding/verify");
       } else {
         router.replace("/onboarding/profile");
       }

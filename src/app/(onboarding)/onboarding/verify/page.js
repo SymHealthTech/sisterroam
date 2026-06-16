@@ -188,6 +188,7 @@ function PaymentStep({
   const [promoInput, setPromoInput] = useState("");
   const [promoState, setPromoState] = useState("idle");
   const [promoType, setPromoType] = useState(null);
+  const [promoIsFree, setPromoIsFree] = useState(false);
   const [promoError, setPromoError] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
@@ -196,9 +197,13 @@ function PaymentStep({
   const [promoActivateError, setPromoActivateError] = useState(null);
 
   const currency = country === "India" ? "INR" : "USD";
-  const price = currency === "INR" ? "₹199" : "$5";
+  // Full price: ₹299/INR, $7/USD. Discount price: ₹199/INR, $5/USD.
+  const fullPrice = currency === "INR" ? "₹299" : "$7";
+  const discountPrice = currency === "INR" ? "₹199" : "$5";
   const methods = currency === "INR" ? "UPI · Cards · Net Banking" : "Cards · International";
   const isPromoValid = promoState === "valid";
+  // Effective displayed price: discount when a discount promo is applied, full otherwise
+  const price = (isPromoValid && !promoIsFree) ? discountPrice : fullPrice;
 
   async function submitDocs() {
     const res = await fetch("/api/verification", {
@@ -235,6 +240,7 @@ function PaymentStep({
       if (data.valid) {
         setPromoState("valid");
         setPromoType(data.type);
+        setPromoIsFree(data.isFree);
       } else {
         setPromoState("invalid");
         setPromoError(data.error);
@@ -273,10 +279,15 @@ function PaymentStep({
     setPaymentError(null);
     try {
       if (idFrontUrl && idBackUrl) await submitDocs();
+      const payBody = { currency };
+      // Attach discount promo code so the server can select the discounted product
+      if (isPromoValid && !promoIsFree) {
+        payBody.promoCode = promoInput.trim().toUpperCase();
+      }
       const res = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currency }),
+        body: JSON.stringify(payBody),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
@@ -296,9 +307,12 @@ function PaymentStep({
         <p className="text-sm text-gray-500">Pay once — access the platform under admin review</p>
       </div>
 
-      {/* Pricing card */}
-      {!isPromoValid && (
+      {/* Pricing card — hidden only when a free promo is applied */}
+      {!(isPromoValid && promoIsFree) && (
         <div className="flex flex-col items-center gap-1.5 p-5 rounded-2xl border-2 border-brand bg-brand-lighter/20 text-center">
+          {isPromoValid && !promoIsFree && (
+            <span className="text-sm line-through text-gray-400">{fullPrice}</span>
+          )}
           <span className="text-3xl font-bold text-brand">{price}</span>
           <span className="text-xs text-gray-500">{methods}</span>
           <span className="text-[11px] text-gray-400 mt-1">
@@ -337,7 +351,7 @@ function PaymentStep({
           ) : (
             <button
               type="button"
-              onClick={() => { setPromoState("idle"); setPromoInput(""); setPromoType(null); setPromoError(null); }}
+              onClick={() => { setPromoState("idle"); setPromoInput(""); setPromoType(null); setPromoIsFree(false); setPromoError(null); }}
               className="text-xs text-gray-400 hover:text-danger px-2 transition-colors"
             >
               Remove
@@ -348,9 +362,9 @@ function PaymentStep({
           <div className="flex items-center gap-2 p-2.5 bg-teal-lighter/60 rounded-xl">
             <CheckCircle className="w-4 h-4 text-teal shrink-0" />
             <p className="text-xs text-teal font-medium">
-              {promoType === "brand_ambassador"
-                ? "Brand Ambassador code applied — fee waived!"
-                : "Welcome code applied — fee waived!"}
+              {promoIsFree
+                ? "Code applied — verification fee waived!"
+                : `Partner code applied — discounted to ${discountPrice}`}
             </p>
           </div>
         )}
@@ -365,7 +379,7 @@ function PaymentStep({
           <Button fullWidth size="lg" onClick={onCheckStatus}>
             Check payment status
           </Button>
-        ) : isPromoValid ? (
+        ) : (isPromoValid && promoIsFree) ? (
           <Button fullWidth size="lg" loading={isActivatingPromo} onClick={handlePromoActivate}>
             {isActivatingPromo ? "Activating…" : "Activate — Free"}
           </Button>
@@ -590,27 +604,6 @@ export default function VerifyPage() {
       <div className="max-w-lg mx-auto px-4 py-8 pb-16">
         <StepIndicator current={step} />
 
-        {/* Early launch promo banner — shown on all steps */}
-        <div className="relative overflow-hidden rounded-2xl bg-red-800 px-4 py-3.5 mb-6">
-          <div className="flex items-start gap-3">
-            <span className="relative flex shrink-0 mt-0.5">
-              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-white opacity-60" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-white leading-snug">
-                Early Launch Offer — Verification is FREE!
-              </p>
-              <p className="text-xs text-white/80 mt-0.5 leading-relaxed">
-                No payment required. At the payment step, apply code{" "}
-                <span className="font-mono font-bold bg-white/20 px-1.5 py-0.5 rounded tracking-widest">
-                  NEWSIS100
-                </span>{" "}
-                to get verified for free.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* ── STEP 1: Country ── */}
         {step === 1 && (
