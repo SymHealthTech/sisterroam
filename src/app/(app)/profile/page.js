@@ -34,7 +34,9 @@ import {
   Award,
   Plane,
   Clock,
+  Lock,
 } from "lucide-react";
+import { VerificationRequiredModal } from "@/components/ui/VerificationGate";
 
 /* ── Completeness ─────────────────────────────────────────── */
 
@@ -69,7 +71,7 @@ function getCompleteness(user, verifData) {
     {
       label: "Verify government ID",
       done: verif?.status === "approved" || verif?.status === "pending",
-      href: "/profile/verification",
+      href: "/onboarding/verify",
     },
     {
       label: "Record video intro",
@@ -77,7 +79,7 @@ function getCompleteness(user, verifData) {
         !!verif?.selfieVideoUrl ||
         verif?.status === "approved" ||
         user.verificationTier !== "basic",
-      href: "/profile/verification",
+      href: "/onboarding/verify",
     },
   ];
   const done = checks.filter((c) => c.done).length;
@@ -142,7 +144,7 @@ function ProfileSkeleton() {
 
 /* ── Hosting summary card (in Hosting tab) ───────────────── */
 
-function HostingTab({ host, onToggle }) {
+function HostingTab({ host, onToggle, onCreateListing }) {
   if (!host)
     return (
       <div className="text-center py-12">
@@ -150,7 +152,11 @@ function HostingTab({ host, onToggle }) {
         <p className="text-sm text-gray-500 mb-4">
           You haven&apos;t set up a host listing yet.
         </p>
-        <Button href="/profile/host-listing">Create host listing</Button>
+        {onCreateListing ? (
+          <Button onClick={onCreateListing}>Create host listing</Button>
+        ) : (
+          <Button href="/profile/host-listing">Create host listing</Button>
+        )}
       </div>
     );
 
@@ -266,6 +272,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
   const [photoModal, setPhotoModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -360,6 +367,7 @@ export default function ProfilePage() {
     );
   if (!user) return null;
 
+  const isBasic = user.verificationTier === "basic";
   const { checks, pct } = getCompleteness(user, verifData);
   const missing = checks.filter((c) => !c.done);
   const verif = verifData?.verification;
@@ -565,7 +573,7 @@ export default function ProfilePage() {
                         ))}
                       </div>
                       <Link
-                        href="/profile/verification"
+                        href="/onboarding/verify"
                         className="inline-flex items-center gap-1 text-xs font-semibold text-amber-dark underline-offset-2 hover:underline mt-3"
                       >
                         Continue verification{" "}
@@ -694,7 +702,11 @@ export default function ProfilePage() {
 
                 {/* Hosting tab */}
                 {activeTab === "hosting" && (
-                  <HostingTab host={host} onToggle={handleHostToggle} />
+                  <HostingTab
+                    host={host}
+                    onToggle={handleHostToggle}
+                    onCreateListing={isBasic ? () => setShowVerifyModal(true) : undefined}
+                  />
                 )}
 
                 {/* Reviews tab */}
@@ -865,26 +877,32 @@ export default function ProfilePage() {
                 { label: "Edit profile", href: "/profile/edit", icon: Edit2 },
                 {
                   label: "Verification",
-                  href: "/profile/verification",
+                  href: isBasic ? "/onboarding/verify" : "/profile/verification",
                   icon: Shield,
                 },
                 {
                   label: isHost ? "Host listing" : "Become a host",
-                  href: "/profile/host-listing",
+                  href: isBasic ? null : "/profile/host-listing",
+                  onClick: isBasic ? () => setShowVerifyModal(true) : null,
                   icon: BedDouble,
                 },
                 { label: "Settings", href: "/profile/settings", icon: null },
-              ].map(({ label, href, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700"
-                >
-                  {Icon && <Icon className="w-4 h-4 text-gray-400" />}
-                  {label}
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-300 ml-auto" />
-                </Link>
-              ))}
+              ].map(({ label, href, icon: Icon, onClick }) => {
+                const cls = "flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700 w-full text-left"
+                return onClick ? (
+                  <button key={label} type="button" onClick={onClick} className={cls}>
+                    {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+                    {label}
+                    <Lock className="w-3.5 h-3.5 text-gray-300 ml-auto" />
+                  </button>
+                ) : (
+                  <Link key={href} href={href} className={cls}>
+                    {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+                    {label}
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 ml-auto" />
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -915,6 +933,8 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
+
+      {showVerifyModal && <VerificationRequiredModal onClose={() => setShowVerifyModal(false)} />}
 
       {/* Photo modal */}
       {photoModal && (
