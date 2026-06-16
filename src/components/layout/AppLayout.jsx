@@ -141,7 +141,6 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
   if (status === 'loading') return <LoadingSkeleton />
   if (!session) return <LoadingSkeleton />
-  if (session.user.verificationTier === 'basic') return <LoadingSkeleton />
 
   const user = session.user
   const avatarSrc = freshData.profilePhotoUrl ?? user.profilePhotoUrl ?? null
