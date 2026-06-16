@@ -277,6 +277,10 @@ export default function SettingsPage() {
   }
 
   async function handleRoleSave() {
+    if ((role === "host" || role === "both") && userData?.verificationTier === "basic") {
+      toast.error("Hosting requires identity verification. Complete verification first.");
+      return;
+    }
     setSavingRole(true);
     try {
       const d = await patchUser({ role });

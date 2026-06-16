@@ -433,9 +433,11 @@ export default function ProfilePage() {
                       <Shield className="w-3 h-3" />
                       {TIER_LABEL[user.verificationTier ?? "basic"]}
                     </Badge>
-                    <Badge variant="basic">
-                      {ROLE_LABEL[user.role ?? "guest"]}
-                    </Badge>
+                    {!isBasic && (
+                      <Badge variant="basic">
+                        {ROLE_LABEL[user.role ?? "guest"]}
+                      </Badge>
+                    )}
                   </div>
 
                   <p className="text-xs text-gray-400 mt-2 flex items-center justify-center lg:justify-start gap-1">

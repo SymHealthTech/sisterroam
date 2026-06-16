@@ -157,19 +157,20 @@ export default function OnboardingRolePage() {
       return
     }
 
-    // Host or both — save role first, then show the informational modal
+    // Host or both — show modal BEFORE saving so the DB is only written on the chosen path
+    setShowModal(true)
+  }
+
+  async function handleFree() {
+    // User skips verification — save as guest so the DB never gets role: host without verification
+    const ok = await saveRole('guest')
+    if (ok) { setDone(true); router.push('/feed') }
+  }
+
+  async function handleVerifyNow() {
+    // User commits to verifying — save the intended host/both role then go to verify
     const ok = await saveRole(selected)
-    if (ok) setShowModal(true)
-  }
-
-  function handleFree() {
-    setDone(true)
-    router.push('/feed')
-  }
-
-  function handleVerifyNow() {
-    setDone(true)
-    router.push('/onboarding/verify')
+    if (ok) { setDone(true); router.push('/onboarding/verify') }
   }
 
   if (status === 'loading' || status === 'unauthenticated' || done) return (
