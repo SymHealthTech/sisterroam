@@ -14,11 +14,14 @@ import {
   ShieldCheck,
   Copy,
   ArrowLeft,
+  ChevronRight,
+  Users,
 } from "lucide-react";
 import { FeedTab } from "@/app/(app)/community/page";
 import { formatDateRange } from "@/lib/utils";
 
 const QUICK_ACTIONS = [
+  { label: "All sisters", href: "/sisters" },
   { label: "Travel Stories", href: "/community/stories" },
   { label: "Browse all hosts", href: "/explore" },
   { label: "Find co-traveller", href: "/cotraveller" },
@@ -27,6 +30,74 @@ const QUICK_ACTIONS = [
   { label: "Profile", href: "/profile" },
   { label: "Safety SoS", href: "/safety" },
 ];
+
+function SistersStrip({ sisters, loading }) {
+  if (!loading && sisters.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+          <Users className="w-4 h-4 text-brand" />
+          Sisters on SisterRoam
+        </h2>
+        <Link
+          href="/sisters"
+          className="text-xs font-medium text-brand hover:text-brand-dark flex items-center gap-0.5"
+        >
+          See all
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="shrink-0 w-16 flex flex-col items-center gap-1.5">
+                <Skeleton variant="avatar" className="w-14 h-14" />
+                <Skeleton className="h-2.5 w-12" />
+              </div>
+            ))
+          : sisters.map((s) => (
+              <Link
+                key={s._id}
+                href={`/user/${s._id}`}
+                className="shrink-0 w-16 flex flex-col items-center gap-1.5 group"
+              >
+                <Avatar
+                  src={s.profilePhotoUrl}
+                  name={s.fullName}
+                  size="lg"
+                  className="ring-2 ring-brand-lighter group-hover:ring-brand transition-all"
+                />
+                <span className="text-[11px] font-medium text-gray-900 text-center leading-tight truncate w-full">
+                  {(s.fullName ?? "").split(" ")[0]}
+                </span>
+                {s.country && (
+                  <span className="text-[10px] text-gray-400 text-center leading-tight truncate w-full -mt-1">
+                    {s.country}
+                  </span>
+                )}
+              </Link>
+            ))}
+
+        {!loading && (
+          <Link
+            href="/sisters"
+            className="shrink-0 w-16 flex flex-col items-center gap-1.5 group"
+          >
+            <span className="w-14 h-14 rounded-full bg-brand-lighter text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors">
+              <ChevronRight className="w-6 h-6" />
+            </span>
+            <span className="text-[11px] font-medium text-brand text-center leading-tight">
+              All
+            </span>
+          </Link>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -152,6 +223,8 @@ export default function FeedPage() {
 
   const [userProfile, setUserProfile] = useState(null);
   const [activeStay, setActiveStay] = useState(null);
+  const [sisters, setSisters] = useState([]);
+  const [sistersLoading, setSistersLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   async function loadFeedData() {
     try {
@@ -180,9 +253,22 @@ export default function FeedPage() {
     }
   }
 
+  async function loadSisters() {
+    try {
+      const res = await fetch("/api/users/sisters?limit=10");
+      if (res.ok) {
+        const d = await res.json();
+        setSisters(d.data?.sisters ?? []);
+      }
+    } finally {
+      setSistersLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!sessionUser?.id) return;
     loadFeedData();
+    loadSisters();
   }, [sessionUser?.id]);
 
   const firstName =
@@ -240,6 +326,9 @@ export default function FeedPage() {
               </Button>
             ))}
           </div>
+
+          {/* Sisters horizontal strip */}
+          <SistersStrip sisters={sisters} loading={sistersLoading} />
 
           {/* Active stay card */}
           {activeStay && (
