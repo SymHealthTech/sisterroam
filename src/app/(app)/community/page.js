@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import PostCard from "@/components/community/PostCard";
 import PostComposer from "@/components/community/PostComposer";
@@ -29,29 +30,36 @@ export function FeedTab({ welcome = false }) {
   const pageRef = useRef(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [welcomeProfile, setWelcomeProfile] = useState(null);
+  const [welcomeInfo, setWelcomeInfo] = useState(null);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const composerRef = useRef(null);
 
   const dismissKey = user?.id ? `sr-welcome-dismissed-${user.id}` : null;
 
+  // Personal (per-browser) dismissal — separate from an admin global delete.
+  useEffect(() => {
+    if (!dismissKey) return;
+    try {
+      setWelcomeDismissed(localStorage.getItem(dismissKey) === "1");
+    } catch {}
+  }, [dismissKey]);
+
   useEffect(() => {
     if (!welcome || !user?.id) return;
-    if (dismissKey && localStorage.getItem(dismissKey)) return;
     let cancelled = false;
     fetch("/api/users/welcome-status")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (cancelled) return;
-        if (d?.data?.isNewcomer) setWelcomeProfile(d.data.profile ?? {});
+        if (!cancelled && d?.data) setWelcomeInfo(d.data);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [welcome, user?.id, dismissKey]);
+  }, [welcome, user?.id]);
 
   function dismissWelcome() {
-    setWelcomeProfile(null);
+    setWelcomeDismissed(true);
     if (dismissKey) {
       try {
         localStorage.setItem(dismissKey, "1");
@@ -59,9 +67,28 @@ export function FeedTab({ welcome = false }) {
     }
   }
 
+  async function adminDeleteWelcome() {
+    setWelcomeInfo((w) => (w ? { ...w, enabled: false } : w));
+    try {
+      const res = await fetch("/api/admin/welcome-message", { method: "DELETE" });
+      if (res.ok) toast.success("Welcome post deleted for everyone");
+      else toast.error("Couldn't delete the welcome post");
+    } catch {
+      toast.error("Couldn't delete the welcome post");
+    }
+  }
+
   function scrollToComposer() {
     composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+
+  // Newcomers (newest-5) and admins (for moderation) see the welcome post,
+  // as long as it's globally enabled and not personally dismissed.
+  const showWelcome =
+    welcome &&
+    !welcomeDismissed &&
+    welcomeInfo?.enabled &&
+    (welcomeInfo.isNewcomer || welcomeInfo.isAdmin);
 
   const fetchPosts = useCallback(async (cat, pg) => {
     const params = new URLSearchParams({ page: pg, limit: 10 });
@@ -139,12 +166,14 @@ export function FeedTab({ welcome = false }) {
         ))}
       </div>
 
-      {/* Welcome post — shown to brand-new sisters on the /feed stream only */}
-      {welcome && welcomeProfile && (
+      {/* Welcome post — shown to brand-new sisters (and admins) on /feed only */}
+      {showWelcome && (
         <WelcomeCard
-          profile={welcomeProfile}
+          profile={welcomeInfo.profile}
+          isAdmin={welcomeInfo.isAdmin}
           onIntroduce={scrollToComposer}
           onDismiss={dismissWelcome}
+          onAdminDelete={adminDeleteWelcome}
         />
       )}
 

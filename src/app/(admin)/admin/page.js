@@ -5,9 +5,10 @@ import AdminLayout from '@/components/layout/AdminLayout'
 import StatsGrid from '@/components/admin/StatsGrid'
 import Skeleton from '@/components/ui/Skeleton'
 import { formatRelativeTime } from '@/lib/utils'
+import toast from 'react-hot-toast'
 import {
   Users, ShieldCheck, FileCheck, Home, Flag, BookOpen,
-  UserPlus, MapPin, MessageSquare,
+  UserPlus, MapPin, MessageSquare, Sparkles, Trash2, RotateCcw,
 } from 'lucide-react'
 
 const STAT_ICONS = {
@@ -25,6 +26,8 @@ const STAT_ICONS = {
 export default function AdminDashboardPage() {
   const [stats,   setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
+  const [welcomeEnabled, setWelcomeEnabled] = useState(null)
+  const [welcomeBusy,    setWelcomeBusy]    = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/stats')
@@ -32,6 +35,34 @@ export default function AdminDashboardPage() {
       .then(d => { if (d.success) setStats(d.data) })
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetch('/api/admin/welcome-message')
+      .then(r => r.json())
+      .then(d => { if (d.success) setWelcomeEnabled(d.data.enabled) })
+      .catch(() => {})
+  }, [])
+
+  async function setWelcome(enabled) {
+    setWelcomeBusy(true)
+    try {
+      const res = await fetch('/api/admin/welcome-message', {
+        method: enabled ? 'PATCH' : 'DELETE',
+        ...(enabled && {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: true }),
+        }),
+      })
+      if (!res.ok) throw new Error()
+      const d = await res.json()
+      setWelcomeEnabled(d.data.enabled)
+      toast.success(enabled ? 'Welcome post restored' : 'Welcome post deleted')
+    } catch {
+      toast.error('Something went wrong')
+    } finally {
+      setWelcomeBusy(false)
+    }
+  }
 
   const statCards = stats
     ? Object.entries(STAT_ICONS).map(([key, meta]) => ({
@@ -83,6 +114,55 @@ export default function AdminDashboardPage() {
                 {a.label}
               </a>
             ))}
+          </div>
+        </div>
+
+        {/* Community welcome post */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-brand-lighter/40 text-brand flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-gray-900">Community welcome post</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Shown in the home feed to the 5 most recently joined sisters.
+              </p>
+              {welcomeEnabled !== null && (
+                <span
+                  className={`inline-flex items-center gap-1.5 mt-2 text-xs font-medium ${
+                    welcomeEnabled ? 'text-teal' : 'text-gray-400'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      welcomeEnabled ? 'bg-teal' : 'bg-gray-300'
+                    }`}
+                  />
+                  {welcomeEnabled ? 'Active' : 'Deleted'}
+                </span>
+              )}
+            </div>
+            {welcomeEnabled !== null &&
+              (welcomeEnabled ? (
+                <button
+                  onClick={() => setWelcome(false)}
+                  disabled={welcomeBusy}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-danger-lighter/40 text-danger hover:bg-danger-lighter/70 transition-colors disabled:opacity-50 shrink-0"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              ) : (
+                <button
+                  onClick={() => setWelcome(true)}
+                  disabled={welcomeBusy}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-brand-lighter/40 text-brand hover:bg-brand-lighter/70 transition-colors disabled:opacity-50 shrink-0"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restore
+                </button>
+              ))}
           </div>
         </div>
 

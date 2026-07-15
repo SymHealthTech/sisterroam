@@ -1,5 +1,6 @@
 import User from '@/models/User'
 import { ok, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { getWelcomeEnabled } from '@/lib/welcomeSetting'
 
 // How many of the most-recently-joined sisters see the welcome post.
 const NEWEST_WINDOW = 5
@@ -20,7 +21,10 @@ export async function GET() {
       )
       .lean()
 
-    if (!me) return ok({ isNewcomer: false })
+    const isAdmin = !!session.user.isAdmin
+    const enabled = await getWelcomeEnabled()
+
+    if (!me) return ok({ isNewcomer: false, enabled, isAdmin })
 
     // Count active sisters who joined strictly after me. Fewer than the window
     // size means I'm still inside the newest-N group.
@@ -32,7 +36,10 @@ export async function GET() {
     })
 
     return ok({
-      isNewcomer: joinedAfter < NEWEST_WINDOW,
+      // Only a newcomer while the post is enabled and she's in the newest-N group.
+      isNewcomer: enabled && joinedAfter < NEWEST_WINDOW,
+      enabled,
+      isAdmin,
       joinedAfter,
       profile: {
         fullName: me.fullName,

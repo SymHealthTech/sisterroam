@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, MapPin, Check, Lock, X, PenLine, UserPlus, ShieldCheck,
+  Sparkles, MapPin, Check, Lock, X, PenLine, UserPlus, ShieldCheck, Trash2,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
@@ -41,8 +41,11 @@ const VERIFIED_PERKS = [
  * verification, and nudges her to introduce herself with a first post.
  *
  * Dismissal is remembered per-user in localStorage so it does not nag.
+ *
+ * Admins also see this card (for moderation) regardless of when they joined,
+ * with an inline "delete for everyone" control that removes it platform-wide.
  */
-export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
+export default function WelcomeCard({ profile, isAdmin = false, onIntroduce, onDismiss, onAdminDelete }) {
   const firstName = (profile?.fullName ?? '').split(' ')[0] || 'sister'
   const isVerified =
     profile?.verificationTier === 'verified' ||
@@ -86,6 +89,12 @@ export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
           You've just joined a community of women who explore the world together —
           safely, and never alone. Here's how to get started.
         </p>
+        {isAdmin && (
+          <p className="mt-3 text-[11px] text-white/80 bg-white/15 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Admin preview — recently joined sisters see this welcome post.
+          </p>
+        )}
       </div>
 
       <div className="px-4 sm:px-5 py-4 space-y-5">
@@ -203,6 +212,23 @@ export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
             Introduce yourself
           </button>
         </section>
+
+        {/* Admin-only: remove the welcome post for everyone */}
+        {isAdmin && (
+          <section className="border-t border-danger/15 pt-4">
+            <button
+              onClick={onAdminDelete}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-danger-lighter/40 text-danger text-sm font-medium hover:bg-danger-lighter/70 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete welcome post for everyone
+            </button>
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              This hides the welcome post for all new sisters until you restore it
+              from the admin dashboard.
+            </p>
+          </section>
+        )}
       </div>
     </div>
   )
