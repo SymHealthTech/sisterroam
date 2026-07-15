@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import toast from "react-hot-toast";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import PostCard from "@/components/community/PostCard";
 import PostComposer from "@/components/community/PostComposer";
@@ -67,28 +66,13 @@ export function FeedTab({ welcome = false }) {
     }
   }
 
-  async function adminDeleteWelcome() {
-    setWelcomeInfo((w) => (w ? { ...w, enabled: false } : w));
-    try {
-      const res = await fetch("/api/admin/welcome-message", { method: "DELETE" });
-      if (res.ok) toast.success("Welcome post deleted for everyone");
-      else toast.error("Couldn't delete the welcome post");
-    } catch {
-      toast.error("Couldn't delete the welcome post");
-    }
-  }
-
   function scrollToComposer() {
     composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Newcomers (newest-5) and admins (for moderation) see the welcome post,
-  // as long as it's globally enabled and not personally dismissed.
-  const showWelcome =
-    welcome &&
-    !welcomeDismissed &&
-    welcomeInfo?.enabled &&
-    (welcomeInfo.isNewcomer || welcomeInfo.isAdmin);
+  // Every newly signed-up sister sees her own private welcome post until she
+  // dismisses it or it auto-retires (first post / 7 days, per the API).
+  const showWelcome = welcome && !welcomeDismissed && welcomeInfo?.isNewcomer;
 
   const fetchPosts = useCallback(async (cat, pg) => {
     const params = new URLSearchParams({ page: pg, limit: 10 });
@@ -130,6 +114,9 @@ export function FeedTab({ welcome = false }) {
 
   function handleNewPost(post) {
     setPosts((prev) => [post, ...prev]);
+    // Auto-retire the welcome post the moment she publishes her first post.
+    // (Admins keep seeing it via isAdmin — this only clears the newcomer flag.)
+    setWelcomeInfo((w) => (w?.isNewcomer ? { ...w, isNewcomer: false } : w));
   }
 
   function handleDelete(id) {
@@ -166,14 +153,12 @@ export function FeedTab({ welcome = false }) {
         ))}
       </div>
 
-      {/* Welcome post — shown to brand-new sisters (and admins) on /feed only */}
+      {/* Welcome post — private to each newly signed-up sister, /feed only */}
       {showWelcome && (
         <WelcomeCard
           profile={welcomeInfo.profile}
-          isAdmin={welcomeInfo.isAdmin}
           onIntroduce={scrollToComposer}
           onDismiss={dismissWelcome}
-          onAdminDelete={adminDeleteWelcome}
         />
       )}
 

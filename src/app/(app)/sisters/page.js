@@ -29,7 +29,7 @@ function SisterCard({ sister }) {
       <Avatar
         src={sister.profilePhotoUrl}
         name={sister.fullName}
-        size="lg"
+        size="md"
         className="ring-2 ring-brand-lighter shrink-0"
       />
 
@@ -75,7 +75,7 @@ function SisterCard({ sister }) {
 function CardSkeleton() {
   return (
     <div className="flex items-center gap-4 py-3 px-1">
-      <Skeleton variant="avatar" className="w-16 h-16 shrink-0" />
+      <Skeleton variant="avatar" className="w-11 h-11 shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-3.5 w-40" />
         <Skeleton className="h-3 w-28" />
@@ -167,7 +167,7 @@ export default function SistersPage() {
 
         {/* Grid */}
         {loading ? (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-200">
             {Array.from({ length: 8 }).map((_, i) => (
               <CardSkeleton key={i} />
             ))}
@@ -185,7 +185,7 @@ export default function SistersPage() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-200">
             {sisters.map((s) => (
               <SisterCard key={s._id} sister={s} />
             ))}
