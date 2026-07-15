@@ -25,8 +25,13 @@ export async function GET() {
       Date.now() - new Date(me.createdAt).getTime() < MAX_AGE_MS
     const hasPosted = !!(await CommunityPost.exists({ authorId: session.user.id }))
 
+    // PREVIEW OVERRIDE: admins always see the welcome card so it can be reviewed
+    // on a real login before launch. Remove this line to ship — after that the
+    // card is shown only to genuinely new sisters.
+    const isNewcomer = session.user.isAdmin ? true : (withinAge && !hasPosted)
+
     return ok({
-      isNewcomer: withinAge && !hasPosted,
+      isNewcomer,
       hasPosted,
       profile: {
         fullName: me.fullName,
