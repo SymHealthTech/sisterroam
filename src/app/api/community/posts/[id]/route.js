@@ -50,12 +50,29 @@ export async function PATCH(request, { params }) {
 
     // Edit — author only
     if (post.authorId.toString() !== session.user.id) return fail('Not authorized', 403)
+
+    // Replace the image set wholesale (staged edits committed on Save).
+    // Any previously-attached image no longer present gets removed from Cloudinary.
+    let removedPublicIds = []
+    if (body.imageUrls !== undefined) {
+      const newUrls = Array.isArray(body.imageUrls)
+        ? body.imageUrls.filter(u => typeof u === 'string')
+        : []
+      const newPublicIds = Array.isArray(body.imagePublicIds) ? body.imagePublicIds : []
+      if (newUrls.length > 7) return fail('Maximum 7 images allowed', 400)
+      const keptIds = new Set(newPublicIds.filter(Boolean).map(String))
+      removedPublicIds = (post.imagePublicIds ?? []).filter(pid => pid && !keptIds.has(String(pid)))
+      post.imageUrls = newUrls
+      post.imagePublicIds = newPublicIds
+    }
+
     if (body.content !== undefined) {
       if (!body.content.trim()) return fail('Content cannot be empty', 400)
       post.content = body.content.trim()
     }
     if (body.category !== undefined) post.category = body.category
     await post.save()
+    removedPublicIds.forEach(pid => deleteFile(pid).catch(() => null))
     return ok(post.toObject())
   } catch (e) {
     return handleError(e)

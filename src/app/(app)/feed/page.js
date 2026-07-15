@@ -313,7 +313,7 @@ export default function FeedPage() {
         {/* Main feed */}
         <div className="flex-1 min-w-0 px-4 py-5 lg:px-8 space-y-6">
           {/* Quick actions */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
             {QUICK_ACTIONS.map(({ label, href }) => (
               <Button
                 key={label}
