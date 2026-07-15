@@ -24,59 +24,62 @@ function SisterCard({ sister }) {
   return (
     <Link
       href={`/user/${sister._id}`}
-      className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center gap-2 hover:border-brand hover:shadow-sm transition-all"
+      className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:border-brand hover:shadow-sm transition-all"
     >
       <Avatar
         src={sister.profilePhotoUrl}
         name={sister.fullName}
         size="lg"
-        className="ring-2 ring-brand-lighter"
+        className="ring-2 ring-brand-lighter shrink-0"
       />
-      <div className="min-w-0 w-full">
-        <p className="text-sm font-semibold text-gray-900 truncate">
-          {sister.fullName}
-        </p>
-        {sister.role && ROLE_LABELS[sister.role] && sister.role !== "guest" && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
-            <Briefcase className="w-3 h-3 shrink-0" />
-            {ROLE_LABELS[sister.role]}
-          </span>
-        )}
-      </div>
 
-      <div className="flex flex-col items-center gap-1 text-xs text-gray-500">
-        {location && (
-          <span className="flex items-center gap-1 truncate max-w-full">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{location}</span>
-          </span>
-        )}
-        {visited > 0 && (
-          <span className="flex items-center gap-1">
-            <Globe className="w-3.5 h-3.5 shrink-0" />
-            {visited} {visited === 1 ? "country" : "countries"} visited
-          </span>
-        )}
-      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-gray-900 truncate">
+            {sister.fullName}
+          </p>
+          {sister.verificationTier === "trusted" ? (
+            <Badge variant="trusted" size="xs">Trusted</Badge>
+          ) : sister.verificationTier === "verified" ? (
+            <Badge variant="verified" size="xs">✓ Verified</Badge>
+          ) : (
+            <Badge variant="gray" size="xs">Member</Badge>
+          )}
+        </div>
 
-      {sister.verificationTier === "trusted" ? (
-        <Badge variant="trusted">Trusted</Badge>
-      ) : sister.verificationTier === "verified" ? (
-        <Badge variant="verified">✓ Verified</Badge>
-      ) : (
-        <Badge variant="gray">Member</Badge>
-      )}
+        <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-gray-500">
+          {sister.role && ROLE_LABELS[sister.role] && sister.role !== "guest" && (
+            <span className="flex items-center gap-1">
+              <Briefcase className="w-3.5 h-3.5 shrink-0" />
+              {ROLE_LABELS[sister.role]}
+            </span>
+          )}
+          {location && (
+            <span className="flex items-center gap-1 min-w-0">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{location}</span>
+            </span>
+          )}
+          {visited > 0 && (
+            <span className="flex items-center gap-1">
+              <Globe className="w-3.5 h-3.5 shrink-0" />
+              {visited} {visited === 1 ? "country" : "countries"} visited
+            </span>
+          )}
+        </div>
+      </div>
     </Link>
   );
 }
 
 function CardSkeleton() {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-2">
-      <Skeleton variant="avatar" className="w-16 h-16" />
-      <Skeleton className="h-3.5 w-24" />
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="h-3 w-16" />
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4">
+      <Skeleton variant="avatar" className="w-16 h-16 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-3.5 w-40" />
+        <Skeleton className="h-3 w-28" />
+      </div>
     </div>
   );
 }
@@ -162,7 +165,7 @@ export default function SistersPage() {
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <CardSkeleton key={i} />
             ))}
@@ -180,7 +183,7 @@ export default function SistersPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="space-y-3">
             {sisters.map((s) => (
               <SisterCard key={s._id} sister={s} />
             ))}

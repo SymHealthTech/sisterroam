@@ -53,28 +53,28 @@ function SistersStrip({ sisters, loading }) {
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="shrink-0 w-16 flex flex-col items-center gap-1.5">
-                <Skeleton variant="avatar" className="w-14 h-14" />
-                <Skeleton className="h-2.5 w-12" />
+              <div key={i} className="shrink-0 w-20 flex flex-col items-center gap-1.5">
+                <Skeleton variant="avatar" className="w-11 h-11" />
+                <Skeleton className="h-2.5 w-16" />
               </div>
             ))
           : sisters.map((s) => (
               <Link
                 key={s._id}
                 href={`/user/${s._id}`}
-                className="shrink-0 w-16 flex flex-col items-center gap-1.5 group"
+                className="shrink-0 w-20 flex flex-col items-center gap-1.5 group"
               >
                 <Avatar
                   src={s.profilePhotoUrl}
                   name={s.fullName}
-                  size="lg"
+                  size="md"
                   className="ring-2 ring-brand-lighter group-hover:ring-brand transition-all"
                 />
-                <span className="text-[11px] font-medium text-gray-900 text-center leading-tight truncate w-full">
-                  {(s.fullName ?? "").split(" ")[0]}
+                <span className="text-[11px] font-medium text-gray-900 text-center leading-tight w-full line-clamp-2">
+                  {s.fullName}
                 </span>
                 {s.country && (
-                  <span className="text-[10px] text-gray-400 text-center leading-tight truncate w-full -mt-1">
+                  <span className="text-[10px] text-gray-400 text-center leading-tight truncate w-full">
                     {s.country}
                   </span>
                 )}
@@ -84,10 +84,10 @@ function SistersStrip({ sisters, loading }) {
         {!loading && (
           <Link
             href="/sisters"
-            className="shrink-0 w-16 flex flex-col items-center gap-1.5 group"
+            className="shrink-0 w-20 flex flex-col items-center gap-1.5 group"
           >
-            <span className="w-14 h-14 rounded-full bg-brand-lighter text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors">
-              <ChevronRight className="w-6 h-6" />
+            <span className="w-11 h-11 rounded-full bg-brand-lighter text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors">
+              <ChevronRight className="w-5 h-5" />
             </span>
             <span className="text-[11px] font-medium text-brand text-center leading-tight">
               All
