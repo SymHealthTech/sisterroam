@@ -50,7 +50,7 @@ function SistersStrip({ sisters, loading }) {
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pt-1.5 pb-1 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="shrink-0 w-20 flex flex-col items-center gap-1.5">
@@ -372,7 +372,7 @@ export default function FeedPage() {
 
           {/* Community feed */}
           <section className="pb-6">
-            <FeedTab />
+            <FeedTab welcome />
           </section>
         </div>
 

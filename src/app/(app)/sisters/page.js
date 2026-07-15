@@ -24,7 +24,7 @@ function SisterCard({ sister }) {
   return (
     <Link
       href={`/user/${sister._id}`}
-      className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:border-brand hover:shadow-sm transition-all"
+      className="flex items-center gap-4 py-3 px-1 -mx-1 rounded-lg hover:bg-gray-50 transition-colors"
     >
       <Avatar
         src={sister.profilePhotoUrl}
@@ -74,7 +74,7 @@ function SisterCard({ sister }) {
 
 function CardSkeleton() {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4">
+    <div className="flex items-center gap-4 py-3 px-1">
       <Skeleton variant="avatar" className="w-16 h-16 shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-3.5 w-40" />
@@ -88,6 +88,7 @@ export default function SistersPage() {
   const [query, setQuery] = useState("");
   const [sisters, setSisters] = useState([]);
   const [total, setTotal] = useState(0);
+  const [listTotal, setListTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const debounceRef = useRef(null);
@@ -100,6 +101,7 @@ export default function SistersPage() {
     const d = await res.json();
     const next = d.data?.sisters ?? [];
     setTotal(d.data?.total ?? 0);
+    setListTotal(d.data?.listTotal ?? 0);
     setSisters((prev) => (append ? [...prev, ...next] : next));
   }, []);
 
@@ -125,11 +127,11 @@ export default function SistersPage() {
     setLoadingMore(false);
   }
 
-  const hasMore = sisters.length < total;
+  const hasMore = sisters.length < listTotal;
 
   return (
     <AppLayout title="All sisters">
-      <div className="max-w-4xl mx-auto px-4 py-5 space-y-5">
+      <div className="max-w-4xl mx-auto px-4 pt-5 pb-28 lg:pb-10 space-y-5">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -165,7 +167,7 @@ export default function SistersPage() {
 
         {/* Grid */}
         {loading ? (
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100">
             {Array.from({ length: 8 }).map((_, i) => (
               <CardSkeleton key={i} />
             ))}
@@ -183,7 +185,7 @@ export default function SistersPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100">
             {sisters.map((s) => (
               <SisterCard key={s._id} sister={s} />
             ))}

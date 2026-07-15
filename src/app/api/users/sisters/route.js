@@ -21,10 +21,10 @@ export async function GET(request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '30', 10) || 30, 60)
     const skip = Math.max(parseInt(searchParams.get('skip') || '0', 10) || 0, 0)
 
-    // Show every signed-up sister (all verification tiers), excluding self
-    // and accounts that are inactive / suspended / banned.
+    // Match every signed-up sister (all verification tiers), excluding only
+    // inactive / suspended / banned accounts. This base filter INCLUDES the
+    // viewer herself and drives the displayed "total sisters" count.
     const filter = {
-      _id: { $ne: session.user.id },
       isActive: true,
       isSuspended: { $ne: true },
       isPermanentlyBanned: { $ne: true },
@@ -46,8 +46,11 @@ export async function GET(request) {
       filter.$or = conditions
     }
 
-    const [sisters, total] = await Promise.all([
-      User.find(filter)
+    // The list itself excludes the viewer so she doesn't see her own profile.
+    const listFilter = { ...filter, _id: { $ne: session.user.id } }
+
+    const [sisters, listTotal, total] = await Promise.all([
+      User.find(listFilter)
         .select(
           'fullName username profilePhotoUrl city country role countriesVisited travellerCategories verificationTier createdAt',
         )
@@ -55,10 +58,13 @@ export async function GET(request) {
         .skip(skip)
         .limit(limit)
         .lean(),
+      User.countDocuments(listFilter),
       User.countDocuments(filter),
     ])
 
-    return ok({ sisters, total })
+    // total    -> full count incl. viewer (shown to the user)
+    // listTotal -> count of listed rows excl. viewer (drives pagination)
+    return ok({ sisters, total, listTotal })
   } catch (e) {
     return handleError(e)
   }

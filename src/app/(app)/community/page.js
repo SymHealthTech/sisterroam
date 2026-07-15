@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import AppLayout, { useAppUser } from "@/components/layout/AppLayout";
 import PostCard from "@/components/community/PostCard";
 import PostComposer from "@/components/community/PostComposer";
+import WelcomeCard from "@/components/community/WelcomeCard";
 import Skeleton from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,9 @@ const CATEGORIES = [
 ];
 
 /* ── Feed tab ─────────────────────────────────────────────── */
-export function FeedTab() {
+// `welcome` — when true (the /feed home stream), a one-time welcome post is
+// shown at the top for brand-new sisters. Never passed on the /community page.
+export function FeedTab({ welcome = false }) {
   const user = useAppUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,39 @@ export function FeedTab() {
   const pageRef = useRef(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [welcomeProfile, setWelcomeProfile] = useState(null);
+  const composerRef = useRef(null);
+
+  const dismissKey = user?.id ? `sr-welcome-dismissed-${user.id}` : null;
+
+  useEffect(() => {
+    if (!welcome || !user?.id) return;
+    if (dismissKey && localStorage.getItem(dismissKey)) return;
+    let cancelled = false;
+    fetch("/api/users/welcome-status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        if (d?.data?.isNewcomer) setWelcomeProfile(d.data.profile ?? {});
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [welcome, user?.id, dismissKey]);
+
+  function dismissWelcome() {
+    setWelcomeProfile(null);
+    if (dismissKey) {
+      try {
+        localStorage.setItem(dismissKey, "1");
+      } catch {}
+    }
+  }
+
+  function scrollToComposer() {
+    composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   const fetchPosts = useCallback(async (cat, pg) => {
     const params = new URLSearchParams({ page: pg, limit: 10 });
@@ -80,7 +116,9 @@ export function FeedTab() {
       {!tierKnown ? (
         <Skeleton variant="card" className="h-16" />
       ) : (
-        <PostComposer user={user} onPost={handleNewPost} />
+        <div ref={composerRef}>
+          <PostComposer user={user} onPost={handleNewPost} />
+        </div>
       )}
 
       {/* Category filter */}
@@ -100,6 +138,15 @@ export function FeedTab() {
           </button>
         ))}
       </div>
+
+      {/* Welcome post — shown to brand-new sisters on the /feed stream only */}
+      {welcome && welcomeProfile && (
+        <WelcomeCard
+          profile={welcomeProfile}
+          onIntroduce={scrollToComposer}
+          onDismiss={dismissWelcome}
+        />
+      )}
 
       {/* Posts */}
       {loading ? (

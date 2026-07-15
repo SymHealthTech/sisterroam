@@ -5,11 +5,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   Heart, MessageCircle, Share2, MoreHorizontal,
-  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Lock,
+  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
-import { UnderReviewModal } from '@/components/ui/VerificationGate'
 import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -427,7 +426,6 @@ function CommentItem({ comment }) {
 
 /* ── Main card ─────────────────────────────────────────────── */
 export default function PostCard({ post: initialPost, currentUserId, currentUserTier, onDelete, priority = false }) {
-  const isUnderReview = currentUserTier === 'paid'
   const [post,         setPost]         = useState(initialPost)
   const [expanded,     setExpanded]     = useState(false)
   const [showComments, setShowComments] = useState(false)
@@ -440,7 +438,6 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
   const [editContent,  setEditContent]  = useState(post.content)
   const [deleting,     setDeleting]     = useState(false)
   const [confirmOpen,  setConfirmOpen]  = useState(false)
-  const [showReviewModal, setShowReviewModal] = useState(false)
   const menuRef = useRef(null)
 
   const isOwn = post.authorId?._id?.toString() === currentUserId || post.authorId?.toString() === currentUserId
@@ -545,7 +542,6 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
 
   return (
     <>
-    {showReviewModal && <UnderReviewModal onClose={() => setShowReviewModal(false)} />}
     <ConfirmDialog
       open={confirmOpen}
       onCancel={() => setConfirmOpen(false)}
@@ -712,35 +708,22 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
               View all {post.commentsCount} comments
             </button>
           )}
-          {isUnderReview ? (
+          <form onSubmit={sendComment} className="flex gap-2 mt-2">
+            <input
+              value={commentInput}
+              onChange={e => setCommentInput(e.target.value)}
+              placeholder="Add a comment…"
+              maxLength={500}
+              className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-0/20 focus:border-brand/30"
+            />
             <button
-              type="button"
-              onClick={() => setShowReviewModal(true)}
-              className="flex gap-2 mt-2 w-full text-left"
+              type="submit"
+              disabled={!commentInput.trim() || sending}
+              className="px-3 py-1.5 bg-brand text-white text-xs rounded-full disabled:opacity-50 hover:bg-brand-dark transition-colors"
             >
-              <div className="flex-1 flex items-center gap-2 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 text-gray-400">
-                <Lock className="w-3 h-3 text-brand/40 shrink-0" />
-                Add a comment…
-              </div>
+              Send
             </button>
-          ) : (
-            <form onSubmit={sendComment} className="flex gap-2 mt-2">
-              <input
-                value={commentInput}
-                onChange={e => setCommentInput(e.target.value)}
-                placeholder="Add a comment…"
-                maxLength={500}
-                className="flex-1 text-xs bg-gray-50 border border-gray-100 rounded-full px-3 py-2 focus:outline-none focus:ring-0/20 focus:border-brand/30"
-              />
-              <button
-                type="submit"
-                disabled={!commentInput.trim() || sending}
-                className="px-3 py-1.5 bg-brand text-white text-xs rounded-full disabled:opacity-50 hover:bg-brand-dark transition-colors"
-              >
-                Send
-              </button>
-            </form>
-          )}
+          </form>
         </div>
       )}
     </div>
