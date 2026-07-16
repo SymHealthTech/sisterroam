@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
+import { trackSignupCompleted } from '@/lib/analytics'
 
 const COUNTRIES = [
   'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
@@ -206,6 +207,7 @@ function OtpStep({ email, formData }) {
     })
     setLoading(false)
     if (!res.ok) { toast.error('Invalid OTP'); return }
+    trackSignupCompleted()
     toast.success('Account created!')
     router.push('/onboarding/profile')
   }

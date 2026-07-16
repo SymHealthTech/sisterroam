@@ -65,16 +65,6 @@ export async function POST(request, { params }) {
       return fail('This trip has already departed', 400)
     }
 
-    if (post.lookingFor?.verifiedOnly) {
-      const currentUser = await User.findById(userId, 'verificationTier').lean()
-      if (currentUser?.verificationTier === 'basic') {
-        return fail(
-          'This trip requires verified members. Complete your verification to apply.',
-          403
-        )
-      }
-    }
-
     if (!message?.trim()) return fail('A message is required', 400)
     if (message.trim().length < 50) return fail('Message must be at least 50 characters', 400)
 

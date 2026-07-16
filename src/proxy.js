@@ -5,8 +5,8 @@ import authConfig from '@/auth.config'
 const { auth } = NextAuth(authConfig)
 
 const publicPaths = [
-  '/', '/about', '/how-it-works', '/safety',
-  '/pricing', '/browse', '/stories', '/blog',
+  '/', '/about', '/how-it-works',
+  '/pricing', '/browse', '/stories',
   '/login', '/signup', '/forgot-password',
 ]
 
@@ -32,6 +32,7 @@ export default auth((request) => {
     pathname.startsWith('/explore') ||
     pathname.startsWith('/messages') ||
     pathname.startsWith('/profile') ||
+    pathname.startsWith('/safety') ||
     pathname.startsWith('/community') ||
     pathname.startsWith('/cotraveller') ||
     pathname.startsWith('/recommendations') ||

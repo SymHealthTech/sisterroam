@@ -51,7 +51,7 @@ export async function POST(request) {
             paidAt:         new Date(),
             webhookPayload: event.data,
             // total_amount from Dodo is in smallest currency unit (paise / cents)
-            amount:         total_amount / 100,
+            ...(typeof total_amount === 'number' ? { amount: total_amount / 100 } : {}),
           },
         },
         { new: true }
@@ -85,7 +85,7 @@ export async function POST(request) {
       if (user) {
         await Notification.create({
           recipientId: userId,
-          type:        'verification_approved',
+          type:        'verification_under_review',
           title:       'Payment received — verification in progress',
           body:        'Your payment was successful. Our team will review your documents within 24–48 hours.',
           link:        '/feed',

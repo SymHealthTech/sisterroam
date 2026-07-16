@@ -19,6 +19,7 @@ import {
   Search,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { trackBadgePurchase, trackPromoCodeApplied } from "@/lib/analytics";
 
 const VideoCapture = dynamic(() => import("@/components/ui/VideoCapture"), {
   loading: () => null,
@@ -241,6 +242,7 @@ function PaymentStep({
         setPromoState("valid");
         setPromoType(data.type);
         setPromoIsFree(data.isFree);
+        trackPromoCodeApplied(code);
       } else {
         setPromoState("invalid");
         setPromoError(data.error);
@@ -490,6 +492,8 @@ export default function VerifyPage() {
       const data = await res.json();
       if (data.success) {
         redirecting = true;
+        // Confirmed Dodo payment success — the free-promo path never reaches here.
+        trackBadgePurchase(data.verificationTier || "paid");
         localStorage.removeItem("sr_verify_country");
         if (!data.onboardingCompleted) sessionStorage.setItem("sr_show_welcome", "1");
         await updateSession({ verificationTier: data.verificationTier || "paid" });

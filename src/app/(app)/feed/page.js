@@ -26,7 +26,7 @@ const QUICK_ACTIONS = [
   { label: "Browse all hosts", href: "/explore" },
   { label: "Find co-traveller", href: "/cotraveller" },
   { label: "Place recommendations", href: "/recommendations" },
-  { label: "Messeges", href: "/messeges" },
+  { label: "Messages", href: "/messages" },
   { label: "Profile", href: "/profile" },
   { label: "Safety SoS", href: "/safety" },
 ];

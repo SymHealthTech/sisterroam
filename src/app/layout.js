@@ -1,4 +1,5 @@
 import './globals.css'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { auth } from '@/lib/auth'
 import SessionProvider from '@/components/auth/SessionProvider'
 import ToastProvider from '@/components/ui/Toast'
@@ -128,6 +129,9 @@ export default async function RootLayout({ children }) {
           <PWAInstallButton />
           <ToastProvider />
         </SessionProvider>
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   )

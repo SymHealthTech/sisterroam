@@ -21,6 +21,7 @@ import {
   Edit2,
 } from "lucide-react";
 import { cn, formatDateRange } from "@/lib/utils";
+import { trackSOSTriggered, trackSOSConfirmed } from "@/lib/analytics";
 import toast from "react-hot-toast";
 
 /* ─── Constants ─────────────────────────────────────────────── */
@@ -343,6 +344,7 @@ export default function SafetyPage() {
 
   /* ── SOS handler ── */
   async function handleSosActivate() {
+    trackSOSTriggered();
     let coords = null;
     if (navigator.geolocation) {
       await new Promise((resolve) => {
@@ -448,7 +450,10 @@ export default function SafetyPage() {
           coords={sosModal.coords}
           emergencyContactName={user?.emergencyContactName}
           onCancel={() => setSosModal(null)}
-          onKeepActive={() => setSosModal(null)}
+          onKeepActive={() => {
+            trackSOSConfirmed();
+            setSosModal(null);
+          }}
         />
       )}
 
