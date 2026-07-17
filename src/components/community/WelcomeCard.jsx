@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {
-  Sparkles, Check, Lock, X, PenLine, UserPlus, ShieldCheck,
+  Sparkles, Check, Lock, X, PenLine, UserPlus, ShieldCheck, Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -114,6 +114,31 @@ export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
                 </li>
               ))}
             </ul>
+
+            {/* Verification fee waived — launch offer */}
+            <div className="mt-3 rounded-xl border border-dashed border-teal/40 bg-teal-lighter/40 p-3">
+              <p className="text-xs font-semibold text-teal flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                Verification fee waived —{' '}
+                <span className="font-bold">free for the first 500 sisters</span>
+              </p>
+              <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
+                Complete all the verification steps and apply promo code at the
+                payment page — your{' '}
+                <s className="text-gray-400">₹299 / $7</s> fee drops to{' '}
+                <span className="font-semibold text-gray-800">₹0</span>.
+              </p>
+              <div className="mt-2.5 flex items-center gap-2">
+                <Tag className="w-3.5 h-3.5 text-brand shrink-0" />
+                <span className="text-xs font-bold tracking-widest text-brand">
+                  NEWSIS100
+                </span>
+                <span className="ml-auto text-[10px] font-semibold text-teal">
+                  100% off
+                </span>
+              </div>
+            </div>
+
             <Link
               href="/verify"
               className="inline-flex items-center gap-1 mt-2.5 text-xs font-semibold text-amber hover:opacity-80"

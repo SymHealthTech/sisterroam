@@ -19,6 +19,8 @@ import {
   MessageCircle,
   MoreHorizontal,
   BookOpen,
+  Sparkles,
+  Tag,
 } from "lucide-react";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
@@ -1793,6 +1795,19 @@ export default async function HomePage() {
                 <div className="flex-1 h-px bg-gray-200" aria-hidden="true" />
               </div>
 
+              {/* Launch offer banner */}
+              <div className="flex items-center gap-2 mb-4 rounded-xl border border-teal/30 bg-teal-lighter px-4 py-2.5">
+                <Sparkles
+                  className="w-4 h-4 text-teal shrink-0"
+                  aria-hidden="true"
+                />
+                <p className="text-[11px] font-semibold text-teal leading-snug">
+                  Launch offer — verification is{" "}
+                  <span className="font-bold">FREE for the first 500 members.</span>{" "}
+                  No fee at all.
+                </p>
+              </div>
+
               {/* Pricing cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 {/* India */}
@@ -1804,9 +1819,14 @@ export default async function HomePage() {
                   <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
                     India
                   </p>
-                  <p className="text-3xl font-bold leading-none mb-0.5">₹299</p>
+                  <div className="flex items-baseline gap-2 mb-0.5">
+                    <p className="text-3xl font-bold leading-none">₹0</p>
+                    <p className="text-lg font-semibold text-white/50 line-through leading-none">
+                      ₹299
+                    </p>
+                  </div>
                   <p className="text-white/50 text-[11px] mb-4">
-                    one-time · lifetime
+                    free for first 500 members · lifetime
                   </p>
                   <ul className="space-y-1.5">
                     {[
@@ -1838,11 +1858,16 @@ export default async function HomePage() {
                   <p className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
                     Outside India
                   </p>
-                  <p className="text-3xl font-bold leading-none text-brand mb-0.5">
-                    $7
-                  </p>
+                  <div className="flex items-baseline gap-2 mb-0.5">
+                    <p className="text-3xl font-bold leading-none text-brand">
+                      $0
+                    </p>
+                    <p className="text-lg font-semibold text-gray-400 line-through leading-none">
+                      $7
+                    </p>
+                  </div>
                   <p className="text-gray-400 text-[11px] mb-4">
-                    one-time · lifetime
+                    free for first 500 members · lifetime
                   </p>
                   <ul className="space-y-1.5">
                     {[
@@ -1863,6 +1888,49 @@ export default async function HomePage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+              </div>
+
+              {/* How to claim free verification */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-5">
+                <p className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">
+                  How to verify for free
+                </p>
+                <ol className="space-y-3">
+                  {[
+                    "Sign up and complete your SisterRoam profile.",
+                    "Go through all the verification steps (upload your government ID & selfie).",
+                    "At the payment page, apply promo code to waive the fee.",
+                    "You're verified — start hosting, messaging & co-travelling.",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="flex items-center justify-center w-5 h-5 shrink-0 rounded-full bg-brand text-white text-[11px] font-bold leading-none">
+                        {i + 1}
+                      </span>
+                      <span className="text-xs text-gray-700 leading-relaxed">
+                        {step}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+
+                {/* Promo code chip */}
+                <div className="mt-4 flex items-center gap-3 rounded-xl border border-dashed border-brand/40 bg-brand-lighter/50 px-4 py-3">
+                  <Tag
+                    className="w-4 h-4 text-brand shrink-0"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                      Promo code
+                    </p>
+                    <p className="text-sm font-bold text-brand tracking-widest">
+                      NEWSIS100
+                    </p>
+                  </div>
+                  <span className="ml-auto text-[10px] font-semibold text-teal whitespace-nowrap">
+                    100% off
+                  </span>
                 </div>
               </div>
 
