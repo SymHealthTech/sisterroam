@@ -231,20 +231,20 @@ export default function ReportsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Safety Reports</h1>
           <p className="text-sm text-gray-500 mt-1">Review and manage safety reports from members</p>
         </div>
 
         {/* Status tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit max-w-full overflow-x-auto">
           {STATUS_TABS.map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-lg capitalize transition-colors',
+                'px-4 py-2 text-sm font-medium rounded-lg capitalize transition-colors whitespace-nowrap shrink-0',
                 tab === t ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700',
               )}
             >

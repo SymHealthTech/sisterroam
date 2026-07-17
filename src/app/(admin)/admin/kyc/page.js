@@ -238,7 +238,7 @@ export default function KYCQueuePage() {
 
   return (
     <AdminLayout>
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">KYC Queue</h1>
           <p className="text-sm text-gray-500 mt-1">Review identity verification requests</p>

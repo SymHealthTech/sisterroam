@@ -214,7 +214,7 @@ export default function UserManagementPage() {
   return (
     <AdminLayout>
       <div className="min-h-full bg-gradient-to-b from-gray-50 to-white">
-        <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -285,7 +285,8 @@ export default function UserManagementPage() {
                       <p className="text-xs text-gray-600 truncate md:mt-0 mt-1">{user.email}</p>
 
                       {/* Age */}
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-gray-700 md:mt-0 mt-1">
+                        <span className="md:hidden text-xs text-gray-400">Age: </span>
                         {user.age ? user.age : <span className="text-gray-300">—</span>}
                       </p>
 

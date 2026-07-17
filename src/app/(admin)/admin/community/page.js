@@ -159,21 +159,21 @@ export default function AdminCommunityPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Community moderation</h1>
           <p className="text-sm text-gray-500 mt-1">Moderate co-traveller posts, recommendations, and questions</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 overflow-x-auto">
           {TABS.map((label, i) => (
             <button
               key={label}
               type="button"
               onClick={() => setActiveTab(i)}
               className={cn(
-                'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0',
                 activeTab === i ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700'
               )}
             >
@@ -192,7 +192,8 @@ export default function AdminCommunityPage() {
             {currentItems.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-10">No content to moderate</p>
             ) : (
-              <table className="w-full">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <th className="text-left text-xs font-semibold text-gray-500 py-3 px-4">Content</th>
@@ -214,6 +215,7 @@ export default function AdminCommunityPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}
