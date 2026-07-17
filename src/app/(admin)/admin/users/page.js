@@ -216,21 +216,20 @@ export default function UserManagementPage() {
       <div className="min-h-full bg-gradient-to-b from-gray-50 to-white">
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
 
-          {/* Hero header */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand-dark to-pink px-7 py-7 text-white shadow-lg shadow-brand/20 mb-6">
-            <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
-            <div className="relative flex items-center justify-between">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand to-pink flex items-center justify-center text-white shadow-sm shadow-brand/20 shrink-0">
+                <UsersIcon className="w-5 h-5" aria-hidden="true" />
+              </div>
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm mb-2">
-                  <UsersIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                  User Management
-                </div>
-                <h1 className="text-2xl font-bold tracking-tight">Members</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">User Management</h1>
+                <p className="text-sm text-gray-500">Members, verification & payments</p>
               </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold">{total.toLocaleString()}</p>
-                <p className="text-white/70 text-xs">total members</p>
-              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-brand">{total.toLocaleString()}</p>
+              <p className="text-gray-400 text-xs">total members</p>
             </div>
           </div>
 

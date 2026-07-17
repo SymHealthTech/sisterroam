@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, FileCheck, Shield, Users, Flag, BookOpen, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, FileCheck, Shield, Users, Flag, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Logo from '@/components/ui/Logo'
 
@@ -14,13 +14,13 @@ function AdminNavItem({ href, icon: Icon, label, badge, currentPath }) {
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+        'flex items-center gap-3 rounded-xl py-2.5 px-3 text-sm font-medium transition-colors',
         active
-          ? 'bg-white/15 text-white font-medium'
-          : 'text-gray-400 hover:bg-white/10 hover:text-gray-200',
+          ? 'bg-brand-lighter text-brand'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+      <Icon className="w-5 h-5 shrink-0" strokeWidth={active ? 2.5 : 1.8} aria-hidden="true" />
       <span className="flex-1">{label}</span>
       {badge > 0 && (
         <span className="w-5 h-5 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
@@ -72,34 +72,39 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-[200px] bg-gray-950 flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
-        <div className="px-4 py-5 border-b border-white/10">
+      {/* Sidebar — white, brand accents, matches the main app sidebar */}
+      <aside className="w-60 bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
+        <div className="px-4 py-5">
           <Logo variant="full" theme="light" size="sm" href="/admin" />
-          <p className="text-xs text-gray-500 mt-2 truncate">
-            Logged in as {session.user.fullName ?? session.user.username ?? 'Admin'}
-          </p>
+          <div className="mt-3 flex items-center gap-1.5">
+            <span className="px-2 py-0.5 rounded-full bg-brand-lighter text-brand text-[10px] font-semibold uppercase tracking-wide">
+              Admin
+            </span>
+            <p className="text-xs text-gray-400 truncate">
+              {session.user.fullName ?? session.user.username ?? 'Admin'}
+            </p>
+          </div>
         </div>
 
-        <nav className="flex-1 p-2 flex flex-col gap-0.5 mt-2">
+        <nav className="flex-1 px-2 flex flex-col gap-1">
           {NAV.map(item => (
             <AdminNavItem key={item.href} {...item} currentPath={pathname} />
           ))}
         </nav>
 
-        <div className="p-2 border-t border-white/10">
+        <div className="p-2 border-t border-gray-100">
           <Link
             href="/feed"
-            className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-400 hover:text-gray-200 hover:bg-white/10 rounded-lg transition-colors"
+            className="flex items-center gap-2.5 rounded-xl py-2.5 px-3 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+            <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
             Back to site
           </Link>
         </div>
       </aside>
 
       {/* Main */}
-      <main className="flex-1 min-w-0 bg-white overflow-auto">
+      <main className="flex-1 min-w-0 overflow-auto">
         {children}
       </main>
     </div>
