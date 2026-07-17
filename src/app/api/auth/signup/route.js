@@ -29,25 +29,45 @@ export async function POST(request) {
 
     await connectDB()
 
-    // Run both uniqueness checks in parallel to save one DB round-trip
-    const [emailExists, phoneExists] = await Promise.all([
-      User.findOne({ email: email.toLowerCase().trim() }, '_id').lean(),
-      phone ? User.findOne({ phone }, '_id').lean() : null,
-    ])
-    if (emailExists) return Response.json({ error: 'Email already registered' }, { status: 409 })
-    if (phoneExists) return Response.json({ error: 'Phone already registered' }, { status: 409 })
+    const emailNorm = email.toLowerCase().trim()
+    const existing = await User.findOne({ email: emailNorm }).select('+password')
 
-    // Pass plain password — the User model's pre('save') hook hashes it
-    const user = new User({
-      fullName: fullName.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      phone,
-      emailVerified: false,
-      phoneVerified: false,
-    })
+    // A fully verified account already owns this email — genuine conflict.
+    if (existing && existing.emailVerified) {
+      return Response.json({ error: 'Email already registered' }, { status: 409 })
+    }
 
-    await user.save()
+    // Phone must be unique — but ignore the unverified same-email row we're about
+    // to reclaim, otherwise re-signing-up with the same phone would false-conflict.
+    if (phone) {
+      const phoneOwner = await User.findOne({ phone }, '_id').lean()
+      if (phoneOwner && (!existing || phoneOwner._id.toString() !== existing._id.toString())) {
+        return Response.json({ error: 'Phone already registered' }, { status: 409 })
+      }
+    }
+
+    let user
+    if (existing) {
+      // Reclaim the half-created (pre-OTP, unverified) account: refresh the details
+      // and require a fresh OTP. The code goes to the email owner, so this is safe
+      // and prevents an abandoned signup from permanently locking the email out.
+      existing.fullName = fullName.trim()
+      existing.password = password // pre('save') re-hashes (password is now modified)
+      existing.phone = phone
+      existing.emailVerified = false
+      user = await existing.save()
+    } else {
+      // Pass plain password — the User model's pre('save') hook hashes it
+      user = new User({
+        fullName: fullName.trim(),
+        email: emailNorm,
+        password,
+        phone,
+        emailVerified: false,
+        phoneVerified: false,
+      })
+      await user.save()
+    }
 
     return Response.json(
       {

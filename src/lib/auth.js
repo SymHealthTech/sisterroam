@@ -34,6 +34,11 @@ export const {
         const isValid = await user.comparePassword(credentials.password)
         if (!isValid) return null
 
+        // Email OTP verification is mandatory. The signup flow only reaches
+        // sign-in AFTER the OTP step, so blocking here does not affect the happy
+        // path — it stops half-created (pre-OTP) accounts from logging in.
+        if (!user.emailVerified) return null
+
         if (user.isPermanentlyBanned) return null
         if (user.isSuspended && user.suspendedUntil > new Date()) return null
 

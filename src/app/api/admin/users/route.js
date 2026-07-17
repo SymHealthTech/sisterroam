@@ -2,6 +2,8 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function GET(request) {
   try {
     const session = await connectAndAuth()
@@ -58,6 +60,55 @@ export async function GET(request) {
     }))
 
     return ok({ users: result, total, page, pages: Math.ceil(total / limit) })
+  } catch (e) {
+    return handleError(e)
+  }
+}
+
+// Admin creates a sister's account directly — no OTP step. Email is marked
+// verified because the admin is vouching for it (used when a sister can't
+// receive/verify the code herself). She fills in her profile after first login
+// and can change this password from settings.
+export async function POST(request) {
+  try {
+    const session = await connectAndAuth()
+    if (!session.user.isAdmin) return fail('Admin access required', 403)
+
+    const { fullName, email, password } = await request.json()
+
+    if (!fullName || !email || !password) {
+      return fail('Name, email and password are all required', 400)
+    }
+    if (fullName.trim().length < 2) {
+      return fail('Name must be at least 2 characters', 400)
+    }
+    if (!EMAIL_RE.test(email)) {
+      return fail('Invalid email format', 400)
+    }
+    if (password.length < 8 || !/\d/.test(password)) {
+      return fail('Password must be at least 8 characters with at least one number', 400)
+    }
+
+    const emailNorm = email.toLowerCase().trim()
+    const existing = await User.findOne({ email: emailNorm }, '_id').lean()
+    if (existing) return fail('A user with this email already exists', 409)
+
+    // Pass plain password — the User model's pre('save') hook hashes it and
+    // generates a username.
+    const user = new User({
+      fullName: fullName.trim(),
+      email: emailNorm,
+      password,
+      emailVerified: true, // admin-vouched, bypasses OTP
+      phoneVerified: false,
+    })
+    await user.save()
+
+    return ok({
+      id: user._id.toString(),
+      fullName: user.fullName,
+      email: user.email,
+    })
   } catch (e) {
     return handleError(e)
   }

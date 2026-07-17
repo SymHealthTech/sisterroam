@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '@/components/layout/AdminLayout'
 import Skeleton from '@/components/ui/Skeleton'
+import AddSisterCard from '@/components/admin/AddSisterCard'
 import {
   Users, ShieldCheck, FileCheck, Home, Flag, BookOpen,
   UserPlus, MapPin, MessageSquare, ArrowRight, Activity, Sparkles,
@@ -121,6 +122,9 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           </div>
+
+          {/* ── Add a new sister ────────────────────────── */}
+          <AddSisterCard />
 
           {/* ── Platform health ─────────────────────────── */}
           {stats && (
