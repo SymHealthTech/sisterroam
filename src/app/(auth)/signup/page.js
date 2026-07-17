@@ -320,18 +320,8 @@ export default function SignUpPage() {
         return;
       }
 
-      const otpRes = await fetch("/api/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email }),
-      });
-
-      if (!otpRes.ok) {
-        const otpData = await otpRes.json();
-        toast.error(otpData.error ?? "Could not send verification code");
-        return;
-      }
-
+      // Signup itself sends the verification code — no separate OTP call. The
+      // account is NOT created until the code is verified in step 2.
       toast.success(`Verification code sent to ${data.email}`);
       setFormData({
         fullName: data.fullName,
@@ -389,10 +379,17 @@ export default function SignUpPage() {
     setCountdown(60);
     setOtpValue("");
     setOtpError("");
-    const res = await fetch("/api/otp/send", {
+    // Re-run signup so the pending record (name + hashed password) is refreshed
+    // and a new code is sent — the account is still only created after verify.
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: formData.email }),
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone || undefined,
+      }),
     });
     if (res.ok) {
       toast.success("Verification code resent");

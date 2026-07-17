@@ -1,8 +1,15 @@
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
+import OtpRecord from '@/models/OtpRecord'
+import { sendOtpEmail } from '@/lib/resend'
+import bcrypt from 'bcryptjs'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^\+[1-9]\d{6,14}$/
+
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
 
 export async function POST(request) {
   try {
@@ -30,53 +37,54 @@ export async function POST(request) {
     await connectDB()
 
     const emailNorm = email.toLowerCase().trim()
-    const existing = await User.findOne({ email: emailNorm }).select('+password')
 
-    // A fully verified account already owns this email — genuine conflict.
-    if (existing && existing.emailVerified) {
-      return Response.json({ error: 'Email already registered' }, { status: 409 })
+    // IMPORTANT: nothing is written to the User collection here. Only an
+    // already-verified real account blocks signup. The account itself is created
+    // later, in /api/otp/verify, once the emailed code is confirmed.
+    const [emailTaken, phoneTaken] = await Promise.all([
+      User.findOne({ email: emailNorm }, '_id').lean(),
+      phone ? User.findOne({ phone }, '_id').lean() : null,
+    ])
+    if (emailTaken) return Response.json({ error: 'Email already registered' }, { status: 409 })
+    if (phoneTaken) return Response.json({ error: 'Phone already registered' }, { status: 409 })
+
+    // Rate-limit OTPs per email (covers the initial send + resends).
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
+    const recentCount = await OtpRecord.countDocuments({
+      email: emailNorm,
+      createdAt: { $gte: tenMinutesAgo },
+    })
+    if (recentCount >= 3) {
+      return Response.json(
+        { error: 'Too many attempts. Please wait 10 minutes and try again.' },
+        { status: 429 }
+      )
     }
 
-    // Phone must be unique — but ignore the unverified same-email row we're about
-    // to reclaim, otherwise re-signing-up with the same phone would false-conflict.
-    if (phone) {
-      const phoneOwner = await User.findOne({ phone }, '_id').lean()
-      if (phoneOwner && (!existing || phoneOwner._id.toString() !== existing._id.toString())) {
-        return Response.json({ error: 'Phone already registered' }, { status: 409 })
-      }
-    }
+    const otp = generateOtp()
+    const [hashedOtp, passwordHash] = await Promise.all([
+      bcrypt.hash(otp, 8), // OTP: cost 8 is enough (rate-limited, expires in 10 min)
+      bcrypt.hash(password, 12), // account password: same cost as the User model
+    ])
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-    let user
-    if (existing) {
-      // Reclaim the half-created (pre-OTP, unverified) account: refresh the details
-      // and require a fresh OTP. The code goes to the email owner, so this is safe
-      // and prevents an abandoned signup from permanently locking the email out.
-      existing.fullName = fullName.trim()
-      existing.password = password // pre('save') re-hashes (password is now modified)
-      existing.phone = phone
-      existing.emailVerified = false
-      user = await existing.save()
-    } else {
-      // Pass plain password — the User model's pre('save') hook hashes it
-      user = new User({
-        fullName: fullName.trim(),
-        email: emailNorm,
-        password,
-        phone,
-        emailVerified: false,
-        phoneVerified: false,
-      })
-      await user.save()
-    }
+    // Stash the pending signup alongside the OTP. The password is stored hashed
+    // and the whole record self-destructs via the TTL index after it expires.
+    await OtpRecord.create({
+      email: emailNorm,
+      otp: hashedOtp,
+      expiresAt,
+      fullName: fullName.trim(),
+      passwordHash,
+      phone: phone || undefined,
+    })
 
-    return Response.json(
-      {
-        success: true,
-        userId: user._id.toString(),
-        message: 'Account created. Please verify your email.',
-      },
-      { status: 201 }
-    )
+    await sendOtpEmail({ to: emailNorm, otp })
+
+    return Response.json({
+      success: true,
+      message: 'Verification code sent. Please verify your email to finish signing up.',
+    })
   } catch (err) {
     console.error('[signup]', err)
     return Response.json({ error: 'Server error' }, { status: 500 })

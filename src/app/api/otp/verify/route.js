@@ -13,8 +13,10 @@ export async function POST(request) {
 
     await connectDB()
 
+    const emailNorm = email.toLowerCase().trim()
+
     const record = await OtpRecord.findOne({
-      email,
+      email: emailNorm,
       isVerified: false,
       expiresAt: { $gt: new Date() },
     }).sort({ createdAt: -1 })
@@ -45,8 +47,33 @@ export async function POST(request) {
     record.isVerified = true
     await record.save()
 
-    // Email OTP doubles as email verification — mark the user's email as verified
-    await User.findOneAndUpdate({ email }, { emailVerified: true })
+    // Pending signup → create the verified account now (deferred creation).
+    if (record.passwordHash && record.fullName) {
+      const existing = await User.findOne({ email: emailNorm }, '_id').lean()
+      if (existing) {
+        // Account already exists (e.g. the code was verified twice) — just make
+        // sure it's flagged verified.
+        await User.updateOne({ email: emailNorm }, { emailVerified: true })
+      } else {
+        const user = new User({
+          fullName: record.fullName,
+          email: emailNorm,
+          phone: record.phone || undefined,
+          emailVerified: true,
+          phoneVerified: false,
+          password: record.passwordHash,
+        })
+        // Password is already hashed — don't let the pre('save') hook hash it again.
+        user.$locals.skipPasswordHash = true
+        await user.save()
+      }
+      // Clear pending records for this email (they hold the password hash).
+      await OtpRecord.deleteMany({ email: emailNorm })
+    } else {
+      // Non-signup OTP (e.g. a standalone email-verification): just flag any
+      // existing user's email as verified.
+      await User.findOneAndUpdate({ email: emailNorm }, { emailVerified: true })
+    }
 
     return Response.json({ success: true, message: 'Email verified' })
   } catch (err) {

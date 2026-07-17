@@ -101,6 +101,9 @@ userSchema.index({ verificationTier: 1 })
 userSchema.index({ travellerCategories: 1 })
 
 userSchema.pre('save', async function () {
+  // Signup verification creates the user with an ALREADY-hashed password
+  // (hashed at the /api/auth/signup step). Skip re-hashing in that case.
+  if (this.$locals?.skipPasswordHash) return
   if (!this.isModified('password') || !this.password) return
   this.password = await bcrypt.hash(this.password, 12)
 })

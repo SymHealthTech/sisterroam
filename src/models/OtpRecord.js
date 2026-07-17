@@ -7,6 +7,13 @@ const otpRecordSchema = new mongoose.Schema({
   attempts: { type: Number, default: 0, max: 3 },
   isVerified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
+
+  // Pending signup payload — present only for account-creation OTPs. The User
+  // row is created from these fields once the OTP is verified, so nothing lands
+  // in the User collection before verification. Auto-purged by the TTL index.
+  fullName: { type: String },
+  passwordHash: { type: String },
+  phone: { type: String },
 })
 
 // MongoDB TTL index — auto-deletes documents after expiresAt
