@@ -2,25 +2,40 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '@/components/layout/AdminLayout'
-import StatsGrid from '@/components/admin/StatsGrid'
 import Skeleton from '@/components/ui/Skeleton'
-import { formatRelativeTime } from '@/lib/utils'
 import {
   Users, ShieldCheck, FileCheck, Home, Flag, BookOpen,
-  UserPlus, MapPin, MessageSquare,
+  UserPlus, MapPin, MessageSquare, ArrowRight, Activity, Sparkles,
 } from 'lucide-react'
 
-const STAT_ICONS = {
-  totalMembers:        { icon: Users,          label: 'Total Members',      color: 'brand'  },
-  verifiedMembers:     { icon: ShieldCheck,     label: 'Verified',           color: 'teal'   },
-  pendingKyc:          { icon: FileCheck,       label: 'KYC Pending',        color: 'amber'  },
-  activeStays:         { icon: Home,            label: 'Active Stays',       color: 'teal'   },
-  openReports:         { icon: Flag,            label: 'Open Reports',       color: 'danger' },
-  blogPosts:           { icon: BookOpen,        label: 'Stories',            color: 'brand'  },
-  openCoTravelPosts:   { icon: UserPlus,        label: 'Open Co-travel',     color: 'brand'  },
-  totalRecommendations:{ icon: MapPin,          label: 'Recommendations',    color: 'teal'   },
-  openQuestions:       { icon: MessageSquare,   label: 'Open Questions',     color: 'amber'  },
+/* Literal class maps — Tailwind v4 only generates classes it can see as
+   complete strings, so every colour variant is spelled out in full. */
+const COLOR = {
+  brand:  { chip: 'bg-brand-lighter text-brand',      value: 'text-brand',      bar: 'bg-brand',  glow: 'from-brand/10' },
+  teal:   { chip: 'bg-teal-lighter text-teal-dark',   value: 'text-teal-dark',  bar: 'bg-teal',   glow: 'from-teal/10' },
+  amber:  { chip: 'bg-amber-lighter text-amber-dark', value: 'text-amber-dark', bar: 'bg-amber',  glow: 'from-amber/10' },
+  danger: { chip: 'bg-danger-lighter text-danger-dark', value: 'text-danger-dark', bar: 'bg-danger', glow: 'from-danger/10' },
+  pink:   { chip: 'bg-pink-lighter text-pink-dark',   value: 'text-pink-dark',  bar: 'bg-pink',   glow: 'from-pink/10' },
 }
+
+const STAT_META = [
+  { key: 'totalMembers',         icon: Users,         label: 'Total Members',   color: 'brand'  },
+  { key: 'verifiedMembers',      icon: ShieldCheck,   label: 'Verified',        color: 'teal'   },
+  { key: 'pendingKyc',           icon: FileCheck,     label: 'KYC Pending',     color: 'amber'  },
+  { key: 'activeStays',          icon: Home,          label: 'Active Stays',    color: 'pink'   },
+  { key: 'openReports',          icon: Flag,          label: 'Open Reports',    color: 'danger' },
+  { key: 'blogPosts',            icon: BookOpen,      label: 'Stories',         color: 'brand'  },
+  { key: 'openCoTravelPosts',    icon: UserPlus,      label: 'Open Co-travel',  color: 'teal'   },
+  { key: 'totalRecommendations', icon: MapPin,        label: 'Recommendations', color: 'pink'   },
+  { key: 'openQuestions',        icon: MessageSquare, label: 'Open Questions',  color: 'amber'  },
+]
+
+const QUICK_ACTIONS = [
+  { label: 'Review KYC',        desc: 'Approve or reject IDs',   href: '/admin/kyc',       icon: FileCheck,     grad: 'from-amber to-amber-light'   },
+  { label: 'Safety Reports',    desc: 'Handle open incidents',   href: '/admin/reports',   icon: Flag,          grad: 'from-danger to-danger-light' },
+  { label: 'Manage Users',      desc: 'Members & payments',      href: '/admin/users',     icon: Users,         grad: 'from-brand to-brand-light'   },
+  { label: 'Community',         desc: 'Moderate content',        href: '/admin/community', icon: MessageSquare, grad: 'from-teal to-teal-light'     },
+]
 
 export default function AdminDashboardPage() {
   const [stats,   setStats]   = useState(null)
@@ -33,91 +48,129 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const statCards = stats
-    ? Object.entries(STAT_ICONS).map(([key, meta]) => ({
-        label: meta.label,
-        value: stats[key] ?? 0,
-        color: meta.color,
-      }))
-    : null
+  const verifyRate = stats
+    ? Math.round((stats.verifiedMembers / Math.max(1, stats.totalMembers)) * 100)
+    : 0
 
   return (
     <AdminLayout>
-      <div className="p-8 space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Platform overview and quick actions</p>
-        </div>
+      <div className="min-h-full bg-gradient-to-b from-gray-50 to-white">
+        <div className="p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
 
-        {/* Stats */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1,2,3,4,5,6,7,8,9].map(i => <Skeleton key={i} variant="card" className="h-24" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {(statCards ?? []).map(({ label, value, color }) => (
-              <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
-                <p className="text-sm text-gray-500 mb-1">{label}</p>
-                <p className={`text-3xl font-bold text-${color}`}>{value.toLocaleString()}</p>
+          {/* ── Hero header ─────────────────────────────── */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand-dark to-pink px-7 py-8 text-white shadow-lg shadow-brand/20">
+            <div className="absolute -right-8 -top-8 w-48 h-48 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
+            <div className="absolute right-24 bottom-0 w-32 h-32 rounded-full bg-pink/30 blur-2xl" aria-hidden="true" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm mb-3">
+                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                Admin Console
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Quick actions */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick actions</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: 'Review KYC',       href: '/admin/kyc',         color: 'amber'  },
-              { label: 'Safety reports',   href: '/admin/reports',     color: 'danger' },
-              { label: 'Manage users',     href: '/admin/users',       color: 'brand'  },
-              { label: 'Community content',href: '/admin/community',   color: 'teal'   },
-            ].map(a => (
-              <a
-                key={a.href}
-                href={a.href}
-                className={`flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium bg-${a.color}-lighter/30 text-${a.color} hover:bg-${a.color}-lighter transition-colors`}
-              >
-                {a.label}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Platform health */}
-        {stats && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4">Platform health</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Verification rate</span>
-                <div className="flex items-center gap-3">
-                  <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-teal rounded-full"
-                      style={{ width: `${Math.round((stats.verifiedMembers / Math.max(1, stats.totalMembers)) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-semibold text-teal w-10 text-right">
-                    {Math.round((stats.verifiedMembers / Math.max(1, stats.totalMembers)) * 100)}%
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Active stays</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.activeStays}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Unresolved safety reports</span>
-                <span className={`text-sm font-semibold ${stats.openReports > 0 ? 'text-danger' : 'text-teal'}`}>
-                  {stats.openReports > 0 ? `${stats.openReports} open` : 'All clear ✓'}
-                </span>
-              </div>
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              <p className="text-white/80 mt-1.5 text-sm">
+                A colourful overview of everything happening across SisterRoam.
+              </p>
             </div>
           </div>
-        )}
+
+          {/* ── Stats grid ──────────────────────────────── */}
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} variant="card" className="h-28" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {STAT_META.map(({ key, icon: Icon, label, color }) => {
+                const c = COLOR[color]
+                return (
+                  <div
+                    key={key}
+                    className={`group relative overflow-hidden bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all`}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${c.glow} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} aria-hidden="true" />
+                    <div className="relative flex items-start justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-1.5">{label}</p>
+                        <p className={`text-3xl font-bold ${c.value}`}>
+                          {(stats?.[key] ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${c.chip}`}>
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ── Quick actions ───────────────────────────── */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <ArrowRight className="w-4 h-4 text-brand" aria-hidden="true" />
+              Quick actions
+            </h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {QUICK_ACTIONS.map(a => (
+                <a
+                  key={a.href}
+                  href={a.href}
+                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${a.grad} p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+                >
+                  <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10 group-hover:scale-125 transition-transform" aria-hidden="true" />
+                  <a.icon className="w-6 h-6 mb-3 relative" aria-hidden="true" />
+                  <p className="font-semibold text-sm relative">{a.label}</p>
+                  <p className="text-white/75 text-xs mt-0.5 relative">{a.desc}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Platform health ─────────────────────────── */}
+          {stats && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-teal" aria-hidden="true" />
+                Platform health
+              </h2>
+
+              <div className="space-y-5">
+                {/* Verification rate */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-gray-600">Verification rate</span>
+                    <span className="text-sm font-bold text-teal-dark">{verifyRate}%</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-teal to-teal-light rounded-full transition-all duration-700"
+                      style={{ width: `${verifyRate}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {stats.verifiedMembers.toLocaleString()} of {stats.totalMembers.toLocaleString()} members verified
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between rounded-xl bg-pink-lighter/60 px-4 py-3">
+                    <span className="text-sm text-pink-dark font-medium">Active stays</span>
+                    <span className="text-lg font-bold text-pink-dark">{stats.activeStays}</span>
+                  </div>
+                  <div className={`flex items-center justify-between rounded-xl px-4 py-3 ${stats.openReports > 0 ? 'bg-danger-lighter/60' : 'bg-teal-lighter/60'}`}>
+                    <span className={`text-sm font-medium ${stats.openReports > 0 ? 'text-danger-dark' : 'text-teal-dark'}`}>
+                      Safety reports
+                    </span>
+                    <span className={`text-sm font-bold ${stats.openReports > 0 ? 'text-danger-dark' : 'text-teal-dark'}`}>
+                      {stats.openReports > 0 ? `${stats.openReports} open` : 'All clear ✓'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   )
