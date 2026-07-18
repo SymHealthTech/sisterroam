@@ -98,6 +98,30 @@ export const metadata = {
   },
 }
 
+// Site-wide structured data. Uses stable @id nodes so it merges with the more
+// detailed Organization schema on /about rather than conflicting with it.
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': 'https://sisterroam.com/#organization',
+  name: 'SisterRoam',
+  url: 'https://sisterroam.com',
+  logo: 'https://sisterroam.com/apple-touch-icon.png',
+  description:
+    'The verified hosting community for female solo travellers — verified female hosts, co-travellers, and trusted local recommendations.',
+  founder: { '@type': 'Person', name: 'Dr Manisha Sonawane' },
+  sameAs: ['https://www.facebook.com/profile.php?id=61589220085163'],
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': 'https://sisterroam.com/#website',
+  name: 'SisterRoam',
+  url: 'https://sisterroam.com',
+  publisher: { '@id': 'https://sisterroam.com/#organization' },
+}
+
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -117,6 +141,14 @@ export default async function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SisterRoam" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 antialiased">
         {/* Rendered server-side so it's in the DOM before JS loads.

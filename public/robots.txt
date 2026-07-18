@@ -12,6 +12,8 @@ Disallow: /cotraveller
 Disallow: /recommendations
 Disallow: /request
 Disallow: /notifications
+Disallow: /user
+Disallow: /sisters
 Disallow: /onboarding
 Disallow: /admin
 Disallow: /verify

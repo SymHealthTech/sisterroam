@@ -33,9 +33,14 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (!result?.ok) {
+      // Auth.js v5 (beta) returns `ok: true` even for a failed credentials
+      // sign-in and signals the failure via `result.error` (the callback
+      // responds HTTP 200 with an error in the URL). So we must key off
+      // `error`, not `ok` — otherwise a wrong email/password silently falls
+      // through to the redirect below instead of showing a warning.
+      if (result?.error || !result?.ok) {
         setAuthError(
-          result?.error === "CredentialsSignin"
+          result?.error
             ? "Invalid email or password. Please try again."
             : "Login failed. Please try again.",
         );

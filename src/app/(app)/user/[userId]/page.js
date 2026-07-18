@@ -26,6 +26,35 @@ async function fetchUser(userId) {
   }
 }
 
+export async function generateMetadata({ params }) {
+  const { userId } = await params
+  const user = await fetchUser(userId)
+  const name = user?.fullName ?? 'Member'
+  const city = user?.city ?? ''
+  const country = user?.country ?? ''
+  const location = [city, country].filter(Boolean).join(', ')
+
+  return {
+    title: `${name} — SisterRoam Member`,
+    description: location
+      ? `${name} is a member of the SisterRoam verified female-traveller community, based in ${location}.`
+      : `${name} is a member of the SisterRoam verified female-traveller community.`,
+    openGraph: {
+      type: 'profile',
+      title: `${name} — SisterRoam Member`,
+      description: `${name} on SisterRoam${location ? ` — ${location}` : ''}.`,
+      images: user?.profilePhotoUrl ? [{ url: user.profilePhotoUrl }] : [],
+    },
+    twitter: {
+      card: 'summary',
+      title: `${name} — SisterRoam Member`,
+    },
+    // Private, auth-gated member profile — must not be indexed.
+    robots: { index: false, follow: false },
+    alternates: { canonical: `/user/${userId}` },
+  }
+}
+
 export default async function UserProfilePage({ params }) {
   const { userId } = await params
 
