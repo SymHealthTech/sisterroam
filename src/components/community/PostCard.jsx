@@ -24,6 +24,10 @@ const CATEGORY_LABELS = {
   hosting_offer: 'Hosting Offer',
   achievements:  'Achievements',
   questions:     'Questions',
+  safety_brief:  'Safety Brief',
+  guide:         'Guide',
+  founder_log:   'Founder Log',
+  ask_community: 'Ask the Community',
 }
 
 /* ── Lightbox ──────────────────────────────────────────────── */

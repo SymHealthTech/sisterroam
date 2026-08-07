@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "generate-favicon": "node scripts/generate-favicon.mjs",
-    "seed:promo": "node scripts/seed-promo-codes.mjs"
+    "seed:promo": "node scripts/seed-promo-codes.mjs",
+    "seed:community": "node scripts/seed-community-posts.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.4",

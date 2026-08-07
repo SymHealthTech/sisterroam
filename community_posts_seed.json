@@ -1,0 +1,268 @@
+{
+  "_meta": {
+    "description": "Seed community posts for SisterRoam. All posts authored by the SisterRoam account (founder/admin). No fabricated member content. Global focus - deliberately no India concentration.",
+    "author_role": "official",
+    "total_posts": 28,
+    "instructions": "publish_offset_days is relative to seed run date. Negative = backdate. Stagger timestamps across the day (see prompt). Do not modify or delete any existing posts."
+  },
+  "categories": [
+    { "slug": "safety-brief", "label": "Safety Brief", "description": "City-specific safety notes for solo female travellers" },
+    { "slug": "guide", "label": "Guide", "description": "Practical how-to content that applies anywhere" },
+    { "slug": "founder-log", "label": "Founder Log", "description": "Building SisterRoam in public" },
+    { "slug": "ask-the-community", "label": "Ask the Community", "description": "Open questions for members to answer" }
+  ],
+  "posts": [
+    {
+      "slug": "welcome-to-sisterroam",
+      "title": "Welcome — and what this space is actually for",
+      "category": "founder-log",
+      "tags": ["welcome", "community"],
+      "pinned": true,
+      "publish_offset_days": -42,
+      "body": "If you are reading this, you are one of the first people here.\n\nSisterRoam exists because of a specific gap. There are hundreds of thousands of women swapping travel advice and offering each other floors to sleep on in informal groups — and almost none of that comes with any way to confirm the person on the other end is who she says she is. The generosity is real. The infrastructure underneath it is not.\n\nSo we are building the infrastructure. Government ID verification. A one-tap SOS that reaches your emergency contacts and our safety team. Daily check-ins when you want them. A way to find someone heading the same direction as you.\n\nWe are early, and we are not going to pretend otherwise. Right now this community spans ten countries and a few dozen women. Every post you see here is real — we have never created a fake profile and we never will, because a trust platform that fakes its own trust has nothing left to sell.\n\nWhat we would love from you: introduce yourself. Tell us where you have been and where you are going next. Ask the thing you have been meaning to ask.\n\nI reply to everything.\n\n— Satish, on behalf of the SisterRoam team"
+    },
+    {
+      "slug": "safety-brief-lisbon",
+      "title": "Safety Brief: Lisbon",
+      "category": "safety-brief",
+      "tags": ["portugal", "lisbon", "europe", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -39,
+      "body": "Lisbon is one of the easier European cities to do alone, and the main risks are opportunistic rather than violent.\n\n**The actual problem is pickpocketing.** Tram 28 is famous for the route and infamous for the theft. If you ride it, ride it with your bag in front of you and nothing in an outer pocket. The same applies to the Santa Justa lift queue and the crowd at Praça do Comércio.\n\n**Hills change your route planning.** Alfama and Bairro Alto are steep, cobbled, and poorly lit in stretches. Shoes with grip matter more than you would expect, and the walk that took twenty minutes downhill takes forty back up. Factor that into how you plan a night out.\n\n**Bairro Alto after midnight** is loud and drunk rather than dangerous, but the street drug offers are persistent and the sellers follow. A flat no without slowing down works. Engaging does not.\n\n**Getting home:** Bolt and Uber both operate and are cheap. The metro closes around 1am. Do not walk back through Cais do Sodré alone at 3am simply because the map says it is fifteen minutes.\n\nAnyone spent longer here? Add what I have missed."
+    },
+    {
+      "slug": "always-pack-prompt",
+      "title": "What is the one thing you always pack that nobody talks about?",
+      "category": "ask-the-community",
+      "tags": ["packing", "discussion"],
+      "pinned": false,
+      "publish_offset_days": -37,
+      "body": "Not the passport. Not the power bank. Everybody knows those.\n\nI mean the odd, specific thing you have learned to carry that would not make a standard packing list — and the story of the trip that taught you to carry it.\n\nA few we have heard so far: a rubber door wedge, a spare phone charging cable kept in a completely different bag, and a printed photo of your own passport page kept somewhere separate from everything digital.\n\nWhat is yours?"
+    },
+    {
+      "slug": "document-backup-system",
+      "title": "The document backup system that takes fifteen minutes and saves a week",
+      "category": "guide",
+      "tags": ["documents", "preparation", "guide"],
+      "pinned": false,
+      "publish_offset_days": -36,
+      "body": "Losing a passport abroad is not usually the disaster. Losing a passport abroad *with no record of its number, no copy, and no proof of entry* is the disaster. One turns into a two-day embassy process. The other can turn into two weeks.\n\nDo this before you leave:\n\n**Photograph, front and back:** passport photo page, visa page, entry stamp once you arrive, driving licence, travel insurance card, and the debit and credit cards you are carrying.\n\n**Store in three separate places.** One cloud folder. One offline copy on your phone that works with no signal. One printed set in a different bag from the originals. Three, because two fails more often than people expect — the bag with the copies is frequently the bag that was stolen.\n\n**Write down separately:** your embassy's address and emergency number in each country you are entering, your insurance policy number and claims line, and the international collect-call numbers for your banks. Bank apps are useless when your phone is the thing that went missing.\n\n**Email yourself a plain text version** of the passport number, issue date, and expiry. Text is searchable in a way that photos are not, and you can read it out over a phone line.\n\nFifteen minutes. Do it the night before."
+    },
+    {
+      "slug": "safety-brief-mexico-city",
+      "title": "Safety Brief: Mexico City",
+      "category": "safety-brief",
+      "tags": ["mexico", "cdmx", "latin-america", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -34,
+      "body": "CDMX has a fearsome reputation that does not match the experience most solo women actually have there, provided you are deliberate about a few things.\n\n**Neighbourhood matters enormously.** Roma Norte, Condesa, Juárez, Coyoacán and Polanco are walkable, busy, and well suited to a first visit. The city is vast and the difference between areas is bigger than in most capitals — do not assume a cheap listing is a bargain rather than a warning.\n\n**Never hail a taxi off the street.** This is the single most repeated piece of local advice and it is worth taking seriously. Use Uber or Didi, both of which are cheap and everywhere, and check the plate before getting in.\n\n**The metro has women-only cars** at the front during rush hours, marked on the platform. They exist for a reason and they are widely used. The metro itself is fine in daylight and heavily pickpocketed at peak.\n\n**Altitude is an underrated first-day risk.** At roughly 2,240m, one drink hits like three and dehydration arrives fast. Give yourself a slow first day.\n\n**Cash:** withdraw inside banks or malls rather than street ATMs, and carry small notes.\n\nSpanish helps more here than in most capitals. Even bad Spanish."
+    },
+    {
+      "slug": "arriving-after-dark",
+      "title": "Arriving somewhere new after dark",
+      "category": "guide",
+      "tags": ["arrival", "transport", "guide"],
+      "pinned": false,
+      "publish_offset_days": -32,
+      "body": "Night arrivals are when most things go wrong, because you are tired, disoriented, cash-less and visibly new all at once. It is the least capable version of you meeting the least forgiving version of a city.\n\n**Book the first night before you fly.** Always. Improvising accommodation at 11pm in an unfamiliar language is how people end up somewhere they would never have chosen in daylight.\n\n**Arrange the airport transfer in advance**, or use the official airport taxi desk inside the terminal. The people approaching you in the arrivals hall offering rides are not the official option anywhere in the world.\n\n**Download the offline map and screenshot your address** in the local language and script. Your phone will pick the worst possible moment to lose signal, and a screenshot works when the browser does not.\n\n**Get some local currency before you land** where possible — enough for one taxi and one meal. Airport exchange rates are terrible but being stranded is worse.\n\n**Tell someone your flight number and arrival time**, and message them when you are inside your accommodation. If you are using SisterRoam's check-in, set it before you board rather than after you land.\n\n**Do not explore on arrival night.** Eat something near where you are staying and sleep. The city will still be there tomorrow, and you will meet it as a functioning person."
+    },
+    {
+      "slug": "where-headed-next-prompt",
+      "title": "Where are you headed next?",
+      "category": "ask-the-community",
+      "tags": ["introductions", "discussion"],
+      "pinned": false,
+      "publish_offset_days": -30,
+      "body": "Drop your next destination below — country, city, rough month.\n\nTwo reasons this is worth doing. First, it is how you find out that someone else here is going to be in the same place at the same time, which is the entire point of a co-traveller finder. Second, post it and I will personally reply with what we know about safety in that city.\n\nEven if the trip is nine months away and half-imagined. Especially then."
+    },
+    {
+      "slug": "safety-brief-tokyo",
+      "title": "Safety Brief: Tokyo",
+      "category": "safety-brief",
+      "tags": ["japan", "tokyo", "asia", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -28,
+      "body": "Tokyo is consistently one of the safest large cities in the world for a woman travelling alone, and the risks that do exist are not the ones people prepare for.\n\n**Violent crime and theft are genuinely rare.** You will see unattended bags holding tables in cafés. Lost wallets are frequently handed in to police boxes intact. Adjust your baseline accordingly — but do not switch off entirely.\n\n**The real issue is groping on packed trains.** It is common enough to have its own word and its own countermeasure: women-only carriages, marked in pink on the platform, operating during morning rush on most major lines. Use them. If something happens, the phrase to say loudly is *chikan desu* — public shaming is the accepted response and bystanders do intervene.\n\n**Nightlife scams in Kabukicho and Roppongi** target tourists of every gender. If someone approaches you on the street to recommend a bar, walk on. The pattern is a small drink followed by an enormous bill and a card machine you cannot argue with.\n\n**Practical things that surprise people:** cash is still king in smaller places, 7-Eleven ATMs accept foreign cards when bank ones will not, and taxis are extremely expensive after the trains stop around midnight. Plan the last train or plan to stay out until five.\n\n**Address system is not linear.** Google Maps works. Street logic does not."
+    },
+    {
+      "slug": "vetting-an-accommodation-listing",
+      "title": "How to read an accommodation listing properly",
+      "category": "guide",
+      "tags": ["accommodation", "vetting", "guide"],
+      "pinned": false,
+      "publish_offset_days": -26,
+      "body": "Most bad stays are visible in the listing before you book. You just have to read it differently.\n\n**Read the negative reviews first, and sort by recent.** A place with 4.8 stars and three reviews in the last two months mentioning a new owner is a different place from the one that earned the 4.8.\n\n**Look for what the photos do not show.** No photo of the building exterior, the street, or the entrance is a pattern worth noticing. Those are the three things that determine whether you feel fine walking back at 10pm.\n\n**Check the lock situation explicitly.** Ask the host directly whether the room locks from the inside, and who else holds a key. A host who answers this straightforwardly is telling you something useful. A host who finds it strange is telling you something more useful.\n\n**Search reviews for the words** *safe*, *walk*, *night*, *alone*, and *woman*. Most platforms let you search review text. Other solo women have usually already answered your question.\n\n**Cross-check the location on a satellite map**, not just the pin. Fifteen minutes from the centre means something different when it is fifteen minutes along an unlit dual carriageway.\n\n**Message the host before booking** and notice how they write back. You are not really asking about the check-in time. You are sampling how this person communicates when something goes wrong."
+    },
+    {
+      "slug": "founder-log-why-we-verify",
+      "title": "Founder log: why we ask for government ID, and what happens to it",
+      "category": "founder-log",
+      "tags": ["verification", "trust", "transparency"],
+      "pinned": false,
+      "publish_offset_days": -24,
+      "body": "We know exactly how much we are asking. Upload the front and back of a government ID plus a selfie video, to a platform you found last week, run by people you have never met.\n\nSo here is the reasoning, plainly.\n\nThe informal groups this community grew out of are wonderful and they do not scale. Approving members by hand works at a few thousand people and breaks completely past that — and the thing that breaks first is the check on who is actually joining. We would rather do the verification once, properly, at the front door.\n\n**What we check:** that the ID is a real document, that the face on it matches the face in your selfie video, and that the name matches your account. That is it. We are not credit-scoring you and we are not sharing anything with advertisers, because we do not have advertisers.\n\n**What other members see:** a verified badge. Your name as you chose to display it. Not your ID, not your document number, not your date of birth.\n\n**What we are still improving:** phone verification is coming, and we have been honest internally that we deferred it on cost rather than principle. When it ships we will say so here.\n\nAnd one thing that is not behind any wall, ever: **the SOS button works on a free account.** Charging someone for the emergency feature would make a nonsense of everything else on this page.\n\nIf you have questions about any of this, ask them here rather than privately. Other people are wondering the same thing."
+    },
+    {
+      "slug": "safety-brief-istanbul",
+      "title": "Safety Brief: Istanbul",
+      "category": "safety-brief",
+      "tags": ["turkey", "istanbul", "europe", "middle-east", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -22,
+      "body": "Istanbul rewards solo travellers and demands a slightly higher tolerance for attention than most European cities.\n\n**Persistent male attention is the main daily friction** — conversation openers in tourist areas that are hard to end politely. The effective response is not rudeness but non-engagement: no eye contact, no slowing down, keep walking. Sunglasses help more than they should.\n\n**The classic scam** is a friendly man striking up conversation and suggesting a bar or nightclub, followed by a bill of several hundred euros and staff who will not let you leave until it is paid. It is well documented and still works because it does not feel like a scam while it is happening. Rule: never go to a venue suggested by someone who approached you.\n\n**Shoe-shine drop, carpet shop detours, and the rigged taxi meter** are all live. Use BiTaksi or Uber rather than street taxis, and if you must take one, insist on the meter before moving.\n\n**Neighbourhoods:** Sultanahmet is touristy and heavily policed. Kadıköy and Moda on the Asian side are relaxed and full of locals. Beyoğlu and İstiklal are lively and pickpocket-heavy. Avoid the quieter back streets off İstiklal late at night.\n\n**Dress** is genuinely relaxed in most of the city, but carry a scarf for mosque visits and expect a more conservative reading in outer districts.\n\nThe ferries are the best transport in the city and cost almost nothing."
+    },
+    {
+      "slug": "the-check-in-ritual",
+      "title": "The check-in ritual: a system, not a text message",
+      "category": "guide",
+      "tags": ["check-in", "safety", "guide"],
+      "pinned": false,
+      "publish_offset_days": -20,
+      "body": "Most people's version of staying in touch is texting someone when they remember to. That fails in exactly the situation it was meant to cover, because it depends on you being able to act.\n\nA real check-in system works the other way around: **someone notices when you go quiet, without you having to do anything.**\n\n**Set a time, not a vibe.** \"I'll message every night by 10pm your time.\" A missed message then means something. An irregular pattern means nothing and nobody will act on it.\n\n**Agree in advance what a missed check-in triggers.** This is the part everyone skips. Does your person wait two hours and try again? Call the accommodation? Contact local police? Decide before you leave, because a worried person with no plan will hesitate for a day.\n\n**Give them real information.** Accommodation name and address, flight numbers, your passport number, and your insurance details. A frightened relative with only your first name and a country is close to powerless.\n\n**Share live location for the risky legs specifically** — the long-distance bus, the night arrival, the day hike — rather than permanently. Permanent sharing gets ignored. A share that starts is a signal.\n\n**One person, not five.** Diffusion of responsibility is real. Name a single primary contact and let them tell the others.\n\nOn SisterRoam, daily check-ins and your emergency contacts do this automatically, and the SOS button reaches both your contacts and our safety team. But the underlying principle stands whether you use us or a shared note with your sister: the plan has to work when you cannot follow it."
+    },
+    {
+      "slug": "worst-travel-advice-prompt",
+      "title": "What is the worst travel advice you have ever been given?",
+      "category": "ask-the-community",
+      "tags": ["discussion", "advice"],
+      "pinned": false,
+      "publish_offset_days": -18,
+      "body": "Ours to start: \"just don't go out at night.\"\n\nIt sounds cautious and it is actually terrible, because it is unfollowable. It means skipping dinner, skipping the thing you flew there for, and spending half your trip in a room. Advice that nobody can realistically follow does not make anyone safer — it just makes them feel guilty when something goes wrong.\n\nUseful advice is specific and doable: which street, which line, which hour, what to do instead.\n\nSo — what is the well-meant, useless, or actively bad advice you have been handed? And what would the useful version of it have been?"
+    },
+    {
+      "slug": "safety-brief-cape-town",
+      "title": "Safety Brief: Cape Town",
+      "category": "safety-brief",
+      "tags": ["south-africa", "cape-town", "africa", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -16,
+      "body": "Cape Town is spectacular and genuinely requires more caution than most places on this list. Both things are true and neither cancels the other.\n\n**Do not walk at night.** This is close to universal local advice, including in areas that look perfectly pleasant in daylight. Uber and Bolt are cheap and used constantly by residents for journeys of a few hundred metres. Take the car.\n\n**Muggings are the main risk** and they are usually opportunistic. Phone out of sight while walking, no visible jewellery, one card and some cash rather than everything you own. If it happens, hand things over immediately — belongings are replaceable and resistance is what turns a robbery into something worse.\n\n**Table Mountain and Lion's Head:** hike in a group, in daylight, on the main routes. Solo hikers have been robbed on quieter trails, including in the middle of the day. Signal Hill after dark is a known hotspot.\n\n**Areas:** the City Bowl, V&A Waterfront, Sea Point, Camps Bay, Green Point and the southern suburbs are where most visitors stay. Township visits should be with a reputable local guide, not independently — that is about respect as much as safety.\n\n**Car:** doors locked and windows up at traffic lights, nothing visible on the seats, and never leave anything in a parked car.\n\n**Load-shedding** means scheduled power cuts, sometimes for hours, and streetlights go with it. Download the schedule app and keep a torch and a charged power bank.\n\nNone of this should stop you going. It should just change how you move."
+    },
+    {
+      "slug": "money-what-to-carry",
+      "title": "Money: what to carry, what to split, what to leave behind",
+      "category": "guide",
+      "tags": ["money", "cards", "guide"],
+      "pinned": false,
+      "publish_offset_days": -14,
+      "body": "The goal is simple: no single loss should be able to end your trip.\n\n**Two cards, from two different banks, kept in two different places.** Not two cards from the same account. If one bank freezes you for suspicious foreign activity — and one will — the second needs to be genuinely independent.\n\n**Tell your banks where you are going**, and check whether their fraud team blocks by country or by transaction. The call is ten minutes and prevents the most common financial disaster of any trip.\n\n**Carry a decoy amount.** A small wallet with a modest amount of cash and one card, kept where a wallet would be. The rest deeper in the bag, or in a money belt, or back in the accommodation safe. If you are robbed, you hand over the small wallet without hesitating.\n\n**Emergency cash in hard currency** — the equivalent of a couple of hundred euros or dollars in notes, kept somewhere you never open in public. Inside a book, taped in a toiletry bag, anywhere that is not your wallet.\n\n**Withdraw inside banks or shopping centres**, in daylight, and take larger amounts less often. Standalone street ATMs are where card skimmers live.\n\n**Know your bank's international collect-call number and write it down on paper.** Every method of contacting your bank runs through the phone that is currently missing.\n\n**Digital wallets** are increasingly accepted and are a real advantage — your phone unlocks with your face and a stolen physical card does not."
+    },
+    {
+      "slug": "safety-brief-bangkok",
+      "title": "Safety Brief: Bangkok",
+      "category": "safety-brief",
+      "tags": ["thailand", "bangkok", "asia", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -12,
+      "body": "Bangkok is one of the most forgiving cities in the world for a first solo trip. Violent crime against tourists is uncommon and the infrastructure for independent travellers is excellent. The risks are almost entirely commercial and vehicular.\n\n**Scams, in order of how often you will meet them:** the tuk-tuk driver who says the temple is closed today and offers a tour instead (it is not closed); the friendly stranger with a gem or tailor recommendation; jet-ski and motorbike rental damage claims, which are mostly a coastal problem but start with a passport handed over as deposit. Never leave your passport as a rental deposit. Offer cash or walk away.\n\n**Transport:** BTS Skytrain and MRT are clean, cheap and air-conditioned, and the Skytrain has women-only carriages during rush hour on some services. Grab is the ride app. Metered taxis are fine if the meter goes on — if the driver quotes a flat fare, get out.\n\n**Drink spiking** happens in the backpacker bar districts. Watch your drink being poured, do not accept an open one from a stranger, and be aware that bucket cocktails on Khao San Road contain far more than they taste like.\n\n**Roads are the genuine danger.** Motorbike accidents injure more visitors than crime does by an enormous margin. If you rent a scooter, wear the helmet and check your travel insurance actually covers you — most policies require a licence you may not have.\n\n**Dress modestly at temples**: shoulders and knees covered, and they do enforce it."
+    },
+    {
+      "slug": "solo-dining",
+      "title": "Eating alone, without the dread",
+      "category": "guide",
+      "tags": ["solo-travel", "food", "guide"],
+      "pinned": false,
+      "publish_offset_days": -10,
+      "body": "The thing that stops people travelling alone is rarely fear of crime. It is the prospect of sitting down to dinner by themselves, night after night, and feeling watched.\n\nA few things that genuinely help.\n\n**Eat early.** A restaurant at 6.30pm has staff who have time for you and other early diners who are not on dates. The same room at 9pm is couples and groups.\n\n**Sit at the bar or the counter** wherever one exists. Counter seating is designed for one person and removes the empty-chair-opposite problem entirely. In many countries it is also where the better food is.\n\n**Markets, food halls and street food** solve this completely. Nobody is alone at a market. You stand, you eat, you move on.\n\n**Bring something to do, but not your phone.** A book or a notebook reads as deliberate. A phone reads as waiting for someone who has not come. This is unfair and also true.\n\n**Learn the phrase for \"table for one\"** in the local language and say it confidently. Hesitation is what invites the pitying face.\n\n**Some countries make this much easier than others.** Japan, Korea, Taiwan and much of Southeast Asia treat solo eating as completely normal — there is dedicated counter seating and often no interaction required at all. Parts of southern Europe and Latin America, where meals are social by default, take more nerve.\n\nAnd the reframe that actually works: nobody is looking at you. They are looking at their own table. The self-consciousness fades somewhere around the fourth dinner, and then you have the best seat in the restaurant and nobody to negotiate the menu with."
+    },
+    {
+      "slug": "felt-safe-moment-prompt",
+      "title": "Tell us about a moment abroad when a stranger made you feel safe",
+      "category": "ask-the-community",
+      "tags": ["discussion", "stories"],
+      "pinned": false,
+      "publish_offset_days": -8,
+      "body": "We spend a lot of time here on what can go wrong, because that is the job. But most of what actually happens when you travel alone is people being decent for no particular reason.\n\nThe shopkeeper who walked you to the corner. The woman on the train who noticed and moved seats to sit beside you. The host who waited up.\n\nTell us one. Where were you, and what did they do?"
+    },
+    {
+      "slug": "safety-brief-buenos-aires",
+      "title": "Safety Brief: Buenos Aires",
+      "category": "safety-brief",
+      "tags": ["argentina", "buenos-aires", "latin-america", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -7,
+      "body": "Buenos Aires is a late-night city with a European rhythm and a persistent petty theft problem. Dinner at 10pm is normal, bars fill after midnight, and you will be out later than you are used to.\n\n**Phone snatching is the defining risk.** Motorbike riders taking phones from hands at café tables and street corners is common enough that locals simply do not use their phones on the street. Copy them. Step into a doorway or a shop to check the map.\n\n**Neighbourhoods:** Palermo, Recoleta, Belgrano and San Telmo are where most visitors stay and are fine to walk in daylight. La Boca is worth seeing for Caminito and is genuinely not safe to wander beyond the tourist strip, including in the afternoon — go, look, leave. Retiro station area and Constitución warrant care after dark.\n\n**Money is unusual here.** Argentina has had a large gap between official and unofficial exchange rates, and the rules change frequently — check what the current situation is close to your travel date rather than relying on anything written months ago. Bringing clean, undamaged US dollar notes has historically been useful. Card and cash economics can differ significantly.\n\n**Transport:** the Subte closes relatively early. Cabify and Uber both operate. Radio taxis booked by phone are safer than hailed ones, and counterfeit notes handed back as change is a known trick — check your change.\n\n**Distraction thefts** in cafés: the classic is a spilled drink or a dropped item, and your bag is gone from the back of the chair while you help. Bag strap over your knee, always."
+    },
+    {
+      "slug": "transport-rules-everywhere",
+      "title": "Six transport rules that hold in every country",
+      "category": "guide",
+      "tags": ["transport", "taxis", "guide"],
+      "pinned": false,
+      "publish_offset_days": -6,
+      "body": "City-specific advice changes. These do not.\n\n**1. Never take the ride offered to you.** Anywhere in the world, the person who approaches you in an arrivals hall, a station forecourt or a taxi rank offering a ride is not the regulated option. Go to the official desk or use an app.\n\n**2. Check the plate against the app before you open the door.** Then say the driver's name as a question and let him confirm it, rather than telling him yours. Fake pickups rely on you volunteering the name first.\n\n**3. Sit in the back, on the side away from the kerb** where possible, and keep your bag with you rather than in the boot on short journeys.\n\n**4. Share the trip.** Every ride app has this. Use it for any journey at night or anywhere unfamiliar, and tell the person you are sharing with that you have done it.\n\n**5. On buses and trains, aim for the carriage the guard is in**, or the busiest one. Empty carriages late at night are a false comfort. Where women-only carriages exist — Japan, Mexico, Egypt, India, Brazil and elsewhere — use them.\n\n**6. If something feels wrong in a moving vehicle, ask to stop somewhere public** and specific: a petrol station, a hotel entrance, a lit shop. \"Stop here please\" said calmly at a busy corner is easier than an explanation, and you do not owe one.\n\nThe underlying rule beneath all six: keep the choice on your side. Every one of these is about not letting someone else pick where you end up."
+    },
+    {
+      "slug": "founder-log-ten-countries",
+      "title": "Founder log: ten countries, and what we are getting wrong",
+      "category": "founder-log",
+      "tags": ["transparency", "building-in-public"],
+      "pinned": false,
+      "publish_offset_days": -5,
+      "body": "A short honest update, because we would rather you heard it from us than concluded it from the silence.\n\n**Where we are:** members across ten countries and almost every continent, which is genuinely more geographic spread than we expected this early. Very few of them have completed verification, and very few have posted.\n\n**What we think is happening:** we asked for too much, too early. Handing over a government ID before you have seen anything worth staying for is a strange request, and the people who hesitated were reading the situation correctly. We are reworking the flow so verification arrives when it makes sense — at the point you want to host or book — rather than at the door.\n\n**What we got right:** keeping the SOS button on the free tier. That was debated internally and it was never really a close call.\n\n**What we are building next:** a proper events section covering women-only and women-focused events worldwide, city-filtered feeds so this place stops looking empty when you are the only member in your country, and phone verification once we can carry the cost of it.\n\n**What would help most right now:** post an introduction. It sounds trivial. It is not — the difference between a member arriving to a room with eight faces in it and a room with none determines almost everything about whether she comes back.\n\nWe are ten countries and a few dozen people. That is a beginning, not a community. Help us make it the second thing.\n\n— Satish"
+    },
+    {
+      "slug": "safety-brief-marrakech",
+      "title": "Safety Brief: Marrakech",
+      "category": "safety-brief",
+      "tags": ["morocco", "marrakech", "africa", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -4,
+      "body": "Marrakech is intense in a way that catches people off guard, and most of that intensity is commercial rather than dangerous. Knowing the difference makes the trip.\n\n**Expect constant approach in the medina.** Offers to guide you, warnings that the square is closed today, invitations to a tannery or a cousin's shop. Almost all of it ends in a demand for money. The response that works is a firm *la, shukran* without stopping. Following up with an explanation invites negotiation.\n\n**The false-guide routine** is the one to watch: someone tells you the road ahead is shut or that you are going the wrong way, redirects you into the maze, and then demands payment when you are lost. Trust your map over any stranger's directions.\n\n**Photographs cost money.** The snake charmers, monkey handlers and water sellers in Jemaa el-Fnaa will demand payment, sometimes aggressively, if you point a camera anywhere near them.\n\n**Male attention is persistent** — comments, following for a street or two. It is rarely more than that, but it is wearing over a week. Sunglasses, headphones, purposeful walking. A wedding ring, real or otherwise, cuts a surprising amount of it.\n\n**Dress:** shoulders and knees covered is not legally required but makes a substantial difference to how much attention you attract. Loose clothing, and a scarf in the bag.\n\n**Riads are a real advantage** for solo travellers — small, staffed, and the owners will arrange transport, book your hammam and walk you out of the medina. Choose one with recent reviews from solo women.\n\n**Nightfall in the medina:** the alleys empty fast and look identical. Have your riad's location pinned and a photograph of its door."
+    },
+    {
+      "slug": "if-you-are-followed",
+      "title": "If you think you are being followed",
+      "category": "guide",
+      "tags": ["safety", "guide"],
+      "pinned": false,
+      "publish_offset_days": -3,
+      "body": "Written to be read now, so it is available later.\n\n**Confirm it without confronting it.** Cross the street. Then cross back. Turn a corner and stop at a window. Someone matching three deliberate direction changes is following you, and you now know rather than wonder.\n\n**Do not go home.** The instinct is to head for your accommodation and it is the wrong one — it tells someone where you sleep. Move toward people instead.\n\n**Go into a business, not a doorway.** A hotel lobby, a restaurant, a petrol station, a pharmacy, a bank. Somewhere staffed, lit, and with other people in it. Hotel lobbies are the best option in most cities: staff are used to helping strangers, they are open late, and they have a phone and usually a security presence.\n\n**Say it out loud to a staff member.** \"I think a man is following me. Can I sit here for a few minutes?\" People help. The reluctance to sound dramatic is the thing that most often stops women doing this, and it is worth overriding.\n\n**Make yourself observed.** Turning and looking directly at someone, or lifting a phone as if to photograph them, removes the anonymity most followers depend on. This works far more often than it does not — but only if there are other people around, which is why the previous step comes first.\n\n**Get a car, not a walk.** Order a ride from inside the building and wait inside until it arrives.\n\n**Use the SOS.** If you are on SisterRoam, one tap alerts your emergency contacts and our safety team, and it works on a free account. You do not need to be certain before you use it. Being wrong costs nothing.\n\nBeing wrong costs nothing. That is the sentence worth keeping."
+    },
+    {
+      "slug": "what-does-safe-mean-prompt",
+      "title": "What does \"safe\" actually mean to you?",
+      "category": "ask-the-community",
+      "tags": ["discussion", "safety"],
+      "pinned": false,
+      "publish_offset_days": -2,
+      "body": "We use the word constantly here and it means very different things to different people.\n\nFor some it is crime statistics. For others it is whether they can walk back from dinner without their shoulders up, or whether there is someone who would notice within twelve hours if they vanished, or simply whether a place lets them stop performing vigilance for a while.\n\nSome of the safest cities by the numbers are exhausting to be a woman in. Some places that read badly on paper feel completely fine on the ground.\n\nSo: what is your actual measure? And which place has surprised you most in either direction?"
+    },
+    {
+      "slug": "safety-brief-tbilisi",
+      "title": "Safety Brief: Tbilisi",
+      "category": "safety-brief",
+      "tags": ["georgia", "tbilisi", "europe", "caucasus", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -2,
+      "body": "Tbilisi has become a fixture on long-term solo routes — cheap, beautiful, generous visa policies for many nationalities, and a low crime rate.\n\n**Street crime is genuinely rare** and most solo women report feeling comfortable walking in the centre at night. That is unusual enough to say plainly.\n\n**Drinking culture is the main thing to calibrate for.** The supra tradition involves toasts, and refusing them can feel socially difficult. It is also a lot of alcohol, poured generously and continuously. Deciding your limit before the evening starts is more useful here than almost anywhere.\n\n**Taxis:** use Bolt or Yandex Go. Street taxis are unmetered and negotiate on the assumption you do not know the going rate.\n\n**Pavements, stairs and street dogs.** The old town is steep and the pavements are unpredictable — genuinely a bigger injury risk than crime. Street dogs are numerous, tagged, generally friendly and mostly asleep, but they do form packs at night in quieter districts.\n\n**Marshrutkas** — the shared minibuses — are cheap and how you reach Kazbegi and the mountains. They leave when full rather than on a timetable, and driving standards on mountain roads are a real consideration. For long routes, a shared private transfer arranged through your accommodation is worth the difference.\n\n**Politics:** demonstrations occur in the centre, particularly around Rustaveli Avenue. They are usually peaceful and worth staying clear of anyway. Check current advisories close to your travel date.\n\n**A note on region:** parts of the country near the occupied territories are not places to wander near without checking current guidance."
+    },
+    {
+      "slug": "what-happens-when-you-press-sos",
+      "title": "What actually happens when you press SOS",
+      "category": "guide",
+      "tags": ["sos", "safety", "product"],
+      "pinned": false,
+      "publish_offset_days": -1,
+      "body": "A safety feature nobody understands is a safety feature nobody uses. So, plainly:\n\n**One tap sends an alert to your emergency contacts and to our safety team,** with your location attached. It is not a silent flag in a database somewhere — it is a message to people.\n\n**It works on a free account.** No verification, no payment. We decided early that an emergency function behind a paywall would contradict everything else we claim to be, and that has not changed.\n\n**Set your emergency contacts before you travel, not during.** The feature is only as good as the numbers in it, and a contact who does not know they are your contact will assume the alert is a mistake. Tell them. Show them what the message looks like.\n\n**It does not replace local emergency services.** If you are in immediate physical danger, call the local number — 112 across the EU and much of the world, 911 in North America, and it is worth knowing the local one wherever you land. Our alert reaches people who care about you. It does not dispatch an ambulance.\n\n**Use it when you are unsure, not when you are certain.** The most common failure of every personal safety tool is that people wait until they are sure it is warranted, by which point the moment for a preventative alert has passed. A false alarm costs you an apologetic phone call.\n\nGo and check your emergency contacts are set. It takes a minute, and the version of you who needs them will not have one."
+    },
+    {
+      "slug": "safety-brief-medellin",
+      "title": "Safety Brief: Medellín",
+      "category": "safety-brief",
+      "tags": ["colombia", "medellin", "latin-america", "safety-brief"],
+      "pinned": false,
+      "publish_offset_days": -1,
+      "body": "Medellín has transformed enormously and is now a fixture on the remote-work circuit. It also has a specific and serious risk profile that its pleasant reputation can obscure.\n\n**The most important warning is about dating apps and bar meetups.** There have been repeated, well-documented cases of foreigners drugged and robbed — sometimes fatally — after meeting someone through an app or being approached in a bar. Local authorities have issued advisories about this specifically. Meet in public, tell someone where you are, do not take anyone back to your accommodation, and never leave a drink unattended.\n\n**Scopolamine** is the drug most often involved. It can be administered on a surface or in a drink and leaves people compliant and unable to remember. Accepting nothing from strangers — including cigarettes, gum, or paper — is not paranoia here.\n\n**\"No dar papaya\"** is the local phrase and the local philosophy: do not give an opportunity. Phone out of sight, no visible jewellery, no expensive camera swinging on a strap.\n\n**Areas:** El Poblado and Laureles are where most visitors stay, and Laureles is the more residential of the two. The metro and the cable cars are excellent, safe, and the best way to see the city. Comuna 13 should be visited with a guide, in daytime.\n\n**Taxis:** use apps. Withdraw cash inside shopping centres.\n\nThe city is genuinely wonderful and the people are extraordinarily warm. The specific risk above is narrow and avoidable, and it is worth knowing precisely rather than vaguely."
+    },
+    {
+      "slug": "first-24-hours",
+      "title": "Your first 24 hours in a new city",
+      "category": "guide",
+      "tags": ["arrival", "orientation", "guide"],
+      "pinned": false,
+      "publish_offset_days": 0,
+      "body": "A short routine that turns an unfamiliar place into a navigable one faster than wandering does.\n\n**Walk the block around your accommodation in daylight.** Not to see anything — to learn what your street looks like, which corner is lit, where the nearest open-late shop is, and what the door looks like at night. This is the single most useful half hour of any arrival.\n\n**Find three fixed points**: the nearest pharmacy, the nearest 24-hour anything, and the nearest metro or main road with taxis. Pin all three. You are building a map of places you could go rather than places to visit.\n\n**Learn what the money looks like.** Sit down and go through the notes and coins once. Fumbling with unfamiliar cash in public is how people get short-changed and marked as new.\n\n**Ask the accommodation staff one question**: which areas would they not walk in at night. Local staff answer this honestly and specifically, and their answer will be better than anything written online.\n\n**Set up the local transport and ride app** before you need it, not standing on a kerb at midnight.\n\n**Get the emergency number for the country** into your phone, and note your embassy's address.\n\n**Then go and be a tourist.** The point of the routine is that it takes about ninety minutes and buys you the rest of the trip without a background hum of low-grade uncertainty. Orientation first, exploration after. In that order it works. In the other order you spend three days slightly lost."
+    }
+  ]
+}

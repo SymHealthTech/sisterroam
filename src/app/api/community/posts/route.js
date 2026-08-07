@@ -4,7 +4,7 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 
-const CATEGORIES = ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions']
+const CATEGORIES = ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions', 'safety_brief', 'guide', 'founder_log', 'ask_community']
 
 export async function GET(request) {
   try {

@@ -8,9 +8,15 @@ const communityPostSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions'],
+      enum: ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions', 'safety_brief', 'guide', 'founder_log', 'ask_community'],
       default: 'general',
     },
+
+    // Optional, additive fields. Existing posts leave these unset (slug is a
+    // sparse-unique index, so null-slug posts are simply not indexed).
+    slug: { type: String, unique: true, sparse: true },   // idempotency key for seeded official posts
+    tags: { type: [String], default: [] },
+    source: { type: String },                             // e.g. 'seed' for importer-created official posts
 
     imageUrls: { type: [String], validate: [v => v.length <= 7, 'Max 7 images'] },
     imagePublicIds: [{ type: String }],

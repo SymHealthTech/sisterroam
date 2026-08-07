@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
   { value: "", label: "All" },
+  { value: "safety_brief", label: "Safety Brief" },
+  { value: "guide", label: "Guide" },
+  { value: "founder_log", label: "Founder Log" },
+  { value: "ask_community", label: "Ask the Community" },
   { value: "safety_tips", label: "Safety" },
   { value: "trip_planning", label: "Trip Planning" },
   { value: "looking_for_host", label: "Host Search" },
