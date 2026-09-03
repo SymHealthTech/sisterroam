@@ -73,10 +73,12 @@ export async function POST(request, { params }) {
     const preview = content.trim().slice(0, 100)
     const now = new Date()
 
-    // Update denormalized lastMessage fields on the request
+    // Update denormalized lastMessage fields on the request. Clearing deletedBy
+    // resurfaces the thread for anyone who had removed it from their list.
     await HostingRequest.findByIdAndUpdate(requestId, {
       lastMessageAt: now,
       lastMessagePreview: preview,
+      deletedBy: [],
     })
 
     const messageObj = message.toObject()
@@ -141,6 +143,44 @@ export async function POST(request, { params }) {
     }
 
     return ok(messageObj)
+  } catch (e) {
+    return handleError(e)
+  }
+}
+
+// Delete a conversation from the current user's message list (per-user soft
+// delete). A later message resurfaces it. Once BOTH participants of a DIRECT
+// chat have removed it, the conversation and its messages are permanently
+// cleaned up.
+export async function DELETE(request, { params }) {
+  try {
+    await connectDB()
+    const session = await getSession()
+    const { requestId } = await params
+
+    const req = await getRequestAndVerify(requestId, session.user.id)
+
+    await HostingRequest.updateOne(
+      { _id: requestId },
+      { $addToSet: { deletedBy: session.user.id } }
+    )
+
+    // Garbage-collect a direct conversation once both sides have deleted it.
+    if (req.requestType === 'direct') {
+      const updated = await HostingRequest.findById(requestId)
+        .select('guestId hostId deletedBy')
+        .lean()
+      const both = [updated.guestId.toString(), updated.hostId.toString()]
+      const deleted = new Set((updated.deletedBy ?? []).map(String))
+      if (both.every(id => deleted.has(id))) {
+        await Promise.all([
+          Message.deleteMany({ requestId }),
+          HostingRequest.deleteOne({ _id: requestId }),
+        ])
+      }
+    }
+
+    return ok({ deleted: true })
   } catch (e) {
     return handleError(e)
   }

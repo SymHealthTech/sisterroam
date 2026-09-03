@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUp, ArrowLeft, MoreVertical, Clock, CheckCircle, XCircle, Shield,
-  WifiOff, Star, AlertTriangle, ChevronDown,
+  WifiOff, Star, AlertTriangle, ChevronDown, Trash2,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
@@ -299,6 +299,8 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
   const [showMenu, setShowMenu] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const messagesEndRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -540,6 +542,28 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
     }
   }
 
+  // ── Delete conversation ───────────────────────────────────────────────────
+
+  async function handleDeleteChat() {
+    if (deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/messages/${requestId}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.success) {
+        setShowDeleteConfirm(false)
+        toast.success('Conversation deleted')
+        router.push('/messages')
+      } else {
+        toast.error(json.error ?? 'Could not delete conversation')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   // ── Derived state ───────────────────────────────────────────────────────
 
   if (!requestId) {
@@ -676,13 +700,14 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
                   Report user
                 </button>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
                   onClick={() => {
                     setShowMenu(false)
-                    toast('Archive — coming soon')
+                    setShowDeleteConfirm(true)
                   }}
                 >
-                  Archive
+                  <Trash2 className="w-4 h-4" />
+                  Delete chat
                 </button>
               </div>
             )}
@@ -850,6 +875,40 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
         revieweeId={otherParty?._id}
         revieweeName={otherParty?.fullName}
       />
+
+      {/* ── Delete conversation confirm ── */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => !deleting && setShowDeleteConfirm(false)}
+        title="Delete this conversation?"
+        size="sm"
+      >
+        <p className="text-sm text-gray-600 leading-relaxed">
+          This removes your chat with{' '}
+          <strong className="text-gray-800">{otherParty?.fullName?.split(' ')[0] ?? 'this sister'}</strong>{' '}
+          from your messages. If she sends you a new message, the conversation will reappear.
+        </p>
+        <div className="flex gap-2 mt-5">
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(false)}
+            disabled={deleting}
+            className="flex-1 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl
+                       hover:bg-gray-50 disabled:opacity-60 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteChat}
+            disabled={deleting}
+            className="flex-1 py-2.5 text-sm font-medium text-white bg-danger rounded-xl
+                       hover:bg-danger-dark disabled:opacity-60 transition-colors"
+          >
+            {deleting ? 'Deleting…' : 'Delete chat'}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

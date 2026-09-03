@@ -29,7 +29,8 @@ export async function GET(request) {
         checkOutDate: { $gte: now },
       }
     } else {
-      filter = { $or: [{ guestId: uid }, { hostId: uid }] }
+      // Exclude conversations the current user has deleted from her own list.
+      filter = { $or: [{ guestId: uid }, { hostId: uid }], deletedBy: { $ne: uid } }
     }
 
     const requests = await HostingRequest.find(filter)

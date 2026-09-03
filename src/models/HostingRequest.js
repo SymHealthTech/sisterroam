@@ -31,6 +31,10 @@ const hostingRequestSchema = new mongoose.Schema(
     lastMessageAt: { type: Date },
     lastMessagePreview: { type: String, maxlength: 100 },
 
+    // Per-user soft delete: users who removed this conversation from their own
+    // message list. A new message clears this (thread reappears for everyone).
+    deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
     requestType: {
       type: String,
       enum: ['hosting', 'cotraveller', 'direct'],
