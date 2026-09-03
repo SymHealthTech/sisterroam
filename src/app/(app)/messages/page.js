@@ -4,21 +4,14 @@ import { useSession } from 'next-auth/react'
 import { MessageCircle, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ConversationList from '@/components/messages/ConversationList'
-import VerificationGate from '@/components/ui/VerificationGate'
 
 export default function MessagesPage() {
   const { data: session } = useSession()
   const userId = session?.user?.id
-  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
 
-  if (session && !isVerified) {
-    return (
-      <AppLayout title="Messages" subtitle="Your trips & stay requests">
-        <VerificationGate mode="page" />
-      </AppLayout>
-    )
-  }
-
+  // Any signed-in sister can open Messages to READ conversations — including
+  // unverified sisters who've received a message. Replying is gated per-thread
+  // in ChatWindow, and starting a conversation is gated on the profile button.
   return (
     <AppLayout title="Messages" subtitle="Your trips & stay requests" scrollable={false}>
       <div className="flex flex-1 min-h-0">

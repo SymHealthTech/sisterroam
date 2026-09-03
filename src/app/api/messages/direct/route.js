@@ -26,13 +26,16 @@ export async function POST(request) {
 
     if (existing) return ok({ requestId: existing._id })
 
-    // Verify recipient is a real, non-basic member
+    // Recipient can be ANY real, active member — including unverified (basic)
+    // sisters. She receives and can read the message; she just can't reply until
+    // she verifies (enforced on POST /api/messages/[requestId]). This is
+    // intentional: receiving a message is a nudge to complete verification.
     const recipient = await User.findById(rid)
-      .select('verificationTier isActive isSuspended isPermanentlyBanned')
+      .select('isActive isSuspended isPermanentlyBanned')
       .lean()
 
-    if (!recipient || recipient.verificationTier === 'basic') {
-      return fail('Recipient not found or not verified', 404)
+    if (!recipient) {
+      return fail('Recipient not found', 404)
     }
     if (recipient.isSuspended || recipient.isPermanentlyBanned) {
       return fail('Cannot message this user', 403)

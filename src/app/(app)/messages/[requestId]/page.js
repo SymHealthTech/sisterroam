@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import AppLayout from "@/components/layout/AppLayout";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatWindow from "@/components/messages/ChatWindow";
-import VerificationGate from "@/components/ui/VerificationGate";
 
 export default function ConversationPage({ params }) {
   const { requestId } = use(params);
@@ -14,17 +13,9 @@ export default function ConversationPage({ params }) {
   const router = useRouter();
   const userId = session?.user?.id;
   const tier = session?.user?.verificationTier;
-  const isVerified = tier && tier !== "basic";
-  // Only fully verified (or trusted) sisters may reply / start a conversation.
+  // Any participant (including an unverified recipient) may open a thread to
+  // READ it. Only fully verified/trusted sisters may reply — gated in ChatWindow.
   const canReply = tier === "verified" || tier === "trusted";
-
-  if (session && !isVerified) {
-    return (
-      <AppLayout title="Messages">
-        <VerificationGate mode="page" />
-      </AppLayout>
-    );
-  }
 
   return (
     <AppLayout title="" scrollable={false} noTopBar>
