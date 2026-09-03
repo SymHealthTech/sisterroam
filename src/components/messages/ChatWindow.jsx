@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUp, ArrowLeft, MoreVertical, Clock, CheckCircle, XCircle, Shield,
-  WifiOff, Star, AlertTriangle, ChevronDown, Trash2,
+  WifiOff, Star, AlertTriangle, ChevronDown, Trash2, X,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
@@ -544,6 +544,23 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
 
   // ── Delete conversation ───────────────────────────────────────────────────
 
+  async function deleteMessage(id) {
+    const snapshot = messages
+    // Optimistically remove, restore on failure
+    setMessages(cur => cur.filter(m => m._id !== id))
+    try {
+      const res = await fetch(`/api/messages/item/${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!json.success) {
+        setMessages(snapshot)
+        toast.error(json.error ?? 'Could not delete message')
+      }
+    } catch {
+      setMessages(snapshot)
+      toast.error('Network error')
+    }
+  }
+
   async function handleDeleteChat() {
     if (deleting) return
     setDeleting(true)
@@ -774,7 +791,7 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
                          msg.senderId?.toString() === currentUserId
 
           return (
-            <div key={msg._id} className={cn('flex px-4 mb-1', isMine ? 'justify-end' : 'justify-start')}>
+            <div key={msg._id} className={cn('group flex items-center px-4 mb-1', isMine ? 'justify-end' : 'justify-start')}>
               {!isMine && (
                 <Avatar
                   src={otherParty?.profilePhotoUrl}
@@ -782,6 +799,18 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
                   size="sm"
                   className="self-end mr-2 shrink-0"
                 />
+              )}
+              {isMine && !msg.isOptimistic && (
+                <button
+                  type="button"
+                  onClick={() => deleteMessage(msg._id)}
+                  aria-label="Delete message"
+                  title="Delete message"
+                  className="mr-1.5 p-1 rounded-full text-gray-400 hover:text-danger hover:bg-red-50 transition shrink-0
+                             opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               )}
               <div className={cn('flex flex-col max-w-[75%]', isMine ? 'items-end' : 'items-start')}>
                 <div className={cn(

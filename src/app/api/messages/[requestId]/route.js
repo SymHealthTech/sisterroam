@@ -31,9 +31,16 @@ export async function GET(request, { params }) {
     const session = await getSession()
     const { requestId } = await params
 
-    await getRequestAndVerify(requestId, session.user.id)
+    const conversation = await getRequestAndVerify(requestId, session.user.id)
 
-    const messages = await Message.find({ requestId })
+    // If this user cleared the chat, only show messages sent after that moment.
+    const cleared = conversation.clearedAt?.find(
+      c => c.user?.toString() === session.user.id
+    )?.at
+    const msgFilter = { requestId }
+    if (cleared) msgFilter.createdAt = { $gt: cleared }
+
+    const messages = await Message.find(msgFilter)
       .sort({ createdAt: 1 })
       .populate('senderId', 'fullName username profilePhotoUrl')
       .lean()
@@ -160,9 +167,18 @@ export async function DELETE(request, { params }) {
 
     const req = await getRequestAndVerify(requestId, session.user.id)
 
+    // Hide from this user's list AND record the clear time so old messages stay
+    // gone for her even if the thread later reappears from a new message.
     await HostingRequest.updateOne(
       { _id: requestId },
-      { $addToSet: { deletedBy: session.user.id } }
+      { $pull: { clearedAt: { user: session.user.id } } }
+    )
+    await HostingRequest.updateOne(
+      { _id: requestId },
+      {
+        $addToSet: { deletedBy: session.user.id },
+        $push: { clearedAt: { user: session.user.id, at: new Date() } },
+      }
     )
 
     // Garbage-collect a direct conversation once both sides have deleted it.

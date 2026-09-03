@@ -35,6 +35,18 @@ const hostingRequestSchema = new mongoose.Schema(
     // message list. A new message clears this (thread reappears for everyone).
     deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 
+    // Per-user "cleared" marker. When a user deletes a conversation we record the
+    // time; that user then only ever sees messages sent AFTER this point — so a
+    // deleted chat stays empty for her even if it later reappears from a new
+    // message. The other participant's view is unaffected.
+    clearedAt: [
+      {
+        _id: false,
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        at: { type: Date },
+      },
+    ],
+
     requestType: {
       type: String,
       enum: ['hosting', 'cotraveller', 'direct'],
