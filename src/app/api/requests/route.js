@@ -29,8 +29,11 @@ export async function GET(request) {
         checkOutDate: { $gte: now },
       }
     } else {
-      // Exclude conversations the current user has deleted from her own list.
-      filter = { $or: [{ guestId: uid }, { hostId: uid }], deletedBy: { $ne: uid } }
+      filter = {
+        $or: [{ guestId: uid }, { hostId: uid }],
+        // Exclude conversations the current user has deleted from her own list.
+        deletedBy: { $ne: uid },
+      }
     }
 
     const requests = await HostingRequest.find(filter)
@@ -39,19 +42,41 @@ export async function GET(request) {
       .sort({ createdAt: -1 })
       .lean()
 
-    // Attach a real unread count per conversation (messages sent *to* me that
-    // I haven't read yet). Powers the unread dot/badge in the conversation list.
+    // Per-conversation message stats: `total` (used to hide empty direct chats)
+    // and `unread` (messages sent to me I haven't read — powers the unread badge).
     const requestIds = requests.map(r => r._id)
-    const unreadAgg = requestIds.length
+    const statsAgg = requestIds.length
       ? await Message.aggregate([
-          { $match: { requestId: { $in: requestIds }, senderId: { $ne: uid }, isRead: false } },
-          { $group: { _id: '$requestId', count: { $sum: 1 } } },
+          { $match: { requestId: { $in: requestIds } } },
+          {
+            $group: {
+              _id: '$requestId',
+              total: { $sum: 1 },
+              unread: {
+                $sum: {
+                  $cond: [
+                    { $and: [{ $ne: ['$senderId', uid] }, { $eq: ['$isRead', false] }] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+            },
+          },
         ])
       : []
-    const unreadMap = new Map(unreadAgg.map(u => [u._id.toString(), u.count]))
-    const withUnread = requests.map(r => ({ ...r, unreadCount: unreadMap.get(r._id.toString()) ?? 0 }))
+    const statsMap = new Map(statsAgg.map(s => [s._id.toString(), s]))
 
-    return ok(withUnread)
+    const withMeta = requests
+      .map(r => {
+        const s = statsMap.get(r._id.toString())
+        return { ...r, unreadCount: s?.unread ?? 0, messageCount: s?.total ?? 0 }
+      })
+      // A direct chat is created the moment you click "Message" on a profile —
+      // don't show it in the list until it actually has a message.
+      .filter(r => !(r.requestType === 'direct' && r.messageCount === 0))
+
+    return ok(withMeta)
   } catch (e) {
     return handleError(e)
   }
