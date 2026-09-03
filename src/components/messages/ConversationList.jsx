@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Trash2 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Skeleton from '@/components/ui/Skeleton'
+import Modal from '@/components/ui/Modal'
 import { useSSEContext } from '@/context/SSEContext'
 import { cn, formatRelativeTime, formatDateRange, truncate } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 const STATUS_BADGE = {
   pending:   { variant: 'warning', label: 'Pending' },
@@ -36,6 +38,8 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
   const router = useRouter()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const { subscribe } = useSSEContext()
 
@@ -100,6 +104,29 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
     }
   }
 
+  async function handleDelete() {
+    if (!pendingDelete || deleting) return
+    const id = pendingDelete._id
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.success) {
+        setRequests(prev => prev.filter(r => r._id !== id))
+        setPendingDelete(null)
+        toast.success('Conversation deleted')
+        // If the deleted chat is the one open on the right, return to the list
+        if (selectedRequestId === id) router.push('/messages')
+      } else {
+        toast.error(json.error ?? 'Could not delete conversation')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const totalUnread = requests.reduce((sum, r) => sum + (r._id === selectedRequestId ? 0 : r.unreadCount ?? 0), 0)
 
   return (
@@ -146,11 +173,11 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                 : STATUS_BADGE[req.status]
 
             return (
+              <div key={req._id} className="relative group">
               <button
-                key={req._id}
                 onClick={() => handleSelect(req)}
                 className={cn(
-                  'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors',
+                  'w-full flex items-start gap-3 px-4 py-3.5 pr-12 text-left transition-colors',
                   'hover:bg-gray-50 cursor-pointer border-b border-gray-100 lg:border-b-0',
                   isSelected
                     ? 'bg-brand-lighter/60 border-l-2 border-l-brand'
@@ -219,11 +246,62 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                   )}
                 </div>
               </button>
+
+              {/* Per-row delete — always visible on mobile, on hover on desktop */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setPendingDelete(req) }}
+                aria-label={`Delete chat with ${other?.fullName ?? 'this sister'}`}
+                title="Delete chat"
+                className="absolute top-1/2 -translate-y-1/2 right-2 p-2 rounded-lg text-gray-400
+                           bg-white/90 shadow-sm ring-1 ring-gray-100 transition
+                           hover:text-danger hover:bg-red-50
+                           opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              </div>
             )
           })}
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <Modal
+        isOpen={!!pendingDelete}
+        onClose={() => !deleting && setPendingDelete(null)}
+        title="Delete this conversation?"
+        size="sm"
+      >
+        <p className="text-sm text-gray-600 leading-relaxed">
+          This removes your chat with{' '}
+          <strong className="text-gray-800">
+            {getOtherParty(pendingDelete ?? {})?.fullName?.split(' ')[0] ?? 'this sister'}
+          </strong>{' '}
+          from your messages. If she sends you a new message, it will reappear.
+        </p>
+        <div className="flex gap-2 mt-5">
+          <button
+            type="button"
+            onClick={() => setPendingDelete(null)}
+            disabled={deleting}
+            className="flex-1 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl
+                       hover:bg-gray-50 disabled:opacity-60 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex-1 py-2.5 text-sm font-medium text-white bg-danger rounded-xl
+                       hover:bg-danger-dark disabled:opacity-60 transition-colors"
+          >
+            {deleting ? 'Deleting…' : 'Delete chat'}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

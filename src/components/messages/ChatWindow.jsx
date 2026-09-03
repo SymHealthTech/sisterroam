@@ -670,6 +670,16 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
             </Badge>
           </div>
 
+          {/* Delete conversation — always-visible control */}
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-2 text-gray-400 hover:text-danger hover:bg-red-50 rounded-lg transition-colors shrink-0"
+            aria-label="Delete conversation"
+            title="Delete chat"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+
           {/* Three-dot menu */}
           <div className="relative" ref={menuRef}>
             <button
@@ -698,16 +708,6 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
                 >
                   <AlertTriangle className="w-4 h-4" />
                   Report user
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-red-50"
-                  onClick={() => {
-                    setShowMenu(false)
-                    setShowDeleteConfirm(true)
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete chat
                 </button>
               </div>
             )}
