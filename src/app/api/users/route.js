@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
+import HostProfile from '@/models/HostProfile'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 
 const UPDATABLE = [
@@ -39,6 +40,18 @@ export async function PATCH(request) {
     ).lean()
 
     if (!user) return fail('User not found', 404)
+
+    // Keep the host listing in sync with the role, so /explore and host profile
+    // views reflect the change immediately. A Traveller (guest) is de-listed; a
+    // Host / Host & Traveller is re-listed (no-op if she has no host profile yet).
+    if (body.role !== undefined) {
+      const isListingActive = body.role === 'host' || body.role === 'both'
+      await HostProfile.updateOne(
+        { userId: session.user.id },
+        { $set: { isListingActive } }
+      )
+    }
+
     delete user.password
     return ok(user)
   } catch (e) {

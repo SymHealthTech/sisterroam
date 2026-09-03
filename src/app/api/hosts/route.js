@@ -40,7 +40,14 @@ export async function GET(request) {
     if (femaleOnly) baseMatch.femaleOnly = true
     if (accommodationType) baseMatch.accommodationType = accommodationType
 
-    const userMatch = { 'user.isActive': true, 'user.isPermanentlyBanned': { $ne: true } }
+    // Only sisters whose role includes hosting appear in /explore — a member who
+    // switched back to Traveller is filtered out here regardless of any stale
+    // isListingActive flag on her host profile.
+    const userMatch = {
+      'user.isActive': true,
+      'user.isPermanentlyBanned': { $ne: true },
+      'user.role': { $in: ['host', 'both'] },
+    }
     if (country) userMatch['user.country'] = { $regex: country, $options: 'i' }
     if (city)    userMatch['user.city']    = { $regex: city,    $options: 'i' }
     if (category)    userMatch['user.travellerCategories'] = category

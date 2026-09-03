@@ -58,9 +58,16 @@ export async function generateMetadata({ params }) {
 export default async function UserProfilePage({ params }) {
   const { userId } = await params
 
-  // If the user has a host profile, show the exact same full explore view
+  // Show the full host view only if she is an ACTIVE host — her role must still
+  // include hosting AND her listing must be active. A sister who switched back to
+  // Traveller (or de-listed) shows as a traveller instead.
   const hostProfile = await fetchHostProfile(userId)
-  if (hostProfile) {
+  const hostRole = hostProfile?.userId?.role
+  const isActiveHost =
+    hostProfile &&
+    hostProfile.isListingActive !== false &&
+    (hostRole === 'host' || hostRole === 'both')
+  if (isActiveHost) {
     return <HostDetailClient host={hostProfile} />
   }
 
