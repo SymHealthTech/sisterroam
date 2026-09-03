@@ -13,6 +13,7 @@ import { UnderReviewModal, VerificationRequiredModal } from '@/components/ui/Ver
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import MessageButton from '@/components/messages/MessageButton'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
 
@@ -530,6 +531,15 @@ function RequestCard({ host, className }) {
               {accepting ? `Request a stay with ${user.fullName?.split(' ')[0]}` : 'Not currently accepting guests'}
             </Button>
           </>
+        )}
+
+        {/* Direct message / chat */}
+        {session && (
+          <div className="pt-1 border-t border-gray-100">
+            <div className="pt-4">
+              <MessageButton recipientId={user._id} recipientName={user.fullName} />
+            </div>
+          </div>
         )}
 
         <div className="flex items-center justify-center gap-1.5 pt-1">

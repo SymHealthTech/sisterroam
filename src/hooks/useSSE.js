@@ -7,6 +7,10 @@ export function useSSE() {
   const esRef       = useRef(null)
   const retryDelay  = useRef(3000)
   const subscribers = useRef({})
+  // Only ask the server for the notification catch-up on the FIRST successful
+  // connect. Reconnects (e.g. the 60s stream timeout) skip that DB query — the
+  // client already has current state, and useUnreadCount refetches on focus/poll.
+  const firstConnect = useRef(true)
 
   const subscribe = useCallback((eventType, handler) => {
     if (!subscribers.current[eventType]) subscribers.current[eventType] = new Set()
@@ -20,13 +24,16 @@ export function useSSE() {
     function connect() {
       if (destroyed) return
 
-      const es = new EventSource('/api/sse')
+      const es = new EventSource(firstConnect.current ? '/api/sse?catchup=1' : '/api/sse')
       esRef.current = es
 
       es.onopen = () => {
         if (destroyed) return
         setIsConnected(true)
         retryDelay.current = 3000
+        // A successful connect means the server already ran (or skipped) the
+        // catch-up; every subsequent reconnect can skip the query.
+        firstConnect.current = false
       }
 
       es.onerror = () => {

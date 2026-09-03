@@ -5,6 +5,7 @@ import { MapPin, Calendar, Globe } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
+import MessageButton from '@/components/messages/MessageButton'
 import { cn } from '@/lib/utils'
 
 const CATEGORY_LABELS = {
@@ -81,6 +82,11 @@ export default function TravelerProfileClient({ user }) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* ── Message / chat ── */}
+          <div className="px-5 pb-5">
+            <MessageButton recipientId={user._id} recipientName={user.fullName} />
           </div>
         </div>
 

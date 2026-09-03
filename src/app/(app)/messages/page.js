@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import { MessageCircle, Shield } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ConversationList from '@/components/messages/ConversationList'
 import VerificationGate from '@/components/ui/VerificationGate'
@@ -31,15 +32,18 @@ export default function MessagesPage() {
         </div>
 
         {/* Right panel: placeholder shown only on desktop */}
-        <div className="hidden lg:flex flex-1 flex-col items-center justify-center bg-gray-50 border-l border-gray-100 text-center px-6">
-          <div className="w-16 h-16 rounded-full bg-brand-lighter flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+        <div className="hidden lg:flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-brand-lighter/30 to-gray-50 border-l border-gray-100 text-center px-6">
+          <div className="w-20 h-20 rounded-full bg-white shadow-sm ring-1 ring-brand/10 flex items-center justify-center mb-5">
+            <MessageCircle className="w-9 h-9 text-brand" />
           </div>
-          <p className="text-base font-medium text-gray-700">Select a conversation</p>
-          <p className="text-sm text-gray-400 mt-1">Choose from your messages on the left</p>
+          <p className="text-lg font-semibold text-gray-800">Your conversations</p>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs">
+            Select a chat on the left, or message a sister from her profile to start a new conversation.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/70 ring-1 ring-teal/20">
+            <Shield className="w-4 h-4 text-teal" />
+            <span className="text-xs text-gray-500">Only verified sisters can start conversations</span>
+          </div>
         </div>
 
       </div>

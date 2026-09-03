@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { MessageCircle } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Skeleton from '@/components/ui/Skeleton'
@@ -64,7 +65,13 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
       setRequests(prev => {
         const updated = prev.map(r =>
           r._id === requestId
-            ? { ...r, lastMessagePreview: preview, lastMessageAt: at }
+            ? {
+                ...r,
+                lastMessagePreview: preview,
+                lastMessageAt: at,
+                // Bump unread unless the user is already viewing this thread
+                unreadCount: requestId === selectedRequestId ? 0 : (r.unreadCount ?? 0) + 1,
+              }
             : r
         )
         const idx = updated.findIndex(r => r._id === requestId)
@@ -75,7 +82,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
         return [...updated]
       })
     })
-  }, [subscribe])
+  }, [subscribe, selectedRequestId])
 
   function getOtherParty(req) {
     return req.guestId?._id?.toString() === currentUserId
@@ -83,14 +90,9 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
       : req.guestId
   }
 
-  function hasUnread(req) {
-    if (!req.lastMessageAt) return false
-    const lastMsg = new Date(req.lastMessageAt)
-    const updated = new Date(req.updatedAt)
-    return lastMsg > updated
-  }
-
   function handleSelect(req) {
+    // Optimistically clear this thread's unread count when opening it
+    setRequests(prev => prev.map(r => (r._id === req._id ? { ...r, unreadCount: 0 } : r)))
     if (onSelect) {
       onSelect(req._id)
     } else {
@@ -98,12 +100,21 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
     }
   }
 
+  const totalUnread = requests.reduce((sum, r) => sum + (r._id === selectedRequestId ? 0 : r.unreadCount ?? 0), 0)
+
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-100">
       {/* Header — desktop only; mobile shows title+subtitle in the AppLayout top bar */}
-      <div className="hidden lg:block px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-900">Messages</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Your trips &amp; stay requests</p>
+      <div className="hidden lg:flex items-center justify-between px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Messages</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Your chats, trips &amp; stay requests</p>
+        </div>
+        {totalUnread > 0 && (
+          <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-brand text-white text-[11px] font-semibold">
+            {totalUnread > 99 ? '99+' : totalUnread}
+          </span>
+        )}
       </div>
 
       {/* List */}
@@ -112,26 +123,27 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
           Array.from({ length: 5 }).map((_, i) => <ConversationItemSkeleton key={i} />)
         ) : requests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-brand-lighter flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+            <div className="w-14 h-14 rounded-full bg-brand-lighter flex items-center justify-center mb-3">
+              <MessageCircle className="w-7 h-7 text-brand" />
             </div>
-            <p className="text-sm font-medium text-gray-700">No active chats yet</p>
-            <p className="text-xs text-gray-400 mt-1">
-              Chats open once a host or trip request is accepted.
+            <p className="text-sm font-medium text-gray-700">No conversations yet</p>
+            <p className="text-xs text-gray-400 mt-1 max-w-[220px]">
+              Message a sister from her profile, or chats open once a host or trip request is accepted.
             </p>
           </div>
         ) : (
           <div>
           {requests.map(req => {
             const other = getOtherParty(req)
-            const unread = hasUnread(req)
-            const badge = req.status === 'accepted' && req.requestType === 'cotraveller'
-              ? { variant: 'success', label: 'Trip Confirmed' }
-              : STATUS_BADGE[req.status]
             const isSelected = selectedRequestId === req._id
+            const unread = isSelected ? 0 : (req.unreadCount ?? 0)
+            const isDirect = req.requestType === 'direct'
+            // Direct chats have no request lifecycle, so no status badge.
+            const badge = isDirect
+              ? null
+              : req.status === 'accepted' && req.requestType === 'cotraveller'
+                ? { variant: 'success', label: 'Trip confirmed' }
+                : STATUS_BADGE[req.status]
 
             return (
               <button
@@ -139,10 +151,10 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                 onClick={() => handleSelect(req)}
                 className={cn(
                   'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors',
-                  'hover:bg-gray-50 cursor-pointer border-b border-gray-200 lg:border-b-0',
+                  'hover:bg-gray-50 cursor-pointer border-b border-gray-100 lg:border-b-0',
                   isSelected
-                    ? 'bg-brand-lighter border-l-2 border-brand'
-                    : 'border-l-2 border-transparent'
+                    ? 'bg-brand-lighter/60 border-l-2 border-l-brand'
+                    : 'border-l-2 border-l-transparent'
                 )}
               >
                 <div className="relative shrink-0">
@@ -151,8 +163,8 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                     name={other?.fullName}
                     size="md"
                   />
-                  {unread && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
+                  {unread > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-brand rounded-full border-2 border-white" />
                   )}
                 </div>
 
@@ -160,11 +172,14 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                   <div className="flex items-center justify-between gap-2">
                     <span className={cn(
                       'text-sm truncate',
-                      unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
+                      unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
                     )}>
                       {other?.fullName ?? 'Unknown'}
                     </span>
-                    <span className="text-[11px] text-gray-400 shrink-0">
+                    <span className={cn(
+                      'text-[11px] shrink-0',
+                      unread > 0 ? 'text-brand font-medium' : 'text-gray-400'
+                    )}>
                       {req.lastMessageAt
                         ? formatRelativeTime(req.lastMessageAt)
                         : formatRelativeTime(req.createdAt)}
@@ -177,16 +192,25 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                     </div>
                   )}
 
-                  <p className={cn(
-                    'text-xs mt-1 truncate',
-                    unread ? 'text-gray-700 font-medium' : 'text-gray-400'
-                  )}>
-                    {req.lastMessagePreview
-                      ? truncate(req.lastMessagePreview, 55)
-                      : req.message
-                        ? truncate(req.message, 55)
-                        : 'No messages yet'}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <p className={cn(
+                      'text-xs truncate',
+                      unread > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'
+                    )}>
+                      {req.lastMessagePreview
+                        ? truncate(req.lastMessagePreview, 55)
+                        : req.message
+                          ? truncate(req.message, 55)
+                          : isDirect
+                            ? 'Say hello 👋'
+                            : 'No messages yet'}
+                    </p>
+                    {unread > 0 && (
+                      <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-white text-[10px] font-semibold">
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
+                  </div>
 
                   {req.checkInDate && (
                     <p className="text-[11px] text-gray-400 mt-0.5">

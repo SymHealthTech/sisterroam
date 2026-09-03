@@ -2,7 +2,9 @@ import { connectDB } from '@/lib/mongodb'
 import HostingRequest from '@/models/HostingRequest'
 import Message from '@/models/Message'
 import Notification from '@/models/Notification'
+import User from '@/models/User'
 import { sendToUser } from '@/lib/sse'
+import { sendNewDirectMessageEmail } from '@/lib/resend'
 import { ok, fail, getSession, requireVerified, handleError } from '@/lib/apiHelpers'
 
 async function getRequestAndVerify(requestId, userId) {
@@ -24,8 +26,9 @@ async function getRequestAndVerify(requestId, userId) {
 export async function GET(request, { params }) {
   try {
     await connectDB()
+    // Any participant may READ a conversation, even a sister who is still under
+    // review — she can see messages sent to her, but only verified sisters can reply.
     const session = await getSession()
-    requireVerified(session)
     const { requestId } = await params
 
     await getRequestAndVerify(requestId, session.user.id)
@@ -117,6 +120,25 @@ export async function POST(request, { params }) {
         createdAt: notif.createdAt,
       },
     })
+
+    // Email the recipient the first time a direct conversation is opened, so a
+    // sister who isn't currently online still learns someone reached out.
+    if (req.requestType === 'direct') {
+      const messageCount = await Message.countDocuments({ requestId })
+      if (messageCount === 1) {
+        const recipient = await User.findById(recipientId)
+          .select('email fullName emailNotifications')
+          .lean()
+        if (recipient?.email && recipient.emailNotifications?.newMessage !== false) {
+          sendNewDirectMessageEmail({
+            recipient,
+            senderName: session.user.fullName,
+            preview: content.trim(),
+            requestId,
+          }).catch(console.error)
+        }
+      }
+    }
 
     return ok(messageObj)
   } catch (e) {

@@ -284,7 +284,7 @@ function SafetyCheckinPrompt({ requestId }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function ChatWindow({ requestId, currentUserId }) {
+export default function ChatWindow({ requestId, currentUserId, canReply = true }) {
   const router = useRouter()
   const [request, setRequest] = useState(null)
   const [messages, setMessages] = useState([])
@@ -481,6 +481,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
   // ── Send ────────────────────────────────────────────────────────────────
 
   async function sendMessage(content = input) {
+    if (!canReply) return
     const text = content.trim()
     if (!text || sending) return
 
@@ -787,7 +788,25 @@ export default function ChatWindow({ requestId, currentUserId }) {
         </button>
       )}
 
-      {/* ── Message input (never scrolls, always visible at bottom) ── */}
+      {/* ── Reply gate: only verified sisters can reply / start a conversation ── */}
+      {!canReply ? (
+        <div className="flex-none border-t border-gray-100 px-4 py-4 bg-white">
+          <div className="flex items-start gap-3 bg-brand-lighter border border-brand/20 rounded-xl px-4 py-3">
+            <Shield className="w-5 h-5 text-brand shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-brand-dark">Only verified sisters can reply</p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                You can read this conversation, but you&apos;ll need to complete verification to reply
+                or start a conversation.{' '}
+                <Link href="/profile/verification" className="text-brand font-medium underline">
+                  Get verified
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+      /* ── Message input (never scrolls, always visible at bottom) ── */
       <div className="flex-none border-t border-gray-100 px-4 py-3 bg-white">
         <div className="flex items-end gap-2">
           <textarea
@@ -821,6 +840,7 @@ export default function ChatWindow({ requestId, currentUserId }) {
           </button>
         </div>
       </div>
+      )}
 
       {/* ── Review modal ── */}
       <ReviewModal

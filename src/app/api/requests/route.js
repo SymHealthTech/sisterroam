@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
 import HostingRequest from '@/models/HostingRequest'
 import HostProfile from '@/models/HostProfile'
+import Message from '@/models/Message'
 import Notification from '@/models/Notification'
 import User from '@/models/User'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
@@ -37,7 +38,19 @@ export async function GET(request) {
       .sort({ createdAt: -1 })
       .lean()
 
-    return ok(requests)
+    // Attach a real unread count per conversation (messages sent *to* me that
+    // I haven't read yet). Powers the unread dot/badge in the conversation list.
+    const requestIds = requests.map(r => r._id)
+    const unreadAgg = requestIds.length
+      ? await Message.aggregate([
+          { $match: { requestId: { $in: requestIds }, senderId: { $ne: uid }, isRead: false } },
+          { $group: { _id: '$requestId', count: { $sum: 1 } } },
+        ])
+      : []
+    const unreadMap = new Map(unreadAgg.map(u => [u._id.toString(), u.count]))
+    const withUnread = requests.map(r => ({ ...r, unreadCount: unreadMap.get(r._id.toString()) ?? 0 }))
+
+    return ok(withUnread)
   } catch (e) {
     return handleError(e)
   }

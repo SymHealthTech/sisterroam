@@ -178,6 +178,32 @@ export async function sendNewRequestEmail(host, guest, hostingRequest) {
   });
 }
 
+/* ── New direct message (recipient) ─────────────────────────── */
+
+export async function sendNewDirectMessageEmail({ recipient, senderName, preview, requestId }) {
+  const firstName = recipient.fullName?.split(" ")[0] ?? "sister";
+  const from = senderName ?? "A sister";
+  const snippet = (preview ?? "").slice(0, 240);
+  return sendEmail({
+    to: recipient.email,
+    subject: `${from} sent you a message on SisterRoam`,
+    html: layout(`
+      ${hi(firstName)}
+      ${p(`<strong>${from}</strong> just started a conversation with you on SisterRoam.`)}
+      ${
+        snippet
+          ? `<div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">
+        <p style="margin:0;font-size:13px;color:#374151;font-style:italic;">"${snippet}"</p>
+      </div>`
+          : ""
+      }
+      ${p("Only verified sisters can reply to messages and start conversations. If you haven't completed verification yet, get verified to join the conversation.")}
+      <div style="text-align:center;">${btn("Read your message", `${SITE}/messages/${requestId}`)}</div>
+      ${p('<span style="color:#9ca3af;font-size:12px;">You received this email because someone messaged you on SisterRoam. You can manage notifications in your settings.</span>')}
+    `),
+  });
+}
+
 /* ── Request accepted (guest) ──────────────────────────────── */
 
 export async function sendRequestAcceptedEmail(guest, host, hostingRequest) {
