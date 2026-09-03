@@ -63,37 +63,6 @@ export const metadata = {
 
 // ── Static content ─────────────────────────────────────────────────────────
 
-const HERO_HOSTS = [
-  {
-    name: "Ananya K.",
-    city: "Bengaluru",
-    country: "India",
-    tier: "verified",
-    femaleOnly: true,
-    rating: 4.9,
-    type: "Private room",
-  },
-  {
-    name: "Maria H.",
-    city: "Barcelona",
-    country: "Spain",
-    tier: "trusted",
-    femaleOnly: false,
-    rating: 5.0,
-    type: "Couch",
-  },
-  {
-    name: "Soo-Jin K.",
-    city: "Seoul",
-    country: "South Korea",
-    tier: "verified",
-    femaleOnly: false,
-    rating: 4.8,
-    type: "Shared room",
-    cyclingNote: true,
-  },
-];
-
 const HOW_IT_WORKS = [
   {
     icon: UserPlus,
@@ -939,90 +908,48 @@ export default async function HomePage() {
                 ))}
               </div>
             ) : (
-              /* Fallback when DB is empty — show placeholder cards */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {HERO_HOSTS.map((h) => (
-                  <div
-                    key={h.name}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
-                    aria-hidden="true"
+              /* No hosts yet — be honest instead of showing placeholder people */
+              <div className="max-w-xl mx-auto text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-12">
+                <div className="w-14 h-14 rounded-full bg-brand-lighter flex items-center justify-center mx-auto mb-4">
+                  <Home className="w-7 h-7 text-brand" aria-hidden="true" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Our founding hosts are joining now
+                </h3>
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                  SisterRoam is just getting started. Be one of the first verified
+                  sisters to open her home — or join now and we&apos;ll let you know
+                  the moment verified hosts go live in your destination.
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white bg-brand rounded-[10px] hover:opacity-90 transition-opacity"
                   >
-                    {/* Card banner */}
-                    <div className="h-24 bg-gradient-to-br from-brand to-brand-dark relative">
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                        <Avatar
-                          name={h.name}
-                          size="lg"
-                          className="ring-4 ring-white shadow-sm blur-[2px]"
-                        />
-                      </div>
-                    </div>
-                    <div className="pt-10 pb-5 px-5 space-y-3 text-center">
-                      <p className="font-semibold text-gray-900">
-                        {h.name.slice(0, Math.ceil(h.name.length / 2))}
-                        <span
-                          className="blur-[2px] select-none"
-                          aria-hidden="true"
-                        >
-                          {h.name.slice(Math.ceil(h.name.length / 2))}
-                        </span>
-                      </p>
-                      <div className="flex justify-center gap-1.5">
-                        <Badge
-                          variant={
-                            h.tier === "trusted" ? "trusted" : "verified"
-                          }
-                          size="sm"
-                        >
-                          {h.tier === "trusted" ? "Trusted" : "Verified"}
-                        </Badge>
-                        {h.femaleOnly && (
-                          <Badge variant="female" size="sm">
-                            ♀ Only
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-center gap-1 text-gray-500 text-xs">
-                        <MapPin className="w-3 h-3" aria-hidden="true" />
-                        <span>
-                          {h.city}, {h.country}
-                        </span>
-                        <span className="mx-1">·</span>
-                        <span>{h.type}</span>
-                      </div>
-                      <div className="flex justify-center items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className="w-3.5 h-3.5 fill-amber text-amber"
-                          />
-                        ))}
-                        <span className="text-xs text-gray-500 ml-1.5 font-medium">
-                          {h.rating}
-                        </span>
-                      </div>
-                      <Link
-                        href="/browse"
-                        className="block w-full py-2.5 text-sm font-medium text-white bg-brand rounded-[10px] hover:opacity-90 transition-opacity"
-                      >
-                        View profile
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                    Become a founding host
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-brand border-2 border-brand rounded-[10px] hover:bg-brand hover:text-white transition-colors"
+                  >
+                    Join the community
+                  </Link>
+                </div>
               </div>
             )}
 
-            {/* CTA */}
-            <div className="mt-10 text-center">
-              <Link
-                href="/browse"
-                className="inline-flex items-center gap-2 px-7 py-3 border-2 border-brand text-brand font-medium text-sm rounded-[10px] hover:bg-brand hover:text-white transition-colors"
-              >
-                See all hosts
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
-            </div>
+            {/* CTA — only when there are real hosts to browse */}
+            {featuredHosts.length > 0 && (
+              <div className="mt-10 text-center">
+                <Link
+                  href="/browse"
+                  className="inline-flex items-center gap-2 px-7 py-3 border-2 border-brand text-brand font-medium text-sm rounded-[10px] hover:bg-brand hover:text-white transition-colors"
+                >
+                  See all hosts
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
