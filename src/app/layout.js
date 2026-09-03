@@ -5,6 +5,7 @@ import SessionProvider from '@/components/auth/SessionProvider'
 import ToastProvider from '@/components/ui/Toast'
 import SplashScreen from '@/components/ui/SplashScreen'
 import PWAInstallButton from '@/components/ui/PWAInstallButton'
+import SWUpdater from '@/components/pwa/SWUpdater'
 
 export const metadata = {
   metadataBase: new URL('https://sisterroam.com'),
@@ -156,6 +157,7 @@ export default async function RootLayout({ children }) {
             preventing any flash of content before the React splash mounts. */}
         <div id="pwa-splash-bg" aria-hidden="true" />
         <SessionProvider session={session}>
+          <SWUpdater />
           <SplashScreen />
           {children}
           <PWAInstallButton />
