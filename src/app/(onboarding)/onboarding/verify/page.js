@@ -17,8 +17,10 @@ import {
   AlertCircle,
   ChevronDown,
   Search,
+  Clock,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { VERIFICATION_UPLOADS_ON_HOLD } from "@/lib/featureFlags";
 import { trackBadgePurchase, trackPromoCodeApplied } from "@/lib/analytics";
 
 const VideoCapture = dynamic(() => import("@/components/ui/VideoCapture"), {
@@ -587,6 +589,45 @@ export default function VerifyPage() {
           >
             Open SisterRoam app
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Verification uploads temporarily halted — show a hold notice instead of the
+  // step flow so no new ID photos / videos can be submitted. Already-paid users
+  // are still redirected away by the effects above before reaching here.
+  if (VERIFICATION_UPLOADS_ON_HOLD) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+          <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+            <Logo variant="icon" theme="light" size="sm" href="/" />
+            <span className="text-xs text-gray-400 font-medium">Identity Verification</span>
+          </div>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 py-16">
+          <div className="flex flex-col items-center text-center space-y-5">
+            <div className="w-16 h-16 rounded-full bg-amber-lighter flex items-center justify-center">
+              <Clock className="w-8 h-8 text-amber" aria-hidden="true" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-gray-900">Verification is on hold</h1>
+              <p className="text-sm text-gray-500 leading-relaxed max-w-sm">
+                Due to a technical issue, identity verification (ID and video
+                upload) is temporarily paused while we make improvements. No
+                action is needed from you right now — please check back soon.
+              </p>
+            </div>
+            <div className="w-full flex items-start gap-3 p-4 bg-amber-lighter/60 border border-amber/30 rounded-2xl text-left">
+              <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-xs text-amber-dark/90 leading-relaxed">
+                You won&apos;t be charged and no documents can be submitted during
+                this pause. We&apos;ll reopen verification as soon as it&apos;s ready.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -5,6 +5,7 @@ import SafetyReport from '@/models/SafetyReport'
 import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
+import { VERIFICATION_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
 const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/avi', 'video/webm'])
@@ -36,6 +37,14 @@ export async function POST(request) {
 
   if (!file || typeof file === 'string') return Response.json({ error: 'No file provided' }, { status: 400 })
   if (!type) return Response.json({ error: 'Upload type required' }, { status: 400 })
+
+  // Verification media uploads are temporarily halted (see featureFlags).
+  if (VERIFICATION_UPLOADS_ON_HOLD && (type === 'id_document' || type === 'intro_video')) {
+    return Response.json(
+      { error: 'Identity verification is temporarily on hold. Please try again later.' },
+      { status: 503 },
+    )
+  }
 
   const isImage = IMAGE_TYPES.has(file.type)
   const isVideo = VIDEO_TYPES.has(file.type)
