@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import { directUpload } from '@/lib/uploadClient'
+import { PROFILE_PHOTO_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 async function resizeToWebp(file, maxPx = 800) {
   return new Promise((resolve) => {
@@ -36,6 +37,10 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
   const fileInputRef = useRef(null)
 
   function openPicker() {
+    if (PROFILE_PHOTO_UPLOADS_ON_HOLD) {
+      toast('Photo uploads are temporarily unavailable.', { icon: 'ℹ️' })
+      return
+    }
     fileInputRef.current?.click()
   }
 
@@ -112,8 +117,8 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
         <button
           type="button"
           onClick={openPicker}
-          disabled={uploading}
-          className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          disabled={uploading || PROFILE_PHOTO_UPLOADS_ON_HOLD}
+          className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed"
           aria-label="Change profile photo"
         >
           {currentImageUrl ? (
@@ -124,13 +129,15 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
             </div>
           )}
 
-          {/* Hover overlay */}
-          <div
-            className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors"
-            aria-hidden="true"
-          >
-            <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
+          {/* Hover overlay — hidden while uploads are on hold */}
+          {!PROFILE_PHOTO_UPLOADS_ON_HOLD && (
+            <div
+              className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors"
+              aria-hidden="true"
+            >
+              <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          )}
 
           {/* Upload spinner */}
           {uploading && (
@@ -149,6 +156,12 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
           onChange={onFileChange}
         />
       </div>
+
+      {PROFILE_PHOTO_UPLOADS_ON_HOLD && (
+        <p className="text-xs text-gray-400 mt-2 max-w-[12rem]">
+          Photo uploads are temporarily unavailable. Your initials are shown for now.
+        </p>
+      )}
 
       {/* Crop modal */}
       {showCrop && previewUrl && (

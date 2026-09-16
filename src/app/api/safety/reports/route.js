@@ -38,7 +38,7 @@ export async function POST(request) {
     await connectDB()
     const session = await getSession()
     const body = await request.json()
-    const { reportedUserId, requestId, reason, details, incidentDate, evidenceUrl, contactReporter } = body
+    const { reportedUserId, requestId, reason, details, incidentDate, evidenceUrl, evidencePublicId, contactReporter } = body
 
     if (!reportedUserId) return fail('Reported user is required', 400)
     if (!reason)         return fail('Reason is required', 400)
@@ -59,6 +59,7 @@ export async function POST(request) {
       reason,
       details,
       evidenceUrl:    evidenceUrl || undefined,
+      evidencePublicId: evidencePublicId || undefined,
       contactReporter: contactReporter !== false,
     })
 

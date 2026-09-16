@@ -19,6 +19,7 @@ import {
   Save,
   ImagePlus,
   X,
+  Lock,
 } from "lucide-react";
 import { calculateReadTime } from "@/lib/utils";
 import { directUpload } from "@/lib/uploadClient";
@@ -82,6 +83,10 @@ export default function NewStoryPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    if (!canAddImages) {
+      toast.error("Only verified members can add a cover image.");
+      return;
+    }
     setCoverUploading(true);
     try {
       const { url, publicId } = await directUpload(file, {
@@ -99,6 +104,9 @@ export default function NewStoryPage() {
 
   const tier = session?.user?.verificationTier;
   const isVerified = tier && tier !== "basic";
+  // Photos (cover image) are limited to fully verified members, matching the
+  // community-feed rule. Paid/under-review members can still write the story text.
+  const canAddImages = tier === "verified" || tier === "trusted";
 
   // Load draft data once session is available
   useEffect(() => {
@@ -268,7 +276,7 @@ export default function NewStoryPage() {
                   Change
                 </button>
               </>
-            ) : (
+            ) : canAddImages ? (
               <button
                 type="button"
                 onClick={() => coverInputRef.current?.click()}
@@ -285,6 +293,12 @@ export default function NewStoryPage() {
                   </>
                 )}
               </button>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 px-4 text-center">
+                <Lock className="w-7 h-7" />
+                <span className="text-sm font-medium">Cover photos are for verified members</span>
+                <span className="text-xs">You can still publish your story without a cover.</span>
+              </div>
             )}
             <input
               ref={coverInputRef}

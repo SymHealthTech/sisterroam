@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { generateUploadSignature } from '@/lib/cloudinary'
 import { isVerifiedMember } from '@/lib/apiHelpers'
-import { VERIFICATION_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
+import { VERIFICATION_UPLOADS_ON_HOLD, PROFILE_PHOTO_UPLOADS_ON_HOLD, SAFETY_EVIDENCE_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 export async function GET(request) {
   try {
@@ -23,8 +23,28 @@ export async function GET(request) {
       )
     }
 
-    // Only verified members may upload community/feed photos.
-    if (folder.startsWith('sisterroam/community') && !isVerifiedMember(session)) {
+    // Profile-photo uploads are temporarily halted (public, unmoderated vector).
+    if (PROFILE_PHOTO_UPLOADS_ON_HOLD && folder.startsWith('sisterroam/profiles')) {
+      return Response.json(
+        { error: 'Profile photo uploads are temporarily unavailable. Please try again later.' },
+        { status: 503 },
+      )
+    }
+
+    // Safety-report evidence uploads are temporarily halted.
+    if (SAFETY_EVIDENCE_UPLOADS_ON_HOLD && folder.startsWith('sisterroam/safety')) {
+      return Response.json(
+        { error: 'Evidence uploads are temporarily unavailable. Please submit your report without an attachment.' },
+        { status: 503 },
+      )
+    }
+
+    // Only verified members may upload member-generated photos
+    // (community/feed images and travel-story covers).
+    if (
+      (folder.startsWith('sisterroam/community') || folder.startsWith('sisterroam/stories')) &&
+      !isVerifiedMember(session)
+    ) {
       return Response.json(
         { error: 'Only verified members can upload photos.' },
         { status: 403 },

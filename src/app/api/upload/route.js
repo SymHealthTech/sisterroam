@@ -6,7 +6,7 @@ import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
 import { isVerifiedMember } from '@/lib/apiHelpers'
-import { VERIFICATION_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
+import { VERIFICATION_UPLOADS_ON_HOLD, PROFILE_PHOTO_UPLOADS_ON_HOLD, SAFETY_EVIDENCE_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
 const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/avi', 'video/webm'])
@@ -47,8 +47,25 @@ export async function POST(request) {
     )
   }
 
-  // Only verified members may upload community/feed photos.
-  if (type === 'community_image' && !isVerifiedMember(session)) {
+  // Profile-photo uploads are temporarily halted (public, unmoderated vector).
+  if (PROFILE_PHOTO_UPLOADS_ON_HOLD && type === 'profile_photo') {
+    return Response.json(
+      { error: 'Profile photo uploads are temporarily unavailable. Please try again later.' },
+      { status: 503 },
+    )
+  }
+
+  // Safety-report evidence uploads are temporarily halted.
+  if (SAFETY_EVIDENCE_UPLOADS_ON_HOLD && type === 'safety_evidence') {
+    return Response.json(
+      { error: 'Evidence uploads are temporarily unavailable. Please submit your report without an attachment.' },
+      { status: 503 },
+    )
+  }
+
+  // Only verified members may upload member-generated photos
+  // (community/feed images and travel-story covers).
+  if ((type === 'community_image' || type === 'blog_cover') && !isVerifiedMember(session)) {
     return Response.json(
       { error: 'Only verified members can upload photos.' },
       { status: 403 },

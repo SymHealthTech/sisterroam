@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { directUpload } from "@/lib/uploadClient";
+import { SAFETY_EVIDENCE_UPLOADS_ON_HOLD } from "@/lib/featureFlags";
 
 /* ─── Reason definitions ─────────────────────────────────────── */
 
@@ -113,36 +115,27 @@ export default function SafetyReportPage() {
     setReasonError(false);
 
     let evidenceUrl = undefined;
+    let evidencePublicId = undefined;
 
-    // Upload evidence file if provided
+    // Upload evidence file if provided (image or PDF → Cloudinary, admin-only).
     if (evidenceFile) {
       setUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", evidenceFile);
-        const sigRes = await fetch("/api/upload/signature", { method: "POST" });
-        const sigJson = await sigRes.json();
-        if (sigJson.signature) {
-          const fd = new FormData();
-          fd.append("file", evidenceFile);
-          fd.append("api_key", sigJson.apiKey);
-          fd.append("timestamp", sigJson.timestamp);
-          fd.append("signature", sigJson.signature);
-          fd.append("folder", sigJson.folder || "safety-reports");
-          const upRes = await fetch(
-            `https://api.cloudinary.com/v1_1/${sigJson.cloudName}/auto/upload`,
-            {
-              method: "POST",
-              body: fd,
-            },
-          );
-          const upJson = await upRes.json();
-          evidenceUrl = upJson.secure_url;
-        }
+        const result = await directUpload(evidenceFile, {
+          folder: "sisterroam/safety",
+          type: "safety_evidence",
+          resourceType: "auto",
+        });
+        evidenceUrl = result.url;
+        evidencePublicId = result.publicId;
       } catch {
-        // continue without evidence URL
+        // Never block a safety report on an optional attachment — submit without it.
+        toast.error(
+          "Couldn't attach the evidence file — submitting your report without it.",
+        );
+      } finally {
+        setUploading(false);
       }
-      setUploading(false);
     }
 
     const res = await fetch("/api/safety/reports", {
@@ -154,6 +147,7 @@ export default function SafetyReportPage() {
         details: data.details,
         incidentDate: data.incidentDate || undefined,
         evidenceUrl,
+        evidencePublicId,
         contactReporter: data.contactPreference === "yes",
       }),
     });
@@ -351,7 +345,8 @@ export default function SafetyReportPage() {
             />
           </div>
 
-          {/* Evidence */}
+          {/* Evidence — hidden while uploads are on hold */}
+          {!SAFETY_EVIDENCE_UPLOADS_ON_HOLD && (
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1.5">
               Evidence{" "}
@@ -393,6 +388,7 @@ export default function SafetyReportPage() {
               />
             </label>
           </div>
+          )}
 
           {/* Contact preference */}
           <div>
