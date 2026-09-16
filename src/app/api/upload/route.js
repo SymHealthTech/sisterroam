@@ -5,6 +5,7 @@ import SafetyReport from '@/models/SafetyReport'
 import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
+import { isVerifiedMember } from '@/lib/apiHelpers'
 import { VERIFICATION_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
@@ -43,6 +44,14 @@ export async function POST(request) {
     return Response.json(
       { error: 'Identity verification is temporarily on hold. Please try again later.' },
       { status: 503 },
+    )
+  }
+
+  // Only verified members may upload community/feed photos.
+  if (type === 'community_image' && !isVerifiedMember(session)) {
+    return Response.json(
+      { error: 'Only verified members can upload photos.' },
+      { status: 403 },
     )
   }
 

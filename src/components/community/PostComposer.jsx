@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ImagePlus, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 import { directUpload } from '@/lib/uploadClient'
@@ -164,7 +164,8 @@ function Lightbox({ images, index, onClose, onChange }) {
 }
 
 /* ── Main component ────────────────────────────────────────────────────── */
-export default function PostComposer({ onPost }) {
+export default function PostComposer({ user, onPost }) {
+  const isVerified = user?.verificationTier === 'verified' || user?.verificationTier === 'trusted'
   const [open,       setOpen]       = useState(false)
   const [content,    setContent]    = useState('')
   const [category,   setCategory]   = useState('general')
@@ -183,6 +184,11 @@ export default function PostComposer({ onPost }) {
   }
 
   async function handleImageFiles(files) {
+    if (!isVerified) {
+      toast.error('Only verified members can add photos.')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     const remaining = MAX_IMAGES - images.length
     if (!files.length || remaining <= 0) return
     if (files.length > remaining) {
@@ -241,10 +247,14 @@ export default function PostComposer({ onPost }) {
         className="bg-white rounded-2xl border border-gray-100 px-4 py-2 flex items-center gap-3 cursor-pointer hover:border-brand/30 transition-colors"
         onClick={() => setOpen(true)}
       >
-        <p className="text-sm text-gray-400 flex-1">Share something with the community…</p>
-        <button className="p-2 text-gray-300 hover:text-brand transition-colors">
-          <ImagePlus className="w-4 h-4" />
-        </button>
+        <p className="text-sm text-gray-400 flex-1">
+          {isVerified ? 'Share something with the community…' : 'Introduce yourself to the community…'}
+        </p>
+        {isVerified && (
+          <button className="p-2 text-gray-300 hover:text-brand transition-colors">
+            <ImagePlus className="w-4 h-4" />
+          </button>
+        )}
       </div>
     )
   }
@@ -307,22 +317,31 @@ export default function PostComposer({ onPost }) {
         {/* Bottom bar */}
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div className="flex items-center gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={e => handleImageFiles(Array.from(e.target.files ?? []))}
-            />
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={images.length >= MAX_IMAGES || uploading}
-              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors disabled:opacity-40"
-            >
-              <ImagePlus className="w-4 h-4" />
-              {uploading ? 'Uploading…' : `Photo${images.length > 0 ? ` (${images.length}/${MAX_IMAGES})` : ''}`}
-            </button>
+            {isVerified ? (
+              <>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => handleImageFiles(Array.from(e.target.files ?? []))}
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={images.length >= MAX_IMAGES || uploading}
+                  className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors disabled:opacity-40"
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  {uploading ? 'Uploading…' : `Photo${images.length > 0 ? ` (${images.length}/${MAX_IMAGES})` : ''}`}
+                </button>
+              </>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs text-gray-400" title="Photos unlock once you're a verified member">
+                <Lock className="w-3.5 h-3.5" />
+                Verified members can add photos
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
             <button

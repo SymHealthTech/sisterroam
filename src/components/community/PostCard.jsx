@@ -457,6 +457,8 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
   const menuRef = useRef(null)
   const fileRef = useRef(null)
 
+  const isVerified = currentUserTier === 'verified' || currentUserTier === 'trusted'
+
   const isOwn = post.authorId?._id?.toString() === currentUserId || post.authorId?.toString() === currentUserId
 
   /* ── Like ──────────────────────────────────────────────── */
@@ -581,6 +583,11 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
 
   /* ── Add photos (uploaded now, attached on Save) ───────── */
   async function handleAddImages(files) {
+    if (!isVerified) {
+      toast.error('Only verified members can add photos.')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     const remaining = MAX_IMAGES - editImages.length
     if (!files.length) return
     if (remaining <= 0) {
@@ -750,8 +757,8 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
                 </div>
               ))}
 
-              {/* Add-photo tile */}
-              {editImages.length < MAX_IMAGES && (
+              {/* Add-photo tile — verified members only */}
+              {isVerified && editImages.length < MAX_IMAGES && (
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}

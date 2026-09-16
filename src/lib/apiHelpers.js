@@ -36,6 +36,12 @@ export function validateRequired(body, fields) {
   }
 }
 
+/** True only for members who completed identity verification (not basic/paid). */
+export function isVerifiedMember(session) {
+  const tier = session?.user?.verificationTier
+  return tier === 'verified' || tier === 'trusted'
+}
+
 export function requireVerified(session) {
   const tier = session.user.verificationTier
   if (tier === 'basic' || tier === 'paid') {

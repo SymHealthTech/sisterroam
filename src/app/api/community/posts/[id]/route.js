@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import CommunityPost from '@/models/CommunityPost'
 import CommunityComment from '@/models/CommunityComment'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, handleError, isVerifiedMember } from '@/lib/apiHelpers'
 import { deleteFile } from '@/lib/cloudinary'
 
 export async function GET(request, { params }) {
@@ -60,6 +60,10 @@ export async function PATCH(request, { params }) {
         : []
       const newPublicIds = Array.isArray(body.imagePublicIds) ? body.imagePublicIds : []
       if (newUrls.length > 7) return fail('Maximum 7 images allowed', 400)
+      // Only verified members may keep/add photos on a post.
+      if (newUrls.length > 0 && !isVerifiedMember(session)) {
+        return fail('Only verified members can add photos to posts.', 403)
+      }
       const keptIds = new Set(newPublicIds.filter(Boolean).map(String))
       removedPublicIds = (post.imagePublicIds ?? []).filter(pid => pid && !keptIds.has(String(pid)))
       post.imageUrls = newUrls

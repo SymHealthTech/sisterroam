@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import CommunityPost from '@/models/CommunityPost'
-import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { ok, fail, connectAndAuth, handleError, isVerifiedMember } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 
@@ -49,6 +49,11 @@ export async function POST(request) {
     const { content, category, imageUrls = [], imagePublicIds = [] } = body
 
     if (!content?.trim())    return fail('Content is required', 400)
+    // Only verified members may attach photos. Unverified members can still post
+    // text (e.g. to introduce themselves).
+    if (imageUrls.length > 0 && !isVerifiedMember(session)) {
+      return fail('Only verified members can add photos. You can still share a text post.', 403)
+    }
     if (imageUrls.length > 7) return fail('Maximum 7 images allowed', 400)
 
     const post = await CommunityPost.create({

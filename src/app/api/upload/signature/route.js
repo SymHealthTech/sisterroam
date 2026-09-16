@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { generateUploadSignature } from '@/lib/cloudinary'
+import { isVerifiedMember } from '@/lib/apiHelpers'
 import { VERIFICATION_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 export async function GET(request) {
@@ -19,6 +20,14 @@ export async function GET(request) {
       return Response.json(
         { error: 'Identity verification is temporarily on hold. Please try again later.' },
         { status: 503 },
+      )
+    }
+
+    // Only verified members may upload community/feed photos.
+    if (folder.startsWith('sisterroam/community') && !isVerifiedMember(session)) {
+      return Response.json(
+        { error: 'Only verified members can upload photos.' },
+        { status: 403 },
       )
     }
 
