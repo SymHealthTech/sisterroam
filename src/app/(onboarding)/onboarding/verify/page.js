@@ -22,6 +22,8 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { VERIFICATION_UPLOADS_ON_HOLD } from "@/lib/featureFlags";
 import { trackBadgePurchase, trackPromoCodeApplied } from "@/lib/analytics";
+import { directUpload, directUploadVideo } from "@/lib/uploadClient";
+import { mergePending, loadPending, clearPending, hasAllMedia } from "@/lib/pendingMedia";
 
 const VideoCapture = dynamic(() => import("@/components/ui/VideoCapture"), {
   loading: () => null,
@@ -175,14 +177,6 @@ function CountrySelect({ value, onChange }) {
 /* ── Payment step ────────────────────────────────────────── */
 
 function PaymentStep({
-  country,
-  sessionUser,
-  idFrontUrl,
-  idFrontPubId,
-  idBackUrl,
-  idBackPubId,
-  videoUrl,
-  videoPubId,
   onSuccess,
   onPayAttempt,
   isProcessing,
@@ -199,34 +193,10 @@ function PaymentStep({
   const [paymentError, setPaymentError] = useState(null);
   const [promoActivateError, setPromoActivateError] = useState(null);
 
-  const currency = country === "India" ? "INR" : "USD";
-  // Full price: ₹299/INR, $7/USD. Discount price: ₹199/INR, $5/USD.
-  const fullPrice = currency === "INR" ? "₹299" : "$7";
-  const discountPrice = currency === "INR" ? "₹199" : "$5";
-  const methods = currency === "INR" ? "UPI · Cards · Net Banking" : "Cards · International";
+  // Flat one-time fee for everyone.
+  const price = "$5";
+  const methods = "Secure card payment";
   const isPromoValid = promoState === "valid";
-  // Effective displayed price: discount when a discount promo is applied, full otherwise
-  const price = (isPromoValid && !promoIsFree) ? discountPrice : fullPrice;
-
-  async function submitDocs() {
-    const res = await fetch("/api/verification", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        country,
-        idDocumentUrl: idFrontUrl,
-        idDocumentPublicId: idFrontPubId,
-        idDocumentBackUrl: idBackUrl,
-        idDocumentBackPublicId: idBackPubId,
-        selfieVideoUrl: videoUrl || undefined,
-        selfieVideoPublicId: videoPubId || undefined,
-      }),
-    });
-    if (!res.ok) {
-      const d = await res.json();
-      throw new Error(d.error ?? "Failed to submit documents");
-    }
-  }
 
   async function handleValidatePromo() {
     const code = promoInput.trim().toUpperCase();
@@ -261,7 +231,8 @@ function PaymentStep({
     setIsActivatingPromo(true);
     setPromoActivateError(null);
     try {
-      await submitDocs();
+      // Redeem waives the fee and marks the user paid. Documents are uploaded
+      // AFTER this (onSuccess → finalize) — never before payment/redemption.
       const res = await fetch("/api/promo/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -269,10 +240,9 @@ function PaymentStep({
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      onSuccess();
+      await onSuccess();
     } catch (err) {
       setPromoActivateError(err.message || "Something went wrong.");
-    } finally {
       setIsActivatingPromo(false);
     }
   }
@@ -282,16 +252,12 @@ function PaymentStep({
     setIsCreatingPayment(true);
     setPaymentError(null);
     try {
-      if (idFrontUrl && idBackUrl) await submitDocs();
-      const payBody = { currency };
-      // Attach discount promo code so the server can select the discounted product
-      if (isPromoValid && !promoIsFree) {
-        payBody.promoCode = promoInput.trim().toUpperCase();
-      }
+      // No documents are uploaded here — they stay on the device and are sent to
+      // Cloudinary only after the payment is confirmed on return.
       const res = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payBody),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
@@ -314,9 +280,6 @@ function PaymentStep({
       {/* Pricing card — hidden only when a free promo is applied */}
       {!(isPromoValid && promoIsFree) && (
         <div className="flex flex-col items-center gap-1.5 p-5 rounded-2xl border-2 border-brand bg-brand-lighter/20 text-center">
-          {isPromoValid && !promoIsFree && (
-            <span className="text-sm line-through text-gray-400">{fullPrice}</span>
-          )}
           <span className="text-3xl font-bold text-brand">{price}</span>
           <span className="text-xs text-gray-500">{methods}</span>
           <span className="text-[11px] text-gray-400 mt-1">
@@ -366,9 +329,7 @@ function PaymentStep({
           <div className="flex items-center gap-2 p-2.5 bg-teal-lighter/60 rounded-xl">
             <CheckCircle className="w-4 h-4 text-teal shrink-0" />
             <p className="text-xs text-teal font-medium">
-              {promoIsFree
-                ? "Code applied — verification fee waived!"
-                : `Partner code applied — discounted to ${discountPrice}`}
+              Code applied — verification fee waived!
             </p>
           </div>
         )}
@@ -449,18 +410,31 @@ export default function VerifyPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [country, setCountry] = useState("");
-  const [idFrontUrl, setIdFrontUrl] = useState("");
-  const [idFrontPubId, setIdFrontPubId] = useState("");
-  const [idFrontDone, setIdFrontDone] = useState(false);
-  const [idBackUrl, setIdBackUrl] = useState("");
-  const [idBackPubId, setIdBackPubId] = useState("");
-  const [idBackDone, setIdBackDone] = useState(false);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [videoPubId, setVideoPubId] = useState("");
+  // Documents are captured but NOT uploaded here — the blobs are held in
+  // IndexedDB and only sent to Cloudinary after payment (see finalizeAndProceed).
+  const [idFrontCaptured, setIdFrontCaptured] = useState(false);
+  const [idBackCaptured, setIdBackCaptured] = useState(false);
+  const [videoCaptured, setVideoCaptured] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [finalizeMsg, setFinalizeMsg] = useState("");
+  const [finalizeFailed, setFinalizeFailed] = useState(false);
   const [paymentFailedMessage, setPaymentFailedMessage] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  // Restore any documents captured before a reload / the Dodo round-trip so the
+  // step shows them as already selected.
+  useEffect(() => {
+    loadPending()
+      .then((p) => {
+        if (!p) return;
+        if (p.idFront) setIdFrontCaptured(true);
+        if (p.idBack) setIdBackCaptured(true);
+        if (p.video) setVideoCaptured(true);
+        if (p.country) setCountry((c) => c || p.country);
+      })
+      .catch(() => {});
+  }, []);
 
   // Redirect already-paid/verified users — also handles stale JWT
   useEffect(() => {
@@ -496,10 +470,14 @@ export default function VerifyPage() {
         redirecting = true;
         // Confirmed Dodo payment success — the free-promo path never reaches here.
         trackBadgePurchase(data.verificationTier || "paid");
-        localStorage.removeItem("sr_verify_country");
-        if (!data.onboardingCompleted) sessionStorage.setItem("sr_show_welcome", "1");
         await updateSession({ verificationTier: data.verificationTier || "paid" });
-        router.replace(data.onboardingCompleted ? "/feed" : "/onboarding/profile");
+        if (data.onboardingCompleted) {
+          localStorage.removeItem("sr_verify_country");
+          router.replace("/feed");
+        } else {
+          // Payment confirmed — NOW upload the documents held on the device.
+          await finalizeAndProceed();
+        }
       } else {
         const msg = data.error ?? "Activation failed. Contact support.";
         setPaymentFailedMessage(msg);
@@ -532,23 +510,82 @@ export default function VerifyPage() {
     runActivate();
   }, [shouldActivate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handleDocUpload({ documentType, url, publicId }) {
+  // Capture handlers — store the blob in IndexedDB, no upload yet.
+  async function handleDocCapture({ documentType, blob }) {
     if (documentType === "id_front") {
-      setIdFrontUrl(url); setIdFrontPubId(publicId); setIdFrontDone(true);
+      setIdFrontCaptured(true);
+      await mergePending({ idFront: blob });
     } else {
-      setIdBackUrl(url); setIdBackPubId(publicId); setIdBackDone(true);
+      setIdBackCaptured(true);
+      await mergePending({ idBack: blob });
     }
   }
 
-  function handleVideoUpload({ url, publicId }) {
-    setVideoUrl(url); setVideoPubId(publicId);
+  async function handleVideoCapture({ blob, name }) {
+    setVideoCaptured(true);
+    await mergePending({ video: blob, videoName: name });
   }
 
-  async function handlePaymentSuccess() {
+  async function submitDocs({ front, back, video }) {
+    const res = await fetch("/api/verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        country,
+        idDocumentUrl: front.url,
+        idDocumentPublicId: front.publicId,
+        idDocumentBackUrl: back.url,
+        idDocumentBackPublicId: back.publicId,
+        selfieVideoUrl: video.url,
+        selfieVideoPublicId: video.publicId,
+      }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error ?? "Failed to submit documents");
+    }
+  }
+
+  async function routeAfterVerify() {
+    localStorage.removeItem("sr_verify_country");
     sessionStorage.setItem("sr_show_welcome", "1");
-    // Update JWT immediately so AppLayout never sees stale 'basic' tier on next page
+    sessionStorage.setItem("sr_prompt_photo", "1"); // encourage adding a profile photo
     await updateSession({ verificationTier: "paid" }).catch(() => {});
     router.replace("/onboarding/profile");
+  }
+
+  // Runs AFTER payment/redemption succeeds: upload the held documents to
+  // Cloudinary, record them, then continue to profile onboarding.
+  async function finalizeAndProceed() {
+    setActivating(true);
+    setFinalizeFailed(false);
+    try {
+      const pending = await loadPending();
+      if (!hasAllMedia(pending)) {
+        // Paid, but the documents aren't on this device (e.g. finished payment in
+        // a different browser). Let them in; they can upload from their profile.
+        toast("Payment confirmed. Please upload your ID from your profile to finish verification.", { icon: "ℹ️" });
+        await routeAfterVerify();
+        return true;
+      }
+      setFinalizeMsg("Uploading your ID…");
+      const front = await directUpload(pending.idFront, { folder: "sisterroam/verifications", type: "id_front" });
+      const back  = await directUpload(pending.idBack,  { folder: "sisterroam/verifications", type: "id_back" });
+      setFinalizeMsg("Uploading your video…");
+      const video = await directUploadVideo(pending.video, pending.videoName || "intro.webm");
+      setFinalizeMsg("Finishing up…");
+      await submitDocs({ front, back, video });
+      await clearPending();
+      await routeAfterVerify();
+      return true;
+    } catch (err) {
+      toast.error(err.message || "Upload failed. Please try again.");
+      setFinalizeMsg("");
+      setFinalizeFailed(true);
+      setActivating(false);
+      setShouldActivate(false);
+      return false;
+    }
   }
 
   if (status === "loading" || ((paymentResult === "return" || paymentResult === "cancelled") && !initialized) || shouldActivate || activating) {
@@ -556,7 +593,43 @@ export default function VerifyPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-gray-500">{shouldActivate || activating ? "Verifying payment…" : "Loading…"}</p>
+          <p className="text-sm text-gray-500">
+            {finalizeMsg || (shouldActivate || activating ? "Verifying payment…" : "Loading…")}
+          </p>
+          {finalizeMsg && (
+            <p className="text-xs text-gray-400">Please keep this page open.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Payment succeeded but the document upload afterwards failed — let them retry
+  // without paying again (the media is still held on the device).
+  if (finalizeFailed) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-amber-lighter flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-amber" aria-hidden="true" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-bold text-gray-900">Payment received</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              We couldn&apos;t upload your documents just now. You won&apos;t be charged
+              again — tap below to finish uploading.
+            </p>
+          </div>
+          <Button fullWidth size="lg" onClick={finalizeAndProceed}>
+            Retry upload
+          </Button>
+          <button
+            type="button"
+            onClick={routeAfterVerify}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Skip for now — upload later from my profile
+          </button>
         </div>
       </div>
     );
@@ -656,7 +729,7 @@ export default function VerifyPage() {
             <div className="text-center space-y-1">
               <h1 className="text-2xl font-bold text-gray-900">Where are you from?</h1>
               <p className="text-sm text-gray-500">
-                This determines your payment method and required documents
+                This helps us confirm the right documents for verification
               </p>
             </div>
 
@@ -667,6 +740,7 @@ export default function VerifyPage() {
               disabled={!country}
               onClick={() => {
                 localStorage.setItem("sr_verify_country", country);
+                mergePending({ country });
                 setStep(2);
               }}
             >
@@ -679,9 +753,19 @@ export default function VerifyPage() {
         {step === 2 && (
           <div className="space-y-6">
             <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">Upload your ID</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Add your ID</h1>
               <p className="text-sm text-gray-500">
                 Government-issued ID required for safety verification
+              </p>
+            </div>
+
+            {/* Privacy reassurance — documents stay on the device until payment */}
+            <div className="flex items-start gap-2.5 p-3 bg-teal-lighter/40 border border-teal/20 rounded-xl">
+              <Lock className="w-4 h-4 text-teal shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-xs text-teal-dark/90 leading-relaxed">
+                Your documents stay on your device and are uploaded securely
+                <span className="font-semibold"> only after payment</span>. They&apos;re
+                private — visible to our review team alone.
               </p>
             </div>
 
@@ -695,8 +779,13 @@ export default function VerifyPage() {
               </ul>
             </div>
 
-            {/* ID Front + Back */}
-            <DocumentUpload onUploadComplete={handleDocUpload} />
+            {/* ID Front + Back (captured, not uploaded yet) */}
+            <DocumentUpload
+              deferred
+              onCapture={handleDocCapture}
+              frontStatus={idFrontCaptured ? "selected" : "not_uploaded"}
+              backStatus={idBackCaptured ? "selected" : "not_uploaded"}
+            />
 
             {/* Video selfie — required */}
             <div className="space-y-2">
@@ -708,9 +797,15 @@ export default function VerifyPage() {
                   Hold your ID next to your face. Min 10 seconds.
                 </p>
               </div>
+              {videoCaptured && (
+                <div className="flex items-center gap-2 p-2.5 bg-teal-lighter/60 rounded-xl">
+                  <CheckCircle className="w-4 h-4 text-teal shrink-0" aria-hidden="true" />
+                  <p className="text-xs text-teal font-medium">Video selected — record again below to replace it.</p>
+                </div>
+              )}
               <VideoCapture
-                userId={session?.user?.id}
-                onUploadComplete={handleVideoUpload}
+                deferred
+                onCapture={handleVideoCapture}
               />
             </div>
 
@@ -720,7 +815,7 @@ export default function VerifyPage() {
               </Button>
               <Button
                 className="flex-1"
-                disabled={!idFrontDone || !idBackDone || !videoUrl}
+                disabled={!idFrontCaptured || !idBackCaptured || !videoCaptured}
                 onClick={() => setStep(3)}
               >
                 Continue
@@ -762,15 +857,7 @@ export default function VerifyPage() {
             )}
 
             <PaymentStep
-              country={country}
-              sessionUser={session?.user}
-              idFrontUrl={idFrontUrl}
-              idFrontPubId={idFrontPubId}
-              idBackUrl={idBackUrl}
-              idBackPubId={idBackPubId}
-              videoUrl={videoUrl}
-              videoPubId={videoPubId}
-              onSuccess={handlePaymentSuccess}
+              onSuccess={finalizeAndProceed}
               onPayAttempt={() => { setPaymentFailedMessage(null); setPaymentProcessing(false); }}
               isProcessing={paymentProcessing}
               onCheckStatus={runActivate}

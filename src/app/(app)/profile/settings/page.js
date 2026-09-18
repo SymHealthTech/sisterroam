@@ -543,10 +543,10 @@ export default function SettingsPage() {
                 Display currency
               </label>
               <div className="w-full h-[44px] sm:h-[40px] px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 flex items-center">
-                {userData?.country === "India" ? "INR (₹)" : "USD ($)"}
+                USD ($)
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Determined by your country ({userData?.country ?? "not set"})
+                All payments are in USD ($5 one-time verification fee)
               </p>
             </div>
             <Button size="sm" variant="secondary" onClick={handleDisplaySave}>
@@ -565,73 +565,38 @@ export default function SettingsPage() {
                   one-time payment below to activate your verified badge.
                 </p>
 
-                {userData?.country === "India" ? (
-                  <div className="border-2 border-brand rounded-2xl p-4 space-y-3 bg-brand-lighter/20">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">🇮🇳</span>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          India
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          UPI · Cards · Net Banking
-                        </p>
-                      </div>
-                      <p className="text-2xl font-bold text-brand ml-auto">
-                        ₹199
+                <div className="border-2 border-brand rounded-2xl p-4 space-y-3 bg-brand-lighter/20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🛡️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        Verified membership
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Secure card payment
                       </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      One-time payment — never expires — unlocks full platform
-                      access
+                    <p className="text-2xl font-bold text-brand ml-auto">
+                      $5
                     </p>
-                    <Button
-                      fullWidth
-                      onClick={() => router.push("/profile/verification")}
-                    >
-                      Pay ₹199 &amp; activate badge
-                    </Button>
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Lock className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-400">
-                        Secure payment via Dodo Payments
-                      </span>
-                    </div>
                   </div>
-                ) : (
-                  <div className="border-2 border-brand rounded-2xl p-4 space-y-3 bg-brand-lighter/20">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">🌍</span>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          International
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Cards · International
-                        </p>
-                      </div>
-                      <p className="text-2xl font-bold text-brand ml-auto">
-                        $5
-                      </p>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      One-time payment — never expires — unlocks full platform
-                      access
-                    </p>
-                    <Button
-                      fullWidth
-                      onClick={() => router.push("/profile/verification")}
-                    >
-                      Pay $5 &amp; activate badge
-                    </Button>
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Lock className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-400">
-                        Secure payment via Dodo Payments
-                      </span>
-                    </div>
+                  <p className="text-xs text-gray-500">
+                    One-time payment — never expires — unlocks full platform
+                    access
+                  </p>
+                  <Button
+                    fullWidth
+                    onClick={() => router.push("/profile/verification")}
+                  >
+                    Pay $5 &amp; activate badge
+                  </Button>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Lock className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-400">
+                      Secure payment via Dodo Payments
+                    </span>
                   </div>
-                )}
+                </div>
 
                 <div className="flex items-center gap-2 p-3 bg-teal-lighter/40 rounded-xl">
                   <ShieldCheck className="w-5 h-5 text-teal shrink-0" />

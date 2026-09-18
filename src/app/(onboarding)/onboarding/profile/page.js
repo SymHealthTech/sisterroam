@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, X, ChevronRight, CheckCircle } from "lucide-react";
+import { ChevronDown, X, ChevronRight, CheckCircle, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button";
@@ -278,6 +278,13 @@ export default function OnboardingProfilePage() {
     if (flag) sessionStorage.removeItem("sr_show_welcome");
     return flag;
   });
+  // Set right after verification completes — nudge her to add a profile photo.
+  const [promptPhoto] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const flag = sessionStorage.getItem("sr_prompt_photo") === "1";
+    if (flag) sessionStorage.removeItem("sr_prompt_photo");
+    return flag;
+  });
   const [showHobbies, setShowHobbies] = useState(false);
   const [showSocial, setShowSocial] = useState(false);
   const [bioLength, setBioLength] = useState(0);
@@ -487,6 +494,15 @@ export default function OnboardingProfilePage() {
         >
           {/* Profile photo */}
           <div className="flex flex-col items-center">
+            {promptPhoto && (
+              <div className="w-full mb-4 flex items-start gap-2.5 p-3 bg-brand-lighter/40 border border-brand/20 rounded-xl">
+                <Sparkles className="w-4 h-4 text-brand shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="text-xs text-brand-dark/90 leading-relaxed">
+                  You&apos;re verified! 🎉 Add a profile photo so other sisters can put
+                  a face to your name — it&apos;s the fastest way to build trust.
+                </p>
+              </div>
+            )}
             <ImageUpload
               currentImageUrl={profilePhotoUrl}
               name={fullName}

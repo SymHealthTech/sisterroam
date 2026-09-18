@@ -109,25 +109,25 @@ function KycCardFull({ verif, onUpdate, isActive, onSelect }) {
 
         {/* Documents */}
         <div className="flex gap-2 flex-wrap">
-          {verif.idDocumentUrl && (
+          {(verif.idDocumentSignedUrl ?? verif.idDocumentUrl) && (
             <button
-              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.idDocumentUrl, type: 'image' }) }}
+              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.idDocumentSignedUrl ?? verif.idDocumentUrl, type: 'image' }) }}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg hover:bg-brand-lighter hover:text-brand hover:border-brand/20 transition-colors"
             >
               <Eye className="w-3.5 h-3.5" /> View ID Front
             </button>
           )}
-          {verif.idDocumentBackUrl && (
+          {(verif.idDocumentBackSignedUrl ?? verif.idDocumentBackUrl) && (
             <button
-              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.idDocumentBackUrl, type: 'image' }) }}
+              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.idDocumentBackSignedUrl ?? verif.idDocumentBackUrl, type: 'image' }) }}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg hover:bg-brand-lighter hover:text-brand hover:border-brand/20 transition-colors"
             >
               <Eye className="w-3.5 h-3.5" /> View ID Back
             </button>
           )}
-          {verif.selfieVideoUrl && (
+          {(verif.selfieVideoSignedUrl ?? verif.selfieVideoUrl) && (
             <button
-              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.selfieVideoUrl, type: 'video' }) }}
+              onClick={e => { e.stopPropagation(); setLightbox({ url: verif.selfieVideoSignedUrl ?? verif.selfieVideoUrl, type: 'video' }) }}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg hover:bg-amber-lighter hover:text-amber hover:border-amber/20 transition-colors"
             >
               <Video className="w-3.5 h-3.5" /> Watch Video

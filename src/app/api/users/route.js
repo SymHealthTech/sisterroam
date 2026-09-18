@@ -33,6 +33,13 @@ export async function PATCH(request) {
       if (body[field] !== undefined) $set[field] = body[field]
     }
 
+    // A newly uploaded profile photo is public + manually moderated: mark it
+    // 'pending' so the UI shows initials until an admin approves it. Cloudinary
+    // won't deliver the image until then either.
+    if (body.profilePhotoPublicId !== undefined && body.profilePhotoPublicId) {
+      $set.profilePhotoStatus = 'pending'
+    }
+
     const user = await User.findByIdAndUpdate(
       session.user.id,
       { $set },

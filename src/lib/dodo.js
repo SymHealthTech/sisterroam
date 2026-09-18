@@ -8,16 +8,12 @@ const dodoClient = new DodoPayments({
 
 export default dodoClient
 
-// isDiscount=true uses DODO_PRODUCT_ID_{currency}_DISCOUNT env vars (₹199/INR or $5/USD).
-// isDiscount=false uses DODO_PRODUCT_ID_{currency} env vars (₹299/INR or $7/USD).
-export async function createCheckoutSession(userId, userEmail, userName, currency, returnBase, isDiscount = false) {
-  const envKey = isDiscount
-    ? `DODO_PRODUCT_ID_${currency}_DISCOUNT`
-    : `DODO_PRODUCT_ID_${currency}`
-  const productId = process.env[envKey]
+// Single flat product: $5 USD for everyone. Set DODO_PRODUCT_ID_USD.
+export async function createCheckoutSession(userId, userEmail, userName, returnBase) {
+  const productId = process.env.DODO_PRODUCT_ID_USD
 
   if (!productId) {
-    throw new Error(`Missing ${envKey} environment variable`)
+    throw new Error('Missing DODO_PRODUCT_ID_USD environment variable')
   }
 
   const base = returnBase || process.env.NEXTAUTH_URL
@@ -31,13 +27,11 @@ export async function createCheckoutSession(userId, userEmail, userName, currenc
       email: userEmail,
       name:  userName,
     },
-    billing_currency: currency,
-    billing_address: currency === 'INR' ? { country: 'IN' } : undefined,
+    billing_currency: 'USD',
     metadata: {
-      userId:    userId.toString(),
-      purpose:   'verified_badge',
-      currency,
-      isDiscount: isDiscount ? 'true' : 'false',
+      userId:  userId.toString(),
+      purpose: 'verified_badge',
+      currency: 'USD',
     },
     return_url: `${base}/onboarding/verify?payment=return`,
     cancel_url: `${base}/onboarding/verify?payment=cancelled`,

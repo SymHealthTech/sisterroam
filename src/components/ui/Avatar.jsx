@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 import { cn, getInitials, generateAvatarColor } from '@/lib/utils'
 
@@ -14,6 +17,11 @@ export default function Avatar({ name, src, size = 'md', className }) {
   const initials = getInitials(name)
   const color    = generateAvatarColor(name)
 
+  // If the photo fails to load (e.g. a photo still pending moderation isn't
+  // delivered by Cloudinary yet), fall back to the initials avatar.
+  const [failed, setFailed] = useState(false)
+  const showImage = src && !failed
+
   return (
     <div
       className={cn(
@@ -21,16 +29,17 @@ export default function Avatar({ name, src, size = 'md', className }) {
         cls,
         className
       )}
-      style={src ? { position: 'relative' } : { position: 'relative', backgroundColor: color.bg, color: color.text }}
+      style={showImage ? { position: 'relative' } : { position: 'relative', backgroundColor: color.bg, color: color.text }}
       aria-label={name ?? 'User avatar'}
     >
-      {src ? (
+      {showImage ? (
         <Image
           src={src}
           alt={name ?? 'User avatar'}
           fill
           sizes={`${px}px`}
           className="object-cover"
+          onError={() => setFailed(true)}
         />
       ) : (
         <span className={text} aria-hidden="true">

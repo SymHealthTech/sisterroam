@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import { directUpload } from '@/lib/uploadClient'
+import { checkImageBlob } from '@/lib/nsfw'
 import { PROFILE_PHOTO_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 async function resizeToWebp(file, maxPx = 800) {
@@ -88,6 +89,17 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
     setUploading(true)
     try {
       const blob = await resizeToWebp(rawFile)
+
+      // Client-side safety pre-filter before anything leaves the device.
+      const check = await checkImageBlob(blob)
+      if (!check.safe) {
+        toast.error(check.reason ?? 'This image can’t be uploaded.')
+        setUploading(false)
+        setPreviewUrl(null)
+        setRawFile(null)
+        return
+      }
+
       const { url, publicId } = await directUpload(blob, {
         folder: 'sisterroam/profiles',
         type: 'profile_photo',
@@ -101,7 +113,7 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
       })
 
       onUploadComplete?.({ url, publicId })
-      toast.success('Photo updated!')
+      toast.success('Photo uploaded — it will appear once approved by our team.')
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
     } finally {

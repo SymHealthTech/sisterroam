@@ -5,6 +5,7 @@ import { X, ImagePlus, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 import { directUpload } from '@/lib/uploadClient'
+import { checkImageBlob } from '@/lib/nsfw'
 
 const CATEGORIES = [
   { value: 'general',          label: 'General' },
@@ -201,6 +202,14 @@ export default function PostComposer({ user, onPost }) {
     for (const raw of files) {
       try {
         const compressed = await compressImage(raw)
+
+        // Client-side safety pre-filter before the image leaves the device.
+        const check = await checkImageBlob(compressed)
+        if (!check.safe) {
+          toast.error(check.reason ?? 'This image can’t be uploaded.')
+          continue
+        }
+
         const { url, publicId } = await directUpload(compressed, {
           folder: 'sisterroam/community',
           type: 'community_image',

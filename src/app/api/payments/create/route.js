@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Payment from '@/models/Payment'
-import PromoCode from '@/models/PromoCode'
 import dodoClient, { createCheckoutSession } from '@/lib/dodo'
 
 export async function POST(request) {
@@ -14,12 +13,6 @@ export async function POST(request) {
     }
 
     await connectDB()
-
-    const body = await request.json()
-    const { currency = 'INR', promoCode } = body
-    if (!['INR', 'USD'].includes(currency)) {
-      return NextResponse.json({ success: false, error: 'Invalid currency' }, { status: 400 })
-    }
 
     const userId = session.user.id
     const user = await User.findById(userId)
@@ -36,24 +29,6 @@ export async function POST(request) {
     const existingCompleted = await Payment.findOne({ userId, purpose: 'verified_badge', status: 'completed' })
     if (existingCompleted) {
       return NextResponse.json({ success: false, error: 'Verification fee already paid' }, { status: 400 })
-    }
-
-    // Validate discount promo code server-side if provided.
-    // Free codes (BRAND100 etc.) go through /api/promo/redeem instead — not here.
-    let isDiscount = false
-    let normalizedPromoCode
-    if (promoCode?.trim()) {
-      normalizedPromoCode = promoCode.trim().toUpperCase()
-      const promo = await PromoCode.findOne({
-        code: normalizedPromoCode,
-        isActive: true,
-        type: 'discount',
-        $expr: { $lt: ['$usedCount', '$maxUses'] },
-      })
-      if (!promo) {
-        return NextResponse.json({ success: false, error: 'Invalid or expired promo code' }, { status: 400 })
-      }
-      isDiscount = true
     }
 
     // Reuse a session only within a 2-minute window (double-click protection).
@@ -90,23 +65,18 @@ export async function POST(request) {
       userId.toString(),
       user.email,
       user.fullName,
-      currency,
-      returnBase,
-      isDiscount
+      returnBase
     )
 
-    // Full price: ₹299 (INR) / $7 (USD). Discount price: ₹199 (INR) / $5 (USD).
-    const amount = currency === 'INR' ? (isDiscount ? 199 : 299) : (isDiscount ? 5 : 7)
-
+    // Flat $5 USD for everyone.
     await Payment.create({
       userId,
       dodoPaymentLinkId: sessionId,
       checkoutUrl,
-      amount,
-      currency,
+      amount: 5,
+      currency: 'USD',
       purpose: 'verified_badge',
       status: 'pending',
-      promoCode: normalizedPromoCode || undefined,
       ipAddress: request.headers.get('x-forwarded-for') || '',
       userAgent: request.headers.get('user-agent') || '',
     })

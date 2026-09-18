@@ -17,8 +17,13 @@
  * To RESUME verification once the pipeline is hardened (moderation + server
  * proxy), flip this single constant to `false`. It is imported by both the
  * client page and the server route, so one edit covers both layers.
+ *
+ * 2026-09-18: RESUMED. The pipeline is hardened — documents are held on the
+ * device and only uploaded AFTER the $5 payment (signature endpoints are
+ * payment-gated), stored privately (authenticated), run through an NSFWJS
+ * pre-filter, format-restricted and rate-limited. Payment confirmed as $5.
  */
-export const VERIFICATION_UPLOADS_ON_HOLD = true
+export const VERIFICATION_UPLOADS_ON_HOLD = false
 
 /**
  * PROFILE_PHOTO_UPLOADS_ON_HOLD
@@ -33,8 +38,13 @@ export const VERIFICATION_UPLOADS_ON_HOLD = true
  *     fall back to their initials avatar.
  *
  * RESUME once Cloudinary moderation is in place: flip to `false`.
+ *
+ * 2026-09-18: RESUMED. Profile photos are now paid-members-only, run through an
+ * NSFWJS pre-filter, and are held by Cloudinary manual moderation (never
+ * delivered until an admin approves them), so the public/unmoderated vector is
+ * closed.
  */
-export const PROFILE_PHOTO_UPLOADS_ON_HOLD = true
+export const PROFILE_PHOTO_UPLOADS_ON_HOLD = false
 
 /**
  * SAFETY_EVIDENCE_UPLOADS_ON_HOLD
@@ -47,5 +57,8 @@ export const PROFILE_PHOTO_UPLOADS_ON_HOLD = true
  * Safety reports still submit normally (evidence is optional).
  *
  * Flip to `false` to allow evidence attachments again.
+ *
+ * 2026-09-18: RESUMED. Evidence is admin-only, stored privately (authenticated
+ * delivery, never public) and rate-limited.
  */
-export const SAFETY_EVIDENCE_UPLOADS_ON_HOLD = true
+export const SAFETY_EVIDENCE_UPLOADS_ON_HOLD = false

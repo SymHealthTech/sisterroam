@@ -58,11 +58,11 @@ export async function POST(req) {
       )
     }
 
-    // Create a ₹0 / $0 payment record so the admin can see promo redemptions
+    // Create a $0 payment record so the admin can see promo redemptions
     await Payment.create({
       userId,
       amount: 0,
-      currency: user.country === 'India' ? 'INR' : 'USD',
+      currency: 'USD',
       purpose: 'verified_badge',
       status: 'completed',
       promoCode: code.trim().toUpperCase(),

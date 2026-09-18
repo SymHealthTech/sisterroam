@@ -4,15 +4,17 @@ import User from '@/models/User'
 import SafetyReport from '@/models/SafetyReport'
 import TravelStory from '@/models/TravelStory'
 import CommunityPost from '@/models/CommunityPost'
+import Payment from '@/models/Payment'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
 import { isVerifiedMember } from '@/lib/apiHelpers'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { VERIFICATION_UPLOADS_ON_HOLD, PROFILE_PHOTO_UPLOADS_ON_HOLD, SAFETY_EVIDENCE_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
 const VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/avi', 'video/webm'])
 
 const IMAGE_MAX = 10 * 1024 * 1024   // 10 MB
-const VIDEO_MAX = 100 * 1024 * 1024  // 100 MB
+const VIDEO_MAX = 30 * 1024 * 1024   // 30 MB
 
 async function fileToDataUri(file) {
   const buffer = Buffer.from(await file.arrayBuffer())
@@ -24,6 +26,12 @@ export async function POST(request) {
   if (!session?.user?.id) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userId = session.user.id
+
+  // Per-user upload throttle (shared bucket with the signature route).
+  const rl = await checkRateLimit(`upload-sig:${userId}`, { max: 60, windowMs: 60 * 60 * 1000 })
+  if (!rl.allowed) {
+    return Response.json({ error: 'Too many uploads in a short time. Please try again later.' }, { status: 429 })
+  }
 
   let formData
   try {
@@ -39,20 +47,40 @@ export async function POST(request) {
   if (!file || typeof file === 'string') return Response.json({ error: 'No file provided' }, { status: 400 })
   if (!type) return Response.json({ error: 'Upload type required' }, { status: 400 })
 
-  // Verification media uploads are temporarily halted (see featureFlags).
-  if (VERIFICATION_UPLOADS_ON_HOLD && (type === 'id_document' || type === 'intro_video')) {
-    return Response.json(
-      { error: 'Identity verification is temporarily on hold. Please try again later.' },
-      { status: 503 },
-    )
+  // Verification media: on hold → refuse; otherwise require a completed payment
+  // before any media reaches Cloudinary.
+  if (type === 'id_document' || type === 'intro_video') {
+    if (VERIFICATION_UPLOADS_ON_HOLD) {
+      return Response.json(
+        { error: 'Identity verification is temporarily on hold. Please try again later.' },
+        { status: 503 },
+      )
+    }
+    await connectDB()
+    const paid = await Payment.findOne({ userId, purpose: 'verified_badge', status: 'completed' })
+    if (!paid) {
+      return Response.json(
+        { error: 'Please complete the verification payment before uploading your documents.' },
+        { status: 403 },
+      )
+    }
   }
 
-  // Profile-photo uploads are temporarily halted (public, unmoderated vector).
-  if (PROFILE_PHOTO_UPLOADS_ON_HOLD && type === 'profile_photo') {
-    return Response.json(
-      { error: 'Profile photo uploads are temporarily unavailable. Please try again later.' },
-      { status: 503 },
-    )
+  // Profile photos: on hold → refuse; otherwise members who have paid the fee
+  // (not free 'basic' accounts). Still manually moderated before going public.
+  if (type === 'profile_photo') {
+    if (PROFILE_PHOTO_UPLOADS_ON_HOLD) {
+      return Response.json(
+        { error: 'Profile photo uploads are temporarily unavailable. Please try again later.' },
+        { status: 503 },
+      )
+    }
+    if (session.user.verificationTier === 'basic') {
+      return Response.json(
+        { error: 'Please complete verification before adding a profile photo.' },
+        { status: 403 },
+      )
+    }
   }
 
   // Safety-report evidence uploads are temporarily halted.
@@ -79,7 +107,7 @@ export async function POST(request) {
 
   const maxBytes = isVideo ? VIDEO_MAX : IMAGE_MAX
   if (file.size > maxBytes)
-    return Response.json({ error: `File too large. Max ${isVideo ? '100MB' : '10MB'}` }, { status: 413 })
+    return Response.json({ error: `File too large. Max ${isVideo ? '30MB' : '10MB'}` }, { status: 413 })
 
   const dataUri = await fileToDataUri(file)
   await connectDB()
@@ -89,6 +117,7 @@ export async function POST(request) {
       case 'profile_photo': {
         const result = await uploadImage(dataUri, {
           folder: `sisterroam/profiles/${userId}`,
+          moderation: 'manual',
           transformation: [
             { width: 400, height: 400, crop: 'fill', gravity: 'face' },
             { format: 'webp', quality: 'auto' },
@@ -97,6 +126,7 @@ export async function POST(request) {
         await User.findByIdAndUpdate(userId, {
           profilePhotoUrl:      result.url,
           profilePhotoPublicId: result.publicId,
+          profilePhotoStatus:   'pending',
         })
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }
@@ -121,11 +151,13 @@ export async function POST(request) {
         if (!isImage) return Response.json({ error: 'Image file required' }, { status: 400 })
         const result = await uploadImage(dataUri, {
           folder: `sisterroam/community/${userId}`,
+          moderation: 'manual',
           transformation: [{ quality: 'auto', fetch_format: 'auto' }],
         })
         if (extra) {
           await CommunityPost.findByIdAndUpdate(extra, {
             $push: { imageUrls: result.url, imagePublicIds: result.publicId },
+            $set:  { moderationStatus: 'pending' },
           })
         }
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
@@ -135,6 +167,7 @@ export async function POST(request) {
         if (!isImage) return Response.json({ error: 'Image file required' }, { status: 400 })
         const result = await uploadImage(dataUri, {
           folder: `sisterroam/blog/${extra ?? userId}`,
+          moderation: 'manual',
           transformation: [
             { width: 1200, height: 630, crop: 'fill' },
             { format: 'webp', quality: 'auto' },
@@ -143,7 +176,7 @@ export async function POST(request) {
         if (extra) {
           await TravelStory.findOneAndUpdate(
             { slug: extra },
-            { coverImageUrl: result.url, coverImagePublicId: result.publicId }
+            { coverImageUrl: result.url, coverImagePublicId: result.publicId, coverModerationStatus: 'pending' }
           )
         }
         return Response.json({ success: true, url: result.url, publicId: result.publicId })

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { directUpload } from '@/lib/uploadClient'
+import { checkImageBlob } from '@/lib/nsfw'
 
 async function compressImage(file, maxPx = 1920) {
   return new Promise((resolve) => {
@@ -27,12 +28,13 @@ async function compressImage(file, maxPx = 1920) {
 
 const STATUS_CONFIG = {
   not_uploaded: { label: 'Not uploaded', variant: 'basic'    },
+  selected:     { label: 'Selected',     variant: 'pending'  },
   uploaded:     { label: 'Uploaded',     variant: 'pending'  },
   under_review: { label: 'Under review', variant: 'pending'  },
   verified:     { label: 'Verified',     variant: 'verified' },
 }
 
-function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onUploadComplete }) {
+function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onUploadComplete, deferred = false, onCapture }) {
   const [status,    setStatus]    = useState(initialStatus)
   const [preview,   setPreview]   = useState(null)   // { file, url }
   const [uploading, setUploading] = useState(false)
@@ -57,15 +59,31 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
     setUploading(true)
     try {
       const compressed = await compressImage(preview.file)
-      const { url, publicId } = await directUpload(compressed, {
-        folder: 'sisterroam/verifications',
-        type: documentType,
-      })
 
-      setStatus('uploaded')
-      clearPreview()
-      onUploadComplete?.({ documentType, url, publicId })
-      toast.success(`${label} uploaded`)
+      // Client-side safety pre-filter before the document leaves the device.
+      const check = await checkImageBlob(compressed)
+      if (!check.safe) {
+        toast.error(check.reason ?? 'This image can’t be uploaded.')
+        setUploading(false)
+        return
+      }
+
+      if (deferred) {
+        // Hold on the device — actual Cloudinary upload happens after payment.
+        onCapture?.({ documentType, blob: compressed })
+        setStatus('selected')
+        clearPreview()
+        toast.success(`${label} selected`)
+      } else {
+        const { url, publicId } = await directUpload(compressed, {
+          folder: 'sisterroam/verifications',
+          type: documentType,
+        })
+        setStatus('uploaded')
+        clearPreview()
+        onUploadComplete?.({ documentType, url, publicId })
+        toast.success(`${label} uploaded`)
+      }
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
     } finally {
@@ -123,7 +141,7 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
                   Re-select
                 </Button>
                 <Button variant="primary" size="sm" className="flex-1" loading={uploading} onClick={uploadFile}>
-                  Upload
+                  {deferred ? 'Use photo' : 'Upload'}
                 </Button>
               </div>
             </div>
@@ -136,10 +154,17 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
                 </div>
               )}
 
+              {status === 'selected' && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <FileCheck className="w-4 h-4 shrink-0 text-brand" aria-hidden="true" />
+                  <span>Selected — uploads securely after payment.</span>
+                </div>
+              )}
+
               <label className="block border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-brand transition-colors">
                 <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1.5" aria-hidden="true" />
                 <p className="text-xs font-medium text-gray-600">
-                  {status === 'uploaded' ? 'Upload a new photo' : 'Click to upload'}
+                  {(status === 'uploaded' || status === 'selected') ? 'Choose a different photo' : 'Click to upload'}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5">JPG, PNG or HEIC · Max 10 MB · auto-compressed</p>
                 <input
@@ -158,7 +183,7 @@ function DocumentSlot({ label, documentType, initialStatus = 'not_uploaded', onU
   )
 }
 
-export default function DocumentUpload({ userId, onUploadComplete, frontStatus, backStatus }) {
+export default function DocumentUpload({ userId, onUploadComplete, frontStatus, backStatus, deferred = false, onCapture }) {
   return (
     <div className="space-y-3">
       <DocumentSlot
@@ -166,12 +191,16 @@ export default function DocumentUpload({ userId, onUploadComplete, frontStatus, 
         documentType="id_front"
         initialStatus={frontStatus ?? 'not_uploaded'}
         onUploadComplete={onUploadComplete}
+        deferred={deferred}
+        onCapture={onCapture}
       />
       <DocumentSlot
         label="Back of ID"
         documentType="id_back"
         initialStatus={backStatus ?? 'not_uploaded'}
         onUploadComplete={onUploadComplete}
+        deferred={deferred}
+        onCapture={onCapture}
       />
     </div>
   )

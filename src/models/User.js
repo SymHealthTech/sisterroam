@@ -30,6 +30,13 @@ const userSchema = new mongoose.Schema(
 
     profilePhotoUrl: { type: String },
     profilePhotoPublicId: { type: String },
+    // Manual-moderation state for the profile photo (public, so held until an
+    // admin approves it in Cloudinary). Legacy photos default to 'approved'.
+    profilePhotoStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
     coverPhotoUrl: { type: String },
 
     travellerCategories: {

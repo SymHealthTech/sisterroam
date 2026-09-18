@@ -98,6 +98,8 @@ export async function POST(request) {
       excerpt:            autoExcerpt,
       coverImageUrl,
       coverImagePublicId,
+      // Cover is public + manually moderated — hold it until an admin approves.
+      coverModerationStatus: coverImagePublicId ? 'pending' : 'approved',
       category,
       tags:               Array.isArray(tags) ? tags.map(t => t.toLowerCase().trim()).filter(Boolean) : [],
       isPublished:        isPublished ?? false,

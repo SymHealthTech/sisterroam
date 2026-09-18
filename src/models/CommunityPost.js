@@ -20,6 +20,17 @@ const communityPostSchema = new mongoose.Schema(
 
     imageUrls: { type: [String], validate: [v => v.length <= 7, 'Max 7 images'] },
     imagePublicIds: [{ type: String }],
+    // Manual-moderation state for attached images (public). Text-only posts and
+    // legacy posts default to 'approved'; posts with new images start 'pending'
+    // and images are hidden until an admin approves them. `moderationStatus`
+    // becomes 'approved' once every image has been individually approved (the
+    // per-image approvals are tracked in approvedImagePublicIds).
+    moderationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
+    approvedImagePublicIds: { type: [String], default: [] },
 
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     likesCount: { type: Number, default: 0 },

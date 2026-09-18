@@ -12,6 +12,14 @@ const travelStorySchema = new mongoose.Schema(
 
     coverImageUrl:     { type: String },
     coverImagePublicId:{ type: String },
+    // Manual-moderation state for the cover image (public). Stories without a
+    // cover and legacy stories default to 'approved'; a new cover starts
+    // 'pending' and is hidden until an admin approves it.
+    coverModerationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
 
     category: {
       type: String,

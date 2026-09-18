@@ -68,7 +68,7 @@ function FullCard({ story, basePath }) {
       className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-brand-light hover:shadow-sm transition-all cursor-pointer"
     >
       {/* Image or placeholder */}
-      {story.coverImageUrl ? (
+      {(story.coverImageUrl && story.coverModerationStatus !== 'pending' && story.coverModerationStatus !== 'rejected') ? (
         <div className="relative h-44 overflow-hidden">
           <Image
             src={story.coverImageUrl}
@@ -132,7 +132,7 @@ function CompactCard({ story, basePath }) {
       href={`${basePath}/${story.slug}`}
       className="flex gap-3 hover:bg-gray-50 rounded-xl p-2 transition-colors"
     >
-      {story.coverImageUrl ? (
+      {(story.coverImageUrl && story.coverModerationStatus !== 'pending' && story.coverModerationStatus !== 'rejected') ? (
         <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
           <Image src={story.coverImageUrl} alt={story.title} fill sizes="80px" className="object-cover" />
         </div>
@@ -203,7 +203,7 @@ function FeaturedCard({ story, basePath }) {
       className="group block bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
     >
       <div className="flex flex-col lg:flex-row">
-        {story.coverImageUrl ? (
+        {(story.coverImageUrl && story.coverModerationStatus !== 'pending' && story.coverModerationStatus !== 'rejected') ? (
           <div className="relative lg:w-1/2 h-56 lg:h-72 overflow-hidden">
             <Image
               src={story.coverImageUrl}

@@ -134,8 +134,8 @@ export default function AppStoryPage({ params }) {
                 </div>
               </div>
 
-              {/* Cover image */}
-              {story.coverImageUrl && (
+              {/* Cover image — hidden until it passes manual moderation */}
+              {story.coverImageUrl && story.coverModerationStatus !== 'pending' && story.coverModerationStatus !== 'rejected' && (
                 <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8">
                   <Image
                     src={story.coverImageUrl}

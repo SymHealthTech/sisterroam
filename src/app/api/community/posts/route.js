@@ -62,6 +62,9 @@ export async function POST(request) {
       category: CATEGORIES.includes(category) ? category : 'general',
       imageUrls,
       imagePublicIds,
+      // Images are public + manually moderated — hold the post's images until an
+      // admin approves them. Text-only posts stay 'approved' and show normally.
+      moderationStatus: imageUrls.length > 0 ? 'pending' : 'approved',
     })
 
     const populated = await CommunityPost.findById(post._id)

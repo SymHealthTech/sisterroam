@@ -32,10 +32,11 @@ const STAT_META = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: 'Review KYC',        desc: 'Approve or reject IDs',   href: '/admin/kyc',       icon: FileCheck,     grad: 'from-amber to-amber-light'   },
-  { label: 'Safety Reports',    desc: 'Handle open incidents',   href: '/admin/reports',   icon: Flag,          grad: 'from-danger to-danger-light' },
-  { label: 'Manage Users',      desc: 'Members & payments',      href: '/admin/users',     icon: Users,         grad: 'from-brand to-brand-light'   },
-  { label: 'Community',         desc: 'Moderate content',        href: '/admin/community', icon: MessageSquare, grad: 'from-teal to-teal-light'     },
+  { label: 'Review KYC',        desc: 'Approve or reject IDs',   href: '/admin/kyc',        icon: FileCheck,     grad: 'from-amber to-amber-light'   },
+  { label: 'Image Moderation',  desc: 'Approve public images',   href: '/admin/moderation', icon: ShieldCheck,   grad: 'from-pink to-pink-light'     },
+  { label: 'Safety Reports',    desc: 'Handle open incidents',   href: '/admin/reports',    icon: Flag,          grad: 'from-danger to-danger-light' },
+  { label: 'Manage Users',      desc: 'Members & payments',      href: '/admin/users',      icon: Users,         grad: 'from-brand to-brand-light'   },
+  { label: 'Community',         desc: 'Moderate content',        href: '/admin/community',  icon: MessageSquare, grad: 'from-teal to-teal-light'     },
 ]
 
 export default function AdminDashboardPage() {

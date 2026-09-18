@@ -19,8 +19,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   BookOpen,
-  Sparkles,
-  Tag,
 } from "lucide-react";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
@@ -1722,112 +1720,52 @@ export default async function HomePage() {
                 <div className="flex-1 h-px bg-gray-200" aria-hidden="true" />
               </div>
 
-              {/* Launch offer banner */}
-              <div className="flex items-center gap-2 mb-4 rounded-xl border border-teal/30 bg-teal-lighter px-4 py-2.5">
-                <Sparkles
-                  className="w-4 h-4 text-teal shrink-0"
+              {/* Verified membership — single flat price */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-6 text-white mb-5">
+                <div
+                  className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 translate-x-1/3 -translate-y-1/3 pointer-events-none"
                   aria-hidden="true"
                 />
-                <p className="text-[11px] font-semibold text-teal leading-snug">
-                  Launch offer — verification is{" "}
-                  <span className="font-bold">FREE for the first 500 members.</span>{" "}
-                  No fee at all.
+                <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
+                  Verified membership
                 </p>
+                <div className="flex items-baseline gap-2 mb-0.5">
+                  <p className="text-4xl font-bold leading-none">$5</p>
+                </div>
+                <p className="text-white/50 text-[11px] mb-4">
+                  one-time · lifetime verified status
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    "Government ID verified badge",
+                    "Host & accept stay requests",
+                    "Message any sister directly",
+                    "Join co-traveller trips",
+                  ].map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-1.5 text-[11px] text-white/85"
+                    >
+                      <CheckCircle
+                        className="w-3 h-3 text-white/70 shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* Pricing cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                {/* India */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-5 text-white">
-                  <div
-                    className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 translate-x-1/3 -translate-y-1/3 pointer-events-none"
-                    aria-hidden="true"
-                  />
-                  <p className="text-white/60 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
-                    India
-                  </p>
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <p className="text-3xl font-bold leading-none">₹0</p>
-                    <p className="text-lg font-semibold text-white/50 line-through leading-none">
-                      ₹299
-                    </p>
-                  </div>
-                  <p className="text-white/50 text-[11px] mb-4">
-                    free for first 500 members · lifetime
-                  </p>
-                  <ul className="space-y-1.5">
-                    {[
-                      "Government ID verified badge",
-                      "Host & accept stay requests",
-                      "Message any sister directly",
-                      "Join co-traveller trips",
-                    ].map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-start gap-1.5 text-[11px] text-white/85"
-                      >
-                        <CheckCircle
-                          className="w-3 h-3 text-white/70 shrink-0 mt-0.5"
-                          aria-hidden="true"
-                        />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* International */}
-                <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-brand p-5">
-                  <div
-                    className="absolute top-0 right-0 w-24 h-24 rounded-full bg-brand-lighter/60 translate-x-1/3 -translate-y-1/3 pointer-events-none"
-                    aria-hidden="true"
-                  />
-                  <p className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider mb-1.5">
-                    Outside India
-                  </p>
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <p className="text-3xl font-bold leading-none text-brand">
-                      $0
-                    </p>
-                    <p className="text-lg font-semibold text-gray-400 line-through leading-none">
-                      $7
-                    </p>
-                  </div>
-                  <p className="text-gray-400 text-[11px] mb-4">
-                    free for first 500 members · lifetime
-                  </p>
-                  <ul className="space-y-1.5">
-                    {[
-                      "Government ID verified badge",
-                      "Host & accept stay requests",
-                      "Message any sister directly",
-                      "Join co-traveller trips",
-                    ].map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-start gap-1.5 text-[11px] text-gray-600"
-                      >
-                        <CheckCircle
-                          className="w-3 h-3 text-teal shrink-0 mt-0.5"
-                          aria-hidden="true"
-                        />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* How to claim free verification */}
+              {/* How verification works */}
               <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-5">
                 <p className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">
-                  How to verify for free
+                  How verification works
                 </p>
                 <ol className="space-y-3">
                   {[
                     "Sign up and complete your SisterRoam profile.",
-                    "Go through all the verification steps (upload your government ID & selfie).",
-                    "At the payment page, apply promo code to waive the fee.",
+                    "Pay the one-time $5 verification fee.",
+                    "Upload your government ID & record a short selfie video.",
                     "You're verified — start hosting, messaging & co-travelling.",
                   ].map((step, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -1840,25 +1778,6 @@ export default async function HomePage() {
                     </li>
                   ))}
                 </ol>
-
-                {/* Promo code chip */}
-                <div className="mt-4 flex items-center gap-3 rounded-xl border border-dashed border-brand/40 bg-brand-lighter/50 px-4 py-3">
-                  <Tag
-                    className="w-4 h-4 text-brand shrink-0"
-                    aria-hidden="true"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                      Promo code
-                    </p>
-                    <p className="text-sm font-bold text-brand tracking-widest">
-                      NEWSIS100
-                    </p>
-                  </div>
-                  <span className="ml-auto text-[10px] font-semibold text-teal whitespace-nowrap">
-                    100% off
-                  </span>
-                </div>
               </div>
 
               {/* Community appeal strip */}

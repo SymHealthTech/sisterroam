@@ -828,16 +828,37 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
         </div>
       )}
 
-      {/* Images */}
-      {!editing && (
-      <ImageGrid
-        images={post.imageUrls}
-        priority={priority}
-        hasLiked={post.hasLiked}
-        likesCount={post.likesCount}
-        onLike={toggleLike}
-      />
-      )}
+      {/* Images — show only images that have passed manual moderation. A fully
+          approved post (or a legacy post) shows everything; otherwise only the
+          individually-approved images are shown. */}
+      {!editing && (() => {
+        const allImages = post.imageUrls ?? []
+        const approved = post.approvedImagePublicIds ?? []
+        const visibleImages =
+          post.moderationStatus === 'approved' || post.moderationStatus === undefined
+            ? allImages
+            : allImages.filter((_, i) => approved.includes(post.imagePublicIds?.[i]))
+        const hiddenCount = allImages.length - visibleImages.length
+
+        return (
+          <>
+            {visibleImages.length > 0 && (
+              <ImageGrid
+                images={visibleImages}
+                priority={priority}
+                hasLiked={post.hasLiked}
+                likesCount={post.likesCount}
+                onLike={toggleLike}
+              />
+            )}
+            {hiddenCount > 0 && (
+              <p className="text-xs text-gray-400 italic">
+                {hiddenCount === 1 ? 'A photo is' : `${hiddenCount} photos are`} pending review
+              </p>
+            )}
+          </>
+        )
+      })()}
 
       {/* Action row */}
       <div className="flex items-center gap-4 pt-1 border-t border-gray-50">

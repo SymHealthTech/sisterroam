@@ -57,8 +57,13 @@ export async function PATCH(request, { params }) {
     }
 
     const wasPublished = story.isPublished
+    const prevCoverPubId = story.coverImagePublicId
     for (const key of ALLOWED_FIELDS) {
       if (body[key] !== undefined) story[key] = body[key]
+    }
+    // A newly swapped-in cover is public + manually moderated — re-hold it.
+    if (body.coverImagePublicId !== undefined && body.coverImagePublicId && body.coverImagePublicId !== prevCoverPubId) {
+      story.coverModerationStatus = 'pending'
     }
     if (body.isPublished && !wasPublished && !story.publishedAt) {
       story.publishedAt = new Date()

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {
-  Sparkles, Check, Lock, X, PenLine, UserPlus, ShieldCheck, Tag,
+  Sparkles, Check, Lock, X, PenLine, UserPlus, ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -115,28 +115,14 @@ export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
               ))}
             </ul>
 
-            {/* Verification fee waived — launch offer */}
-            <div className="mt-3 rounded-xl border border-dashed border-teal/40 bg-teal-lighter/40 p-3">
-              <p className="text-xs font-semibold text-teal flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                Verification fee waived —{' '}
-                <span className="font-bold">free for the first 500 sisters</span>
+            {/* One-time verification fee */}
+            <div className="mt-3 rounded-xl border border-dashed border-brand/30 bg-brand-lighter/30 p-3">
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                A one-time{' '}
+                <span className="font-semibold text-gray-800">$5</span>{' '}
+                verification fee keeps SisterRoam safe — every member is a
+                genuine, ID-verified woman.
               </p>
-              <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
-                Complete all the verification steps and apply promo code at the
-                payment page — your{' '}
-                <s className="text-gray-400">₹299 / $7</s> fee drops to{' '}
-                <span className="font-semibold text-gray-800">₹0</span>.
-              </p>
-              <div className="mt-2.5 flex items-center gap-2">
-                <Tag className="w-3.5 h-3.5 text-brand shrink-0" />
-                <span className="text-xs font-bold tracking-widest text-brand">
-                  NEWSIS100
-                </span>
-                <span className="ml-auto text-[10px] font-semibold text-teal">
-                  100% off
-                </span>
-              </div>
             </div>
 
             <Link

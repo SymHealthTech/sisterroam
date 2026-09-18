@@ -9,7 +9,7 @@ cloudinary.config({
 export default cloudinary
 
 export async function uploadImage(file, options = {}) {
-  const { folder = 'sisterroam', publicId, transformation } = options
+  const { folder = 'sisterroam', publicId, transformation, moderation } = options
 
   const defaultTransformation = [
     { width: 400, height: 400, crop: 'fill', gravity: 'face' },
@@ -21,6 +21,9 @@ export async function uploadImage(file, options = {}) {
     public_id: publicId,
     transformation: transformation ?? defaultTransformation,
     resource_type: 'image',
+    // Manual moderation for public images — held 'pending', not delivered until
+    // an admin approves.
+    ...(moderation ? { moderation } : {}),
   })
 
   return {
@@ -38,6 +41,9 @@ export async function uploadVideo(file, options = {}) {
     folder,
     public_id:     publicId,
     resource_type: 'video',
+    // Verification videos are private — never publicly deliverable. Admins view
+    // them through short-lived signed URLs (see getSignedUrl).
+    type:          'authenticated',
   })
 
   return {
@@ -81,12 +87,17 @@ export async function getSignedUrl(publicId, resourceType = 'image') {
   })
 }
 
-export async function generateUploadSignature(folder = 'sisterroam', tags = []) {
+// `extra` holds any additional upload params that must be part of the signature
+// (e.g. { moderation: 'manual' } for public images, { type: 'authenticated' }
+// for private verification media). The exact same key/values must be sent by the
+// client in the Cloudinary upload FormData, or the signature check fails.
+export async function generateUploadSignature(folder = 'sisterroam', tags = [], extra = {}) {
   const timestamp = Math.round(Date.now() / 1000)
   const params = {
     folder,
     timestamp,
     ...(tags.length ? { tags: tags.join(',') } : {}),
+    ...extra,
   }
   const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET)
 
@@ -95,5 +106,7 @@ export async function generateUploadSignature(folder = 'sisterroam', tags = []) 
     timestamp,
     apiKey:    process.env.CLOUDINARY_API_KEY,
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    // Echo back the signed extras so the client knows exactly what to append.
+    params: extra,
   }
 }

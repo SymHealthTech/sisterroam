@@ -3,7 +3,7 @@ import VerificationRequest from '@/models/VerificationRequest'
 import User from '@/models/User'
 import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
-import { deleteFile } from '@/lib/cloudinary'
+import { deleteFile, getSignedUrl } from '@/lib/cloudinary'
 
 export async function GET(request) {
   try {
@@ -24,7 +24,19 @@ export async function GET(request) {
       .populate('userId', 'fullName email profilePhotoUrl verificationTier')
       .lean()
 
-    return ok({ verifications })
+    // Verification media is stored privately (type: authenticated). Attach
+    // short-lived signed URLs so only this admin response can view them; the
+    // raw stored URLs never resolve on their own.
+    const withSigned = await Promise.all(
+      verifications.map(async (v) => ({
+        ...v,
+        idDocumentSignedUrl:     v.idDocumentPublicId     ? await getSignedUrl(v.idDocumentPublicId, 'image')     : v.idDocumentUrl,
+        idDocumentBackSignedUrl: v.idDocumentBackPublicId ? await getSignedUrl(v.idDocumentBackPublicId, 'image') : v.idDocumentBackUrl,
+        selfieVideoSignedUrl:    v.selfieVideoPublicId    ? await getSignedUrl(v.selfieVideoPublicId, 'video')    : v.selfieVideoUrl,
+      })),
+    )
+
+    return ok({ verifications: withSigned })
   } catch (e) {
     return handleError(e)
   }

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Video, Upload, Square, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
+import { checkVideoBlob } from '@/lib/nsfw'
 import { cn } from '@/lib/utils'
 
 function formatTime(seconds) {
@@ -12,7 +13,7 @@ function formatTime(seconds) {
   return `${m}:${s}`
 }
 
-export default function VideoCapture({ onUploadComplete }) {
+export default function VideoCapture({ onUploadComplete, deferred = false, onCapture }) {
   const [tab, setTab] = useState('record')
 
   // Record tab
@@ -151,7 +152,7 @@ export default function VideoCapture({ onUploadComplete }) {
   async function uploadToCloudinary(blob, fileName) {
     const sigRes = await fetch('/api/upload/signature?folder=sisterroam/verifications/videos')
     if (!sigRes.ok) throw new Error('Could not start upload. Please try again.')
-    const { signature, timestamp, apiKey, cloudName } = await sigRes.json()
+    const { signature, timestamp, apiKey, cloudName, params = {} } = await sigRes.json()
 
     const fd = new FormData()
     fd.append('file', blob, fileName)
@@ -159,6 +160,8 @@ export default function VideoCapture({ onUploadComplete }) {
     fd.append('timestamp', String(timestamp))
     fd.append('signature', signature)
     fd.append('api_key', apiKey)
+    // Append server-signed extras (type=authenticated → private video).
+    for (const [k, v] of Object.entries(params)) fd.append(k, String(v))
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
@@ -190,10 +193,22 @@ export default function VideoCapture({ onUploadComplete }) {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const result = await uploadToCloudinary(recordedBlob, 'intro.webm')
-      setRecordDone(true)
-      onUploadComplete?.({ url: result.url, publicId: result.publicId })
-      toast.success('Video uploaded!')
+      const check = await checkVideoBlob(recordedBlob)
+      if (!check.safe) {
+        toast.error(check.reason ?? 'This video can’t be uploaded.')
+        setUploading(false)
+        return
+      }
+      if (deferred) {
+        onCapture?.({ blob: recordedBlob, name: 'intro.webm' })
+        setRecordDone(true)
+        toast.success('Video selected')
+      } else {
+        const result = await uploadToCloudinary(recordedBlob, 'intro.webm')
+        setRecordDone(true)
+        onUploadComplete?.({ url: result.url, publicId: result.publicId })
+        toast.success('Video uploaded!')
+      }
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
     } finally {
@@ -204,8 +219,8 @@ export default function VideoCapture({ onUploadComplete }) {
   function onFileSelect(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 500 * 1024 * 1024) {
-      toast.error('File too large. Max 500MB.')
+    if (file.size > 30 * 1024 * 1024) {
+      toast.error('File too large. Max 30MB.')
       e.target.value = ''
       return
     }
@@ -219,10 +234,22 @@ export default function VideoCapture({ onUploadComplete }) {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const result = await uploadToCloudinary(selectedFile, selectedFile.name)
-      setUploadDone(true)
-      onUploadComplete?.({ url: result.url, publicId: result.publicId })
-      toast.success('Video uploaded!')
+      const check = await checkVideoBlob(selectedFile)
+      if (!check.safe) {
+        toast.error(check.reason ?? 'This video can’t be uploaded.')
+        setUploading(false)
+        return
+      }
+      if (deferred) {
+        onCapture?.({ blob: selectedFile, name: selectedFile.name })
+        setUploadDone(true)
+        toast.success('Video selected')
+      } else {
+        const result = await uploadToCloudinary(selectedFile, selectedFile.name)
+        setUploadDone(true)
+        onUploadComplete?.({ url: result.url, publicId: result.publicId })
+        toast.success('Video uploaded!')
+      }
     } catch (err) {
       toast.error(err.message ?? 'Upload failed. Try again.')
     } finally {
@@ -347,7 +374,7 @@ export default function VideoCapture({ onUploadComplete }) {
               {recordDone ? (
                 <div className="text-center py-6">
                   <CheckCircle className="w-12 h-12 text-teal mx-auto mb-2" aria-hidden="true" />
-                  <p className="text-sm font-medium text-gray-900">Video uploaded successfully!</p>
+                  <p className="text-sm font-medium text-gray-900">{deferred ? 'Video selected — uploads after payment' : 'Video uploaded successfully!'}</p>
                 </div>
               ) : (
                 <>
@@ -399,7 +426,7 @@ export default function VideoCapture({ onUploadComplete }) {
                 {selectedFile ? (
                   <p className="text-xs text-gray-400">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB</p>
                 ) : (
-                  <p className="text-xs text-gray-400">MP4, MOV or AVI · Max 500 MB</p>
+                  <p className="text-xs text-gray-400">MP4, MOV or AVI · Max 30 MB</p>
                 )}
                 <input
                   ref={fileInputRef}
