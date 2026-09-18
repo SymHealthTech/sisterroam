@@ -26,6 +26,8 @@ const TYPE_ICON = {
   cotraveller_filled:        Bell,
   new_recommendation_answer: MessageCircle,
   answer_accepted:           Star,
+  moderation_pending:        Bell,
+  content_rejected:          AlertTriangle,
 }
 
 function groupByDate(notifs) {

@@ -74,12 +74,20 @@ export async function applyModerationDecision(publicId, status, resourceType = '
       user.profilePhotoStatus = 'approved'
       await user.save()
     } else {
-      // Rejected: drop the photo, fall back to initials, delete the asset.
+      // Rejected: drop the photo, fall back to initials, delete the asset,
+      // and tell her so she can upload a different one.
       user.profilePhotoUrl = undefined
       user.profilePhotoPublicId = undefined
       user.profilePhotoStatus = 'rejected'
       await user.save()
       await deleteFile(publicId, 'image').catch(() => {})
+      await Notification.create({
+        recipientId: user._id,
+        type:  'content_rejected',
+        title: 'Your profile photo was rejected',
+        body:  'The profile photo you uploaded didn’t meet our community guidelines and was removed. You can upload a different one from your profile.',
+        link:  '/profile/edit',
+      }).catch(() => {})
     }
     return { matched: true, kind: 'profile_photo' }
   }
@@ -87,7 +95,6 @@ export async function applyModerationDecision(publicId, status, resourceType = '
   // ── Community post image (may hold up to 7 images) ─────────────
   const post = await CommunityPost.findOne({ imagePublicIds: publicId })
   if (post) {
-    const idx = post.imagePublicIds.indexOf(publicId)
     if (status === 'approved') {
       if (!post.approvedImagePublicIds.includes(publicId)) {
         post.approvedImagePublicIds.push(publicId)
@@ -99,18 +106,19 @@ export async function applyModerationDecision(publicId, status, resourceType = '
       post.moderationStatus = allApproved ? 'approved' : 'pending'
       await post.save()
     } else {
-      // Rejected: remove just this image (keep the rest + the text).
-      if (idx !== -1) {
-        post.imageUrls.splice(idx, 1)
-        post.imagePublicIds.splice(idx, 1)
+      // Rejected: the whole post comes down with the image — delete every
+      // attached image from Cloudinary, remove the post, and notify the author.
+      for (const pid of post.imagePublicIds ?? []) {
+        await deleteFile(pid, 'image').catch(() => {})
       }
-      post.approvedImagePublicIds = post.approvedImagePublicIds.filter((id) => id !== publicId)
-      const allApproved =
-        post.imagePublicIds.length === 0 ||
-        post.imagePublicIds.every((id) => post.approvedImagePublicIds.includes(id))
-      post.moderationStatus = allApproved ? 'approved' : 'pending'
-      await post.save()
-      await deleteFile(publicId, 'image').catch(() => {})
+      await CommunityPost.deleteOne({ _id: post._id })
+      await Notification.create({
+        recipientId: post.authorId,
+        type:  'content_rejected',
+        title: 'Your post was removed',
+        body:  'A post you shared was removed by our team because an attached photo didn’t meet our community guidelines.',
+        link:  '/feed',
+      }).catch(() => {})
     }
     return { matched: true, kind: 'community_image' }
   }
@@ -127,6 +135,13 @@ export async function applyModerationDecision(publicId, status, resourceType = '
       story.coverModerationStatus = 'rejected'
       await story.save()
       await deleteFile(publicId, 'image').catch(() => {})
+      await Notification.create({
+        recipientId: story.authorId,
+        type:  'content_rejected',
+        title: 'Your story cover was rejected',
+        body:  'The cover image on your travel story didn’t meet our community guidelines and was removed. Your story text is safe — you can add a different cover.',
+        link:  story.slug ? `/stories/${story.slug}` : '/community/blog',
+      }).catch(() => {})
     }
     return { matched: true, kind: 'story_cover' }
   }

@@ -5,20 +5,13 @@ import CommunityPost from '@/models/CommunityPost'
 import TravelStory from '@/models/TravelStory'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 
-// Cache badge counts for 30s — polled by the admin nav and doesn't need
-// to be real-time.
-let _countsCache = null
-let _countsCacheAt = 0
-const COUNTS_TTL = 30_000
-
+// Not cached: these badge counts must drop immediately after an admin approves
+// or rejects an item (a lingering "KYC pending" number is confusing). The admin
+// nav fetches this once per page mount — the extra countDocuments are cheap.
 export async function GET() {
   try {
     const session = await connectAndAuth()
     if (!session.user.isAdmin) return fail('Admin access required', 403)
-
-    if (_countsCache && Date.now() - _countsCacheAt < COUNTS_TTL) {
-      return ok(_countsCache)
-    }
 
     const [pendingKyc, openReports, pendingPhotos, pendingPosts, pendingStories] = await Promise.all([
       VerificationRequest.countDocuments({ status: 'pending' }),
@@ -29,10 +22,7 @@ export async function GET() {
     ])
 
     const pendingModeration = pendingPhotos + pendingPosts + pendingStories
-    _countsCache = { pendingKyc, openReports, pendingModeration }
-    _countsCacheAt = Date.now()
-
-    return ok(_countsCache)
+    return ok({ pendingKyc, openReports, pendingModeration })
   } catch (e) {
     return handleError(e)
   }

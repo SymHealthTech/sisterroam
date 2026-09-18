@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -90,19 +90,26 @@ export default function AdminLayout({ children }) {
     if (status === 'authenticated' && !session?.user?.isAdmin) router.replace('/feed')
   }, [status, session, router])
 
-  useEffect(() => {
+  const refreshCounts = useCallback(async () => {
     if (!session?.user?.isAdmin) return
-    async function fetchCounts() {
-      try {
-        const res = await fetch('/api/admin/counts')
-        if (res.ok) {
-          const data = await res.json()
-          setCounts({ kyc: data.data?.pendingKyc ?? 0, reports: data.data?.openReports ?? 0 })
-        }
-      } catch {}
-    }
-    fetchCounts()
+    try {
+      const res = await fetch('/api/admin/counts')
+      if (res.ok) {
+        const data = await res.json()
+        setCounts({ kyc: data.data?.pendingKyc ?? 0, reports: data.data?.openReports ?? 0 })
+      }
+    } catch {}
   }, [session])
+
+  useEffect(() => { refreshCounts() }, [refreshCounts])
+
+  // Admin pages fire `admin:refresh-counts` right after they approve/reject an
+  // item, so the sidebar badge drops immediately instead of waiting for the
+  // next navigation.
+  useEffect(() => {
+    window.addEventListener('admin:refresh-counts', refreshCounts)
+    return () => window.removeEventListener('admin:refresh-counts', refreshCounts)
+  }, [refreshCounts])
 
   // Lock body scroll while the drawer is open
   useEffect(() => {

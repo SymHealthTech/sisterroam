@@ -23,6 +23,7 @@ const notificationSchema = new mongoose.Schema({
       'new_recommendation_answer',
       'answer_accepted',
       'moderation_pending',
+      'content_rejected',
     ],
     required: true,
   },

@@ -126,6 +126,8 @@ function getProfileCompleteness(profile) {
 function ProfileCompletenessCard({ profile }) {
   const { checks, pct } = getProfileCompleteness(profile);
   const missing = checks.filter((c) => !c.done);
+  // Unverified (free / basic) sisters still need to verify — surface a CTA.
+  const needsVerification = (profile?.verificationTier ?? "basic") === "basic";
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 space-y-3">
@@ -157,6 +159,11 @@ function ProfileCompletenessCard({ profile }) {
       <Button href="/profile/edit" variant="secondary" size="sm" fullWidth>
         Complete profile
       </Button>
+      {needsVerification && (
+        <Button href="/verify" variant="primary" size="sm" fullWidth>
+          Get verified
+        </Button>
+      )}
     </div>
   );
 }

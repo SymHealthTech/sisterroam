@@ -223,6 +223,8 @@ export default function KYCQueuePage() {
       return prev.map(v => v._id === id ? { ...v, status } : v)
     })
     setActiveIdx(prev => Math.max(0, Math.min(prev, verifs.length - 2)))
+    // Drop the KYC-pending badge in the sidebar immediately.
+    window.dispatchEvent(new Event('admin:refresh-counts'))
   }
 
   // Keyboard navigation

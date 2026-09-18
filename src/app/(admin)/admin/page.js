@@ -6,7 +6,7 @@ import Skeleton from '@/components/ui/Skeleton'
 import AddSisterCard from '@/components/admin/AddSisterCard'
 import {
   Users, ShieldCheck, FileCheck, Home, Flag, BookOpen,
-  UserPlus, MapPin, MessageSquare, ArrowRight, Activity, Sparkles,
+  UserPlus, MapPin, MessageSquare, ArrowRight, Activity, Sparkles, Images,
 } from 'lucide-react'
 
 /* Literal class maps — Tailwind v4 only generates classes it can see as
@@ -23,6 +23,7 @@ const STAT_META = [
   { key: 'totalMembers',         icon: Users,         label: 'Total Members',   color: 'brand'  },
   { key: 'verifiedMembers',      icon: ShieldCheck,   label: 'Verified',        color: 'teal'   },
   { key: 'pendingKyc',           icon: FileCheck,     label: 'KYC Pending',     color: 'amber'  },
+  { key: 'pendingModeration',    icon: Images,        label: 'Images Pending',  color: 'pink'   },
   { key: 'activeStays',          icon: Home,          label: 'Active Stays',    color: 'pink'   },
   { key: 'openReports',          icon: Flag,          label: 'Open Reports',    color: 'danger' },
   { key: 'blogPosts',            icon: BookOpen,      label: 'Stories',         color: 'brand'  },
@@ -32,9 +33,9 @@ const STAT_META = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: 'Review KYC',        desc: 'Approve or reject IDs',   href: '/admin/kyc',        icon: FileCheck,     grad: 'from-amber to-amber-light'   },
-  { label: 'Image Moderation',  desc: 'Approve public images',   href: '/admin/moderation', icon: ShieldCheck,   grad: 'from-pink to-pink-light'     },
-  { label: 'Safety Reports',    desc: 'Handle open incidents',   href: '/admin/reports',    icon: Flag,          grad: 'from-danger to-danger-light' },
+  { label: 'Review KYC',        desc: 'Approve or reject IDs',   href: '/admin/kyc',        icon: FileCheck,     grad: 'from-amber to-amber-light',   countKey: 'pendingKyc'        },
+  { label: 'Image Moderation',  desc: 'Approve public images',   href: '/admin/moderation', icon: ShieldCheck,   grad: 'from-pink to-pink-light',     countKey: 'pendingModeration' },
+  { label: 'Safety Reports',    desc: 'Handle open incidents',   href: '/admin/reports',    icon: Flag,          grad: 'from-danger to-danger-light', countKey: 'openReports'       },
   { label: 'Manage Users',      desc: 'Members & payments',      href: '/admin/users',      icon: Users,         grad: 'from-brand to-brand-light'   },
   { label: 'Community',         desc: 'Moderate content',        href: '/admin/community',  icon: MessageSquare, grad: 'from-teal to-teal-light'     },
 ]
@@ -73,7 +74,7 @@ export default function AdminDashboardPage() {
           {/* ── Stats grid ──────────────────────────────── */}
           {loading ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} variant="card" className="h-28" />)}
+              {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} variant="card" className="h-28" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -109,18 +110,26 @@ export default function AdminDashboardPage() {
               Quick actions
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {QUICK_ACTIONS.map(a => (
-                <a
-                  key={a.href}
-                  href={a.href}
-                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${a.grad} p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all`}
-                >
-                  <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10 group-hover:scale-125 transition-transform" aria-hidden="true" />
-                  <a.icon className="w-6 h-6 mb-3 relative" aria-hidden="true" />
-                  <p className="font-semibold text-sm relative">{a.label}</p>
-                  <p className="text-white/75 text-xs mt-0.5 relative">{a.desc}</p>
-                </a>
-              ))}
+              {QUICK_ACTIONS.map(a => {
+                const count = a.countKey ? (stats?.[a.countKey] ?? 0) : 0
+                return (
+                  <a
+                    key={a.href}
+                    href={a.href}
+                    className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${a.grad} p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+                  >
+                    <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10 group-hover:scale-125 transition-transform" aria-hidden="true" />
+                    {count > 0 && (
+                      <span className="absolute top-3 right-3 min-w-[22px] h-[22px] px-1.5 rounded-full bg-white text-gray-900 text-xs font-bold flex items-center justify-center shadow-sm">
+                        {count > 99 ? '99+' : count}
+                      </span>
+                    )}
+                    <a.icon className="w-6 h-6 mb-3 relative" aria-hidden="true" />
+                    <p className="font-semibold text-sm relative">{a.label}</p>
+                    <p className="text-white/75 text-xs mt-0.5 relative">{a.desc}</p>
+                  </a>
+                )
+              })}
             </div>
           </div>
 

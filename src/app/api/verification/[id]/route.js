@@ -32,7 +32,10 @@ export async function PATCH(request, { params }) {
     // Delete selfie video after review — it is only needed during the review
     // window. ID document photos are intentionally kept for safety/legal reference.
     if (verif.selfieVideoPublicId) {
-      deleteFile(verif.selfieVideoPublicId, 'video').catch(console.error)
+      // The intro video is stored as private ('authenticated') media, so it must
+      // be destroyed with the same type — otherwise Cloudinary reports
+      // 'not found' and the file lingers in storage.
+      deleteFile(verif.selfieVideoPublicId, 'video', 'authenticated').catch(console.error)
       verif.selfieVideoUrl      = undefined
       verif.selfieVideoPublicId = undefined
     }

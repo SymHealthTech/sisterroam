@@ -4,25 +4,19 @@ import VerificationRequest from '@/models/VerificationRequest'
 import HostingRequest from '@/models/HostingRequest'
 import SafetyReport from '@/models/SafetyReport'
 import TravelStory from '@/models/TravelStory'
+import CommunityPost from '@/models/CommunityPost'
 import CoTravelPost from '@/models/CoTravelPost'
 import Recommendation from '@/models/Recommendation'
 import RecommendationQuestion from '@/models/RecommendationQuestion'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 
-// Cache admin stats for 60s — these 9 countDocuments are expensive and the
-// data doesn't need to be real-time on the dashboard.
-let _statsCache = null
-let _statsCacheAt = 0
-const STATS_TTL = 60_000
-
+// Not cached: the dashboard is admin-only + low-traffic, and a stale count (e.g.
+// KYC/moderation pending not dropping right after an approve/reject) is worse
+// than a few extra countDocuments. Numbers are always read fresh.
 export async function GET() {
   try {
     const session = await connectAndAuth()
     if (!session.user.isAdmin) return fail('Admin access required', 403)
-
-    if (_statsCache && Date.now() - _statsCacheAt < STATS_TTL) {
-      return ok(_statsCache)
-    }
 
     const [
       totalMembers,
@@ -34,6 +28,9 @@ export async function GET() {
       openCoTravelPosts,
       totalRecommendations,
       openQuestions,
+      pendingPhotos,
+      pendingPosts,
+      pendingStories,
     ] = await Promise.all([
       User.countDocuments({ isActive: { $ne: false } }),
       User.countDocuments({ verificationTier: { $in: ['verified', 'trusted'] } }),
@@ -44,9 +41,12 @@ export async function GET() {
       CoTravelPost.countDocuments({ status: 'open' }),
       Recommendation.countDocuments({ isFlagged: false }),
       RecommendationQuestion.countDocuments({ status: 'open' }),
+      User.countDocuments({ profilePhotoStatus: 'pending' }),
+      CommunityPost.countDocuments({ moderationStatus: 'pending' }),
+      TravelStory.countDocuments({ coverModerationStatus: 'pending' }),
     ])
 
-    _statsCache = {
+    return ok({
       totalMembers,
       verifiedMembers,
       pendingKyc,
@@ -56,10 +56,9 @@ export async function GET() {
       openCoTravelPosts,
       totalRecommendations,
       openQuestions,
-    }
-    _statsCacheAt = Date.now()
-
-    return ok(_statsCache)
+      // Public images (profile photos + post images + story covers) awaiting review.
+      pendingModeration: pendingPhotos + pendingPosts + pendingStories,
+    })
   } catch (e) {
     return handleError(e)
   }

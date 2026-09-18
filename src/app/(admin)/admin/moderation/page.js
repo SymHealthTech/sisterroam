@@ -126,6 +126,8 @@ export default function AdminModerationPage() {
 
   function handleDecide(publicId) {
     setItems((prev) => prev.filter((i) => i.publicId !== publicId))
+    // Keep the sidebar/dashboard moderation counts in sync immediately.
+    window.dispatchEvent(new Event('admin:refresh-counts'))
   }
 
   return (

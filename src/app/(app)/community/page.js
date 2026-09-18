@@ -35,17 +35,27 @@ export function FeedTab({ welcome = false }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [welcomeInfo, setWelcomeInfo] = useState(null);
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [verifiedDismissed, setVerifiedDismissed] = useState(false);
   const composerRef = useRef(null);
 
   const dismissKey = user?.id ? `sr-welcome-dismissed-${user.id}` : null;
+  // The "you're verified" card is a separate one-time card with its own
+  // dismissal, so a sister who dismissed the sign-up card still sees it after
+  // her verification is approved.
+  const verifiedDismissKey = user?.id
+    ? `sr-verified-welcome-dismissed-${user.id}`
+    : null;
 
   // Personal (per-browser) dismissal — separate from an admin global delete.
   useEffect(() => {
     if (!dismissKey) return;
     try {
       setWelcomeDismissed(localStorage.getItem(dismissKey) === "1");
+      if (verifiedDismissKey) {
+        setVerifiedDismissed(localStorage.getItem(verifiedDismissKey) === "1");
+      }
     } catch {}
-  }, [dismissKey]);
+  }, [dismissKey, verifiedDismissKey]);
 
   useEffect(() => {
     if (!welcome || !user?.id) return;
@@ -70,13 +80,33 @@ export function FeedTab({ welcome = false }) {
     }
   }
 
+  function dismissVerifiedWelcome() {
+    setVerifiedDismissed(true);
+    if (verifiedDismissKey) {
+      try {
+        localStorage.setItem(verifiedDismissKey, "1");
+      } catch {}
+    }
+  }
+
   function scrollToComposer() {
     composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Every newly signed-up sister sees her own private welcome post until she
-  // dismisses it or it auto-retires (first post / 7 days, per the API).
-  const showWelcome = welcome && !welcomeDismissed && welcomeInfo?.isNewcomer;
+  const isVerified =
+    (user?.tierLoaded ?? false) &&
+    (user?.verificationTier === "verified" ||
+      user?.verificationTier === "trusted");
+
+  // A newly-verified sister sees a one-time "you're verified" card (with an
+  // upload-photo button + everything she can now do), shown until she dismisses
+  // it. It takes priority over the sign-up card.
+  const showVerifiedWelcome = welcome && isVerified && !verifiedDismissed;
+
+  // Every newly signed-up (still unverified) sister sees her own private welcome
+  // post until she dismisses it or it auto-retires (first post / 7 days, per the API).
+  const showWelcome =
+    welcome && !welcomeDismissed && welcomeInfo?.isNewcomer && !isVerified;
 
   const fetchPosts = useCallback(async (cat, pg) => {
     const params = new URLSearchParams({ page: pg, limit: 10 });
@@ -157,13 +187,25 @@ export function FeedTab({ welcome = false }) {
         ))}
       </div>
 
-      {/* Welcome post — private to each newly signed-up sister, /feed only */}
-      {showWelcome && (
+      {/* Welcome posts — private to each sister, /feed only. The verified card
+          takes priority once her verification is approved. */}
+      {showVerifiedWelcome ? (
         <WelcomeCard
-          profile={welcomeInfo.profile}
+          profile={{
+            fullName: user?.fullName,
+            verificationTier: user?.verificationTier,
+          }}
           onIntroduce={scrollToComposer}
-          onDismiss={dismissWelcome}
+          onDismiss={dismissVerifiedWelcome}
         />
+      ) : (
+        showWelcome && (
+          <WelcomeCard
+            profile={welcomeInfo.profile}
+            onIntroduce={scrollToComposer}
+            onDismiss={dismissWelcome}
+          />
+        )
       )}
 
       {/* Posts */}

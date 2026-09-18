@@ -522,9 +522,12 @@ export default function OnboardingProfilePage() {
               }
               onUploadComplete={({ url }) => setProfilePhotoUrl(url)}
             />
-            <p className="text-xs text-gray-400 mt-2">
-              Add a clear photo of yourself
-            </p>
+            {(session?.user?.verificationTier === "verified" ||
+              session?.user?.verificationTier === "trusted") && (
+              <p className="text-xs text-gray-400 mt-2">
+                Add a clear photo of yourself
+              </p>
+            )}
           </div>
 
           {/* Full name */}

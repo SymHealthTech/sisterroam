@@ -73,8 +73,12 @@ export async function uploadDocument(file, options = {}) {
   }
 }
 
-export async function deleteFile(publicId, resourceType = 'image') {
-  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType })
+// `type` must match how the asset was stored, or Cloudinary can't find it and
+// returns { result: 'not found' } without deleting anything. Public images are
+// 'upload' (the default); private verification media (ID docs + intro video)
+// are 'authenticated', so those must be deleted with type: 'authenticated'.
+export async function deleteFile(publicId, resourceType = 'image', type = 'upload') {
+  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType, type })
 }
 
 export async function getSignedUrl(publicId, resourceType = 'image') {

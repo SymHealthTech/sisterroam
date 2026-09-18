@@ -27,6 +27,8 @@ const TYPE_ICON = {
   cotraveller_filled:        Bell,
   new_recommendation_answer: MessageCircle,
   answer_accepted:           Star,
+  moderation_pending:        Clock,
+  content_rejected:          AlertTriangle,
 }
 
 function reducer(state, action) {
