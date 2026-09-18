@@ -3,6 +3,7 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import { slugify } from '@/lib/utils'
+import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
 
 const CATEGORIES = [
   'solo_travel', 'cycling', 'trekking', 'running',
@@ -106,6 +107,10 @@ export async function POST(request) {
       publishedAt:        isPublished ? new Date() : undefined,
       readTimeMinutes,
     })
+
+    if (story.coverModerationStatus === 'pending') {
+      notifyAdminsOfPendingModeration({ kind: 'story_cover' }).catch(() => {})
+    }
 
     return ok(story.toObject())
   } catch (e) {

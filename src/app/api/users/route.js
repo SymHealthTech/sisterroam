@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import HostProfile from '@/models/HostProfile'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
 
 const UPDATABLE = [
   'fullName', 'age', 'gender', 'city', 'country', 'languages', 'education',
@@ -47,6 +48,14 @@ export async function PATCH(request) {
     ).lean()
 
     if (!user) return fail('User not found', 404)
+
+    // A newly uploaded profile photo is held for moderation — alert admins.
+    if ($set.profilePhotoStatus === 'pending') {
+      notifyAdminsOfPendingModeration({
+        kind:   'profile_photo',
+        detail: user.fullName ? `from ${user.fullName}` : '',
+      }).catch(() => {})
+    }
 
     // Keep the host listing in sync with the role, so /explore and host profile
     // views reflect the change immediately. A Traveller (guest) is de-listed; a

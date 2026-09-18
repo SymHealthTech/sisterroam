@@ -603,6 +603,10 @@ export default function ProfileEditPage() {
             <ImageUpload
               currentImageUrl={profilePhotoUrl}
               name={fullName}
+              isVerified={
+                session?.user?.verificationTier === "verified" ||
+                session?.user?.verificationTier === "trusted"
+              }
               onUploadComplete={({ url, publicId }) => {
                 setProfilePhotoUrl(url);
                 setProfilePhotoPublicId(publicId ?? "");

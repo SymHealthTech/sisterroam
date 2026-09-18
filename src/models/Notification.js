@@ -22,6 +22,7 @@ const notificationSchema = new mongoose.Schema({
       'cotraveller_filled',
       'new_recommendation_answer',
       'answer_accepted',
+      'moderation_pending',
     ],
     required: true,
   },

@@ -32,13 +32,13 @@ const STEPS = [
     icon: UserPlus,
     step: "01",
     title: "Create your free profile",
-    desc: "Sign up with your email or Google account. Tell us about yourself, your travel style, and what you're looking for. It takes less than 3 minutes.",
+    desc: "Sign up with your email, then tell us about yourself, your travel style, and what you're looking for. It takes less than 3 minutes.",
   },
   {
     icon: Shield,
     step: "02",
     title: "Get verified",
-    desc: "Submit a government-issued ID and a short intro video. Our team reviews your documents within 48 hours and grants you the verified badge.",
+    desc: "Upload a government-issued ID and record a short intro video, then pay the one-time $5 verification fee. This confirms every member is a genuine woman and keeps out fake or abusive accounts. Our team reviews within 48 hours and grants your verified badge.",
   },
   {
     icon: Search,
@@ -117,7 +117,7 @@ export default function HowItWorksPage() {
               href="/signup"
               className="inline-flex items-center gap-2 px-7 py-3 bg-brand text-white font-medium text-sm rounded-[10px] hover:bg-brand-dark transition-colors"
             >
-              Join SisterRoam — it&apos;s free
+              Join SisterRoam — free to join
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>
           </div>

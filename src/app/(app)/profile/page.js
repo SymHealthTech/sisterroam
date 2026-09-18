@@ -406,6 +406,12 @@ export default function ProfilePage() {
                       <Camera className="w-3.5 h-3.5 text-white" />
                     </button>
                   </div>
+                  {user.profilePhotoStatus === "pending" && (
+                    <p className="mt-2 text-[11px] leading-snug text-amber-dark bg-amber-lighter/40 border border-amber/20 rounded-lg px-2 py-1 max-w-[9rem]">
+                      Photo under review — your initials show until our team
+                      approves it.
+                    </p>
+                  )}
                 </div>
 
                 {/* Info */}
@@ -952,6 +958,10 @@ export default function ProfilePage() {
             <ImageUpload
               currentImageUrl={user.profilePhotoUrl}
               name={user.fullName}
+              isVerified={
+                user.verificationTier === "verified" ||
+                user.verificationTier === "trusted"
+              }
               onUploadComplete={handlePhotoUpdate}
             />
           </div>

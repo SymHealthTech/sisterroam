@@ -7,6 +7,7 @@ import CommunityPost from '@/models/CommunityPost'
 import Payment from '@/models/Payment'
 import { uploadImage, uploadVideo, uploadDocument } from '@/lib/cloudinary'
 import { isVerifiedMember } from '@/lib/apiHelpers'
+import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { VERIFICATION_UPLOADS_ON_HOLD, PROFILE_PHOTO_UPLOADS_ON_HOLD, SAFETY_EVIDENCE_UPLOADS_ON_HOLD } from '@/lib/featureFlags'
 
@@ -66,8 +67,8 @@ export async function POST(request) {
     }
   }
 
-  // Profile photos: on hold → refuse; otherwise members who have paid the fee
-  // (not free 'basic' accounts). Still manually moderated before going public.
+  // Profile photos: on hold → refuse; otherwise verified members only (a
+  // profile photo is public-facing). Still manually moderated before going public.
   if (type === 'profile_photo') {
     if (PROFILE_PHOTO_UPLOADS_ON_HOLD) {
       return Response.json(
@@ -75,9 +76,9 @@ export async function POST(request) {
         { status: 503 },
       )
     }
-    if (session.user.verificationTier === 'basic') {
+    if (!isVerifiedMember(session)) {
       return Response.json(
-        { error: 'Please complete verification before adding a profile photo.' },
+        { error: 'Only verified members can add a profile photo.' },
         { status: 403 },
       )
     }
@@ -128,6 +129,7 @@ export async function POST(request) {
           profilePhotoPublicId: result.publicId,
           profilePhotoStatus:   'pending',
         })
+        notifyAdminsOfPendingModeration({ kind: 'profile_photo' }).catch(() => {})
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }
 
@@ -159,6 +161,7 @@ export async function POST(request) {
             $push: { imageUrls: result.url, imagePublicIds: result.publicId },
             $set:  { moderationStatus: 'pending' },
           })
+          notifyAdminsOfPendingModeration({ kind: 'community_image' }).catch(() => {})
         }
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }
@@ -178,6 +181,7 @@ export async function POST(request) {
             { slug: extra },
             { coverImageUrl: result.url, coverImagePublicId: result.publicId, coverModerationStatus: 'pending' }
           )
+          notifyAdminsOfPendingModeration({ kind: 'story_cover' }).catch(() => {})
         }
         return Response.json({ success: true, url: result.url, publicId: result.publicId })
       }

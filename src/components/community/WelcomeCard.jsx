@@ -21,6 +21,16 @@ const VERIFIED_PERKS = [
   'Express interest in co-travel trips',
 ]
 
+// Everything a fully verified sister can now do — shown on her welcome card.
+const VERIFIED_CAN_DO = [
+  'Add a profile photo so sisters recognise you',
+  'Post photos in the community feed',
+  'Message any sister and request stays',
+  'Host fellow travellers and offer your place',
+  'Express interest in co-traveller trips',
+  'Share your own travel stories',
+]
+
 /**
  * A short, friendly welcome "post" shown at the top of the /feed community
  * stream to brand-new sisters. Flow: welcome → introduce yourself → what's free
@@ -83,20 +93,39 @@ export default function WelcomeCard({ profile, onIntroduce, onDismiss }) {
           </button>
         </section>
 
-        {/* 2 — What you can do now (free) */}
+        {/* 2 — What you can do now */}
         <section className="border-t border-gray-100 pt-3.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal flex items-center gap-1.5 mb-2">
-            <Check className="w-3.5 h-3.5" />
-            Free — what you can do now
-          </p>
-          <ul className="space-y-1">
-            {FREE_PERKS.map((perk) => (
-              <li key={perk} className="flex items-start gap-2 text-sm text-gray-700">
-                <Check className="w-4 h-4 text-teal shrink-0 mt-0.5" />
-                <span>{perk}</span>
-              </li>
-            ))}
-          </ul>
+          {isVerified ? (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-wide text-teal flex items-center gap-1.5 mb-2">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                You&apos;re verified 🎉 — here&apos;s everything you can do now
+              </p>
+              <ul className="space-y-1">
+                {VERIFIED_CAN_DO.map((perk) => (
+                  <li key={perk} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Check className="w-4 h-4 text-teal shrink-0 mt-0.5" />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-wide text-teal flex items-center gap-1.5 mb-2">
+                <Check className="w-3.5 h-3.5" />
+                Free — what you can do now
+              </p>
+              <ul className="space-y-1">
+                {FREE_PERKS.map((perk) => (
+                  <li key={perk} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Check className="w-4 h-4 text-teal shrink-0 mt-0.5" />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
 
         {/* 3 — Verification benefits */}

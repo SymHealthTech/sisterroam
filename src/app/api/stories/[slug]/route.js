@@ -3,6 +3,7 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import { deleteFile } from '@/lib/cloudinary'
+import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
 
 const ALLOWED_FIELDS = [
   'title', 'content', 'excerpt', 'coverImageUrl', 'coverImagePublicId',
@@ -62,14 +63,19 @@ export async function PATCH(request, { params }) {
       if (body[key] !== undefined) story[key] = body[key]
     }
     // A newly swapped-in cover is public + manually moderated — re-hold it.
+    let coverReheld = false
     if (body.coverImagePublicId !== undefined && body.coverImagePublicId && body.coverImagePublicId !== prevCoverPubId) {
       story.coverModerationStatus = 'pending'
+      coverReheld = true
     }
     if (body.isPublished && !wasPublished && !story.publishedAt) {
       story.publishedAt = new Date()
     }
 
     await story.save()
+    if (coverReheld) {
+      notifyAdminsOfPendingModeration({ kind: 'story_cover' }).catch(() => {})
+    }
     return ok(story.toObject())
   } catch (e) {
     return handleError(e)

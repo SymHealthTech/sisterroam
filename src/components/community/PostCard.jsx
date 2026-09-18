@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   Heart, MessageCircle, Share2, MoreHorizontal,
-  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, ImagePlus,
+  Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, ImagePlus, Clock,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
@@ -652,6 +652,18 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
       confirmLabel="Remove"
     />
     <div className="bg-white border border-gray-100 -mx-4 sm:mx-0 rounded-none sm:rounded-2xl p-4 space-y-3">
+      {/* Under-review banner — only the author sees her own held post; it stays
+          hidden from everyone else until an admin approves the photos. */}
+      {isOwn && post.moderationStatus === 'pending' && (
+        <div className="flex items-start gap-2 rounded-xl bg-amber-lighter/40 border border-amber/20 px-3 py-2 text-xs text-amber-dark">
+          <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>
+            <span className="font-semibold">Under review.</span> This post has
+            photos and is only visible to you until our team approves it.
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3 min-w-0">

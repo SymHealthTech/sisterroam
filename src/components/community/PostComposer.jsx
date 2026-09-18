@@ -245,7 +245,11 @@ export default function PostComposer({ user, onPost }) {
     if (!res.ok) { toast.error('Failed to post'); return }
     const d = await res.json()
     onPost?.(d.data)
-    toast.success('Posted!')
+    if (d.data?.moderationStatus === 'pending') {
+      toast.success('Your post is under review — it will appear once our team approves the photos.', { duration: 5000 })
+    } else {
+      toast.success('Posted!')
+    }
     reset()
   }
 
@@ -319,6 +323,10 @@ export default function PostComposer({ user, onPost }) {
             />
             <p className="text-[11px] text-gray-400 mt-1.5 text-right">
               {images.length}/{MAX_IMAGES} photos · tap to view full size
+            </p>
+            <p className="text-[11px] text-amber-dark bg-amber-lighter/40 border border-amber/20 rounded-lg px-2.5 py-1.5 mt-1.5 flex items-center gap-1.5">
+              <Lock className="w-3 h-3 shrink-0" />
+              Posts with photos are reviewed by our team before they appear in the feed.
             </p>
           </div>
         )}

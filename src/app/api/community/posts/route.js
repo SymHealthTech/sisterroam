@@ -3,6 +3,7 @@ import CommunityPost from '@/models/CommunityPost'
 import { ok, fail, connectAndAuth, handleError, isVerifiedMember } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
+import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
 
 const CATEGORIES = ['general', 'safety_tips', 'trip_planning', 'looking_for_host', 'hosting_offer', 'achievements', 'questions', 'safety_brief', 'guide', 'founder_log', 'ask_community']
 
@@ -17,8 +18,18 @@ export async function GET(request) {
     const page     = Math.max(1, parseInt(searchParams.get('page')  ?? '1'))
     const limit    = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') ?? '10')))
 
+    const uid = userId ? String(userId) : null
+
     const filter = { isPublished: true }
     if (category && CATEGORIES.includes(category)) filter.category = category
+
+    // A post with attached photos is held for moderation (moderationStatus
+    // 'pending') and stays hidden from the public feed until an admin approves
+    // it. Its own author still sees it — with an "under review" badge — so she
+    // knows it was posted. Text-only posts are 'approved' and show normally.
+    filter.$or = uid
+      ? [{ moderationStatus: { $ne: 'pending' } }, { authorId: uid }]
+      : [{ moderationStatus: { $ne: 'pending' } }]
 
     const [posts, total] = await Promise.all([
       CommunityPost.find(filter)
@@ -30,7 +41,6 @@ export async function GET(request) {
       CommunityPost.countDocuments(filter),
     ])
 
-    const uid = userId ? String(userId) : null
     const postsOut = posts.map(p => ({
       ...p,
       hasLiked: uid ? p.likes?.some(id => id.toString() === uid) : false,
@@ -66,6 +76,14 @@ export async function POST(request) {
       // admin approves them. Text-only posts stay 'approved' and show normally.
       moderationStatus: imageUrls.length > 0 ? 'pending' : 'approved',
     })
+
+    // A post with photos is held for moderation — alert admins so they can review it.
+    if (post.moderationStatus === 'pending') {
+      notifyAdminsOfPendingModeration({
+        kind:   'community_image',
+        detail: `${imageUrls.length} photo${imageUrls.length === 1 ? '' : 's'} to review`,
+      }).catch(() => {})
+    }
 
     const populated = await CommunityPost.findById(post._id)
       .populate('authorId', 'fullName username profilePhotoUrl verificationTier city')

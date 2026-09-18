@@ -87,7 +87,7 @@ export default function PricingPage() {
               {[
                 {
                   q: "Why is there a fee at all?",
-                  a: "The small one-time fee covers real identity verification — keeping every member genuine and every connection trustworthy. It's a safety mechanism, not a profit model.",
+                  a: "SisterRoam is a women-only community where members open their homes to one another, so the small one-time fee covers real identity verification — confirming every member is a genuine woman, keeping out fake and abusive accounts, and protecting the hosts and travellers who trust each other. It's a safety mechanism, not a profit model.",
                 },
                 {
                   q: "Is SisterRoam free to use after paying?",

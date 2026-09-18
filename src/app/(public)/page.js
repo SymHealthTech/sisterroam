@@ -428,7 +428,7 @@ export default async function HomePage() {
                   {[
                     "ID-verified hosts",
                     "SOS safety button",
-                    "100% free to join",
+                    "Free to join · verify for $5",
                   ].map((point) => (
                     <div key={point} className="flex items-center gap-2">
                       <span
@@ -652,8 +652,8 @@ export default async function HomePage() {
                   </h3>
                   <p className="text-white/70 text-sm leading-relaxed max-w-sm">
                     Open your home to verified female travellers, or find a
-                    sister host in any city worldwide. A 100% free hospitality
-                    exchange built on trust.
+                    sister host in any city worldwide. A hospitality exchange
+                    built on trust — no nightly fees, ever.
                   </p>
                 </div>
               </div>
@@ -1678,6 +1678,43 @@ export default async function HomePage() {
                 features.
               </p>
 
+              {/* Why verification is necessary */}
+              <div className="rounded-2xl border border-brand/15 bg-brand-lighter/25 p-5 mb-5">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                    <Shield className="w-5 h-5 text-brand" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-bold text-gray-900">
+                    Why we verify every sister
+                  </p>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                  SisterRoam is a women-only community where members open their
+                  homes to one another. Verification is how we keep it safe: it
+                  confirms every host and traveller is a genuine woman, blocks
+                  fake and abusive accounts, and means the sister at your door —
+                  or the one you welcome in — is exactly who she says she is.
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    "Confirms every member is a real, ID-verified woman",
+                    "Keeps out fake profiles, bots, and bad actors",
+                    "Protects hosts who share their homes and travellers who stay",
+                  ].map((point) => (
+                    <li
+                      key={point}
+                      className="flex items-start gap-2 text-xs text-gray-700"
+                    >
+                      <CheckCircle
+                        className="w-3.5 h-3.5 text-brand shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               {/* Free tier */}
               <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-5">
                 <div className="flex items-center gap-2 mb-3">
@@ -1764,8 +1801,8 @@ export default async function HomePage() {
                 <ol className="space-y-3">
                   {[
                     "Sign up and complete your SisterRoam profile.",
-                    "Pay the one-time $5 verification fee.",
                     "Upload your government ID & record a short selfie video.",
+                    "Pay the one-time $5 verification fee.",
                     "You're verified — start hosting, messaging & co-travelling.",
                   ].map((step, i) => (
                     <li key={i} className="flex items-start gap-3">

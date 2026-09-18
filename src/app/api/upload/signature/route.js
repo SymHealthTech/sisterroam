@@ -56,10 +56,11 @@ export async function GET(request) {
       }
     }
 
-    // Profile photos: on hold → refuse; otherwise members who have paid the
-    // verification fee (paid/verified/trusted — i.e. not free 'basic' accounts).
-    // Every photo is still manually moderated, so nothing is public until an
-    // admin approves it — the paywall + moderation together remove the abuse risk.
+    // Profile photos: on hold → refuse; otherwise verified members only. A
+    // profile photo is public-facing, so it is limited to fully verified
+    // sisters (not free 'basic' or paid-but-under-review accounts). Every photo
+    // is still manually moderated on top of that, so nothing is served until an
+    // admin approves it.
     if (folder.startsWith('sisterroam/profiles')) {
       if (PROFILE_PHOTO_UPLOADS_ON_HOLD) {
         return Response.json(
@@ -67,9 +68,9 @@ export async function GET(request) {
           { status: 503 },
         )
       }
-      if (session.user.verificationTier === 'basic') {
+      if (!isVerifiedMember(session)) {
         return Response.json(
-          { error: 'Please complete verification before adding a profile photo.' },
+          { error: 'Only verified members can add a profile photo.' },
           { status: 403 },
         )
       }

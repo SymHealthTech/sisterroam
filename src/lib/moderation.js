@@ -2,7 +2,54 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import CommunityPost from '@/models/CommunityPost'
 import TravelStory from '@/models/TravelStory'
+import Notification from '@/models/Notification'
 import { deleteFile } from '@/lib/cloudinary'
+import { sendEmail } from '@/lib/resend'
+
+const KIND_LABELS = {
+  profile_photo:   'A profile photo',
+  community_image: 'A community post with photos',
+  story_cover:     'A travel-story cover photo',
+}
+
+/**
+ * Alert admins that a piece of member content is awaiting manual moderation.
+ * Fires an in-app notification to every admin plus one email to ADMIN_EMAIL.
+ * Best-effort and non-blocking — never throws into the request path.
+ *
+ * @param {{ kind: 'profile_photo'|'community_image'|'story_cover', detail?: string, link?: string }} opts
+ */
+export async function notifyAdminsOfPendingModeration({ kind, detail = '', link = '/admin/moderation' } = {}) {
+  try {
+    await connectDB()
+    const label = KIND_LABELS[kind] ?? 'New content'
+    const body  = `${label} is awaiting review${detail ? ` — ${detail}` : ''}.`
+
+    const admins = await User.find({ isAdmin: true }).select('_id').lean()
+    if (admins.length) {
+      await Notification.insertMany(
+        admins.map((a) => ({
+          recipientId: a._id,
+          type:  'moderation_pending',
+          title: 'New content awaiting review',
+          body,
+          link,
+        })),
+      )
+    }
+
+    if (process.env.ADMIN_EMAIL) {
+      const url = `${process.env.NEXTAUTH_URL ?? ''}${link}`
+      sendEmail({
+        to:      process.env.ADMIN_EMAIL,
+        subject: 'SisterRoam — new content awaiting moderation',
+        html:    `<p>${body}</p><p><a href="${url}">Open the moderation queue</a></p>`,
+      }).catch(() => {})
+    }
+  } catch (e) {
+    console.error('[notifyAdminsOfPendingModeration]', e.message)
+  }
+}
 
 /**
  * Apply a Cloudinary manual-moderation decision to whatever record owns the

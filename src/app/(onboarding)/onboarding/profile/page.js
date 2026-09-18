@@ -498,14 +498,28 @@ export default function OnboardingProfilePage() {
               <div className="w-full mb-4 flex items-start gap-2.5 p-3 bg-brand-lighter/40 border border-brand/20 rounded-xl">
                 <Sparkles className="w-4 h-4 text-brand shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="text-xs text-brand-dark/90 leading-relaxed">
-                  You&apos;re verified! 🎉 Add a profile photo so other sisters can put
-                  a face to your name — it&apos;s the fastest way to build trust.
+                  {session?.user?.verificationTier === "verified" ||
+                  session?.user?.verificationTier === "trusted" ? (
+                    <>
+                      You&apos;re verified! 🎉 Add a profile photo so other sisters can
+                      put a face to your name — it&apos;s the fastest way to build trust.
+                    </>
+                  ) : (
+                    <>
+                      Payment received — thank you! 💜 Your ID is now under review.
+                      Once you&apos;re verified you&apos;ll be able to add a profile photo.
+                    </>
+                  )}
                 </p>
               </div>
             )}
             <ImageUpload
               currentImageUrl={profilePhotoUrl}
               name={fullName}
+              isVerified={
+                session?.user?.verificationTier === "verified" ||
+                session?.user?.verificationTier === "trusted"
+              }
               onUploadComplete={({ url }) => setProfilePhotoUrl(url)}
             />
             <p className="text-xs text-gray-400 mt-2">

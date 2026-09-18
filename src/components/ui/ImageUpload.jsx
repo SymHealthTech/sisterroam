@@ -27,7 +27,7 @@ async function resizeToWebp(file, maxPx = 800) {
   })
 }
 
-export default function ImageUpload({ currentImageUrl, name, onUploadComplete }) {
+export default function ImageUpload({ currentImageUrl, name, isVerified = true, onUploadComplete }) {
   const [previewUrl,  setPreviewUrl]  = useState(null)
   const [rawFile,     setRawFile]     = useState(null)
   const [showCrop,    setShowCrop]    = useState(false)
@@ -37,11 +37,16 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
 
   const fileInputRef = useRef(null)
 
+  // Uploading a profile photo is a verified-member feature. It is also blocked
+  // while photo uploads are globally on hold. In either case the picker button
+  // is disabled and a short message explains why.
+  const blocked = PROFILE_PHOTO_UPLOADS_ON_HOLD || !isVerified
+  const blockedMessage = PROFILE_PHOTO_UPLOADS_ON_HOLD
+    ? 'Photo uploads are temporarily unavailable. Your initials are shown for now.'
+    : 'Get verified to add a profile photo. Until then, your initials are shown.'
+
   function openPicker() {
-    if (PROFILE_PHOTO_UPLOADS_ON_HOLD) {
-      toast('Photo uploads are temporarily unavailable.', { icon: 'ℹ️' })
-      return
-    }
+    if (blocked) return
     fileInputRef.current?.click()
   }
 
@@ -129,7 +134,7 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
         <button
           type="button"
           onClick={openPicker}
-          disabled={uploading || PROFILE_PHOTO_UPLOADS_ON_HOLD}
+          disabled={uploading || blocked}
           className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed"
           aria-label="Change profile photo"
         >
@@ -141,8 +146,8 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
             </div>
           )}
 
-          {/* Hover overlay — hidden while uploads are on hold */}
-          {!PROFILE_PHOTO_UPLOADS_ON_HOLD && (
+          {/* Hover overlay — hidden while uploads are blocked */}
+          {!blocked && (
             <div
               className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors"
               aria-hidden="true"
@@ -169,9 +174,9 @@ export default function ImageUpload({ currentImageUrl, name, onUploadComplete })
         />
       </div>
 
-      {PROFILE_PHOTO_UPLOADS_ON_HOLD && (
+      {blocked && (
         <p className="text-xs text-gray-400 mt-2 max-w-[12rem]">
-          Photo uploads are temporarily unavailable. Your initials are shown for now.
+          {blockedMessage}
         </p>
       )}
 
