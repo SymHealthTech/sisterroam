@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import Skeleton from "@/components/ui/Skeleton";
 import { CheckCircle, Clock, XCircle, ShieldCheck, Mail } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import FinishVerification from "@/components/verification/FinishVerification";
 
 export default function VerificationStatusPage() {
   const [loading, setLoading] = useState(true);
   const [verifData, setVerifData] = useState(null);
 
-  useEffect(() => {
-    fetch("/api/verification/status")
+  const load = useCallback(() => {
+    return fetch("/api/verification/status")
       .then((r) => r.json())
       .then((d) => {
         if (d.success) setVerifData(d.data);
-      })
-      .finally(() => setLoading(false));
+      });
   }, []);
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
+  }, [load]);
 
   if (loading) {
     return (
@@ -39,6 +43,10 @@ export default function VerificationStatusPage() {
   const isFullyVerified =
     user?.verificationTier === "verified" ||
     user?.verificationTier === "trusted";
+  // Paid, but no verification request exists — documents were never uploaded
+  // (e.g. the tab closed between payment and the post-payment upload). This is
+  // the only state where we let the member re-upload without paying again.
+  const needsDocs = user?.verificationTier === "paid" && !verif;
 
   return (
     <AppLayout title="Verification Status">
@@ -50,7 +58,13 @@ export default function VerificationStatusPage() {
           </p>
         </div>
 
-        {/* Status card */}
+        {/* Payment done but documents missing — recovery upload flow */}
+        {needsDocs && (
+          <FinishVerification initialCountry={user?.country ?? ""} onSubmitted={load} />
+        )}
+
+        {/* Status card — hidden while the recovery flow is showing */}
+        {!needsDocs && (
         <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4">
           {isFullyVerified && (
             <div className="flex items-center gap-3">
@@ -114,6 +128,7 @@ export default function VerificationStatusPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Docs submitted */}
         {verif?.idDocumentUrl && (

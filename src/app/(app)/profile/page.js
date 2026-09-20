@@ -521,6 +521,33 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Paid but documents never uploaded — prompt to finish.
+                Require verifData to be loaded so we don't flash this before the
+                verification status arrives. */}
+            {user.verificationTier === "paid" && verifData && !verif && (
+              <Link
+                href="/profile/verification"
+                className="block bg-amber-lighter border border-amber/30 rounded-2xl p-4 hover:border-amber/50 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-dark">
+                      Payment received — documents not uploaded
+                    </p>
+                    <p className="text-xs text-amber-dark/80 mt-0.5">
+                      Your payment went through, but your verification documents
+                      didn&apos;t finish uploading. Tap to upload them now —
+                      you won&apos;t be charged again.
+                    </p>
+                    <span className="inline-block mt-2 text-xs font-semibold text-amber-dark underline">
+                      Finish verification →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            )}
+
             {/* Verification alert */}
             {user.verificationTier === "basic" &&
               verif?.status !== "approved" &&

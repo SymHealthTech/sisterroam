@@ -532,6 +532,27 @@ export async function sendVerificationBadgeEmail(user) {
   })
 }
 
+/* ── Paid but documents not uploaded ────────────────────────── */
+
+export async function sendMissingDocsReminderEmail(user) {
+  const firstName = user.fullName?.split(' ')[0] ?? 'sister'
+  return sendEmail({
+    to: user.email,
+    subject: 'Finish your SisterRoam verification — one step left',
+    html: layout(`
+      ${hi(firstName)}
+      ${p('Thank you for your payment! We noticed your verification is almost complete — but your identity documents didn’t finish uploading, so our team has nothing to review yet.')}
+      <div style="background:#FBF3E4;border-radius:12px;padding:16px 20px;margin:20px 0;">
+        <p style="margin:0;font-size:13px;color:#7A4E12;line-height:1.7;">
+          You won’t be charged again. Just upload your ID and a short video selfie to complete verification — it only takes a minute.
+        </p>
+      </div>
+      <div style="text-align:center;">${btn('Finish verification →', `${SITE}/profile/verification`)}</div>
+      ${p('<span style="color:#9ca3af;font-size:13px;">If you already uploaded your documents, you can ignore this email.</span>')}
+    `),
+  })
+}
+
 /* ── Password reset ─────────────────────────────────────────── */
 
 export async function sendPasswordResetEmail({ to, name, resetUrl }) {

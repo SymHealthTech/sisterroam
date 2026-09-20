@@ -60,6 +60,9 @@ const userSchema = new mongoose.Schema(
       enum: ['basic', 'paid', 'verified', 'trusted'],
       default: 'basic',
     },
+    // Set when the "you paid but never uploaded your verification documents"
+    // reminder email has been sent, so the daily job emails each member at most once.
+    verificationDocsReminderSentAt: { type: Date },
     role: { type: String, enum: ['guest', 'host', 'both'], default: 'guest' },
     isAdmin: { type: Boolean, default: false },
 

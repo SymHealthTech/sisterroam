@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -382,6 +382,11 @@ export default function VerifyPage() {
   // must be false on SSR and computed in an effect — avoids hydration mismatch.
   const [isPwaReturnInBrowser, setIsPwaReturnInBrowser] = useState(false);
   const [shouldActivate, setShouldActivate] = useState(false);
+  // Set synchronously the moment we detect a payment return that will activate,
+  // so the "redirect already-paid users" effect can bail out even on the same
+  // render pass (a stale-state guard could race it). While this is true,
+  // runActivate()/finalizeAndProceed() own routing and upload the docs first.
+  const activationInProgressRef = useRef(false);
 
   // paymentResult comes from useSearchParams which is SSR-consistent, so it is safe
   // to use directly in useState — server and client see the same URL value.
@@ -402,10 +407,14 @@ export default function VerifyPage() {
     }
     if (pwa && getCookie("sr_payment_result") === "return") {
       deleteCookie("sr_payment_result");
+      activationInProgressRef.current = true;
       setShouldActivate(true);
       return;
     }
-    if (paymentResult === "return") setShouldActivate(true);
+    if (paymentResult === "return") {
+      activationInProgressRef.current = true;
+      setShouldActivate(true);
+    }
     setInitialized(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -439,6 +448,12 @@ export default function VerifyPage() {
   // Redirect already-paid/verified users — also handles stale JWT
   useEffect(() => {
     if (status !== "authenticated") return;
+    // On a payment return, runActivate()/finalizeAndProceed() own the flow — they
+    // upload the documents held on the device BEFORE routing. This auto-redirect
+    // must NOT fire here, or (since the Dodo webhook may already have set the tier
+    // to 'paid') it would send the user straight to /feed and the KYC documents
+    // would never be uploaded — leaving a paid member with nothing to review.
+    if (paymentResult === "return" || activationInProgressRef.current) return;
     const sessionTier = session.user.verificationTier;
 
     if (sessionTier === "paid" || sessionTier === "verified" || sessionTier === "trusted") {
@@ -451,6 +466,9 @@ export default function VerifyPage() {
       .then((r) => r.json())
       .then(async (d) => {
         if (!d.success) return;
+        // A payment return may have begun activating while this fetch was in
+        // flight — if so, let runActivate own the redirect (it uploads docs first).
+        if (activationInProgressRef.current) return;
         const dbTier = d.data.verificationTier;
         if (dbTier === "paid" || dbTier === "verified" || dbTier === "trusted") {
           await updateSession({ verificationTier: dbTier });
@@ -471,13 +489,12 @@ export default function VerifyPage() {
         // Confirmed Dodo payment success — the free-promo path never reaches here.
         trackBadgePurchase(data.verificationTier || "paid");
         await updateSession({ verificationTier: data.verificationTier || "paid" });
-        if (data.onboardingCompleted) {
-          localStorage.removeItem("sr_verify_country");
-          router.replace("/feed");
-        } else {
-          // Payment confirmed — NOW upload the documents held on the device.
-          await finalizeAndProceed();
-        }
+        // Payment confirmed (or the webhook already marked us paid) — NOW upload
+        // the documents held on the device. This must run regardless of
+        // onboarding status: skipping it for onboarding-complete users created a
+        // paid member with NO KYC documents in Cloudinary, so admins had nothing
+        // to review. finalizeAndProceed handles routing (feed vs. onboarding).
+        await finalizeAndProceed({ onboardingCompleted: data.onboardingCompleted });
       } else {
         const msg = data.error ?? "Activation failed. Contact support.";
         setPaymentFailedMessage(msg);
@@ -546,17 +563,20 @@ export default function VerifyPage() {
     }
   }
 
-  async function routeAfterVerify() {
+  async function routeAfterVerify(onboardingCompleted = false) {
     localStorage.removeItem("sr_verify_country");
     sessionStorage.setItem("sr_show_welcome", "1");
     sessionStorage.setItem("sr_prompt_photo", "1"); // encourage adding a profile photo
     await updateSession({ verificationTier: "paid" }).catch(() => {});
-    router.replace("/onboarding/profile");
+    // A member who has already finished onboarding goes back to the feed;
+    // a new member continues to the profile step.
+    router.replace(onboardingCompleted ? "/feed" : "/onboarding/profile");
   }
 
   // Runs AFTER payment/redemption succeeds: upload the held documents to
-  // Cloudinary, record them, then continue to profile onboarding.
-  async function finalizeAndProceed() {
+  // Cloudinary, record them, then continue (feed or profile onboarding).
+  async function finalizeAndProceed(opts = {}) {
+    const onboardingCompleted = opts?.onboardingCompleted ?? false;
     setActivating(true);
     setFinalizeFailed(false);
     try {
@@ -565,7 +585,7 @@ export default function VerifyPage() {
         // Paid, but the documents aren't on this device (e.g. finished payment in
         // a different browser). Let them in; they can upload from their profile.
         toast("Payment confirmed. Please upload your ID from your profile to finish verification.", { icon: "ℹ️" });
-        await routeAfterVerify();
+        await routeAfterVerify(onboardingCompleted);
         return true;
       }
       setFinalizeMsg("Uploading your ID…");
@@ -576,7 +596,7 @@ export default function VerifyPage() {
       setFinalizeMsg("Finishing up…");
       await submitDocs({ front, back, video });
       await clearPending();
-      await routeAfterVerify();
+      await routeAfterVerify(onboardingCompleted);
       return true;
     } catch (err) {
       toast.error(err.message || "Upload failed. Please try again.");
@@ -620,12 +640,12 @@ export default function VerifyPage() {
               again — tap below to finish uploading.
             </p>
           </div>
-          <Button fullWidth size="lg" onClick={finalizeAndProceed}>
+          <Button fullWidth size="lg" onClick={() => finalizeAndProceed()}>
             Retry upload
           </Button>
           <button
             type="button"
-            onClick={routeAfterVerify}
+            onClick={() => routeAfterVerify()}
             className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
             Skip for now — upload later from my profile
