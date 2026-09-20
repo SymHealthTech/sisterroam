@@ -533,6 +533,9 @@ export default function ProfileEditPage() {
   );
 
   const userId = session?.user?.id;
+  const isVerifiedMember =
+    session?.user?.verificationTier === "verified" ||
+    session?.user?.verificationTier === "trusted";
 
   const save = useCallback(
     async (showToast = false) => {
@@ -603,17 +606,19 @@ export default function ProfileEditPage() {
             <ImageUpload
               currentImageUrl={profilePhotoUrl}
               name={fullName}
-              isVerified={
-                session?.user?.verificationTier === "verified" ||
-                session?.user?.verificationTier === "trusted"
-              }
+              isVerified={isVerifiedMember}
               onUploadComplete={({ url, publicId }) => {
                 setProfilePhotoUrl(url);
                 setProfilePhotoPublicId(publicId ?? "");
                 update({ profilePhotoUrl: url });
               }}
             />
-            <p className="text-xs text-gray-400">Tap to update your photo</p>
+            {/* Only verified members can change their photo, so only show the
+                "tap to update" hint to them. Unverified / under-review members
+                see the "get verified" message from ImageUpload instead. */}
+            {isVerifiedMember && (
+              <p className="text-xs text-gray-400">Tap to update your photo</p>
+            )}
           </div>
         </Section>
 

@@ -35,7 +35,9 @@ function ModerationCard({ item, onDecide }) {
       return
     }
     toast.success(action === 'approve' ? 'Image approved' : 'Image rejected & deleted')
-    onDecide(item.publicId)
+    // A rejected community post takes all its images down together — remove
+    // every affected asset from the queue, not just the one that was clicked.
+    onDecide(data.data?.removedPublicIds ?? [item.publicId])
   }
 
   return (
@@ -124,8 +126,9 @@ export default function AdminModerationPage() {
     return () => ctrl.abort()
   }, [fetchQueue])
 
-  function handleDecide(publicId) {
-    setItems((prev) => prev.filter((i) => i.publicId !== publicId))
+  function handleDecide(publicIds) {
+    const removed = new Set(Array.isArray(publicIds) ? publicIds : [publicIds])
+    setItems((prev) => prev.filter((i) => !removed.has(i.publicId)))
     // Keep the sidebar/dashboard moderation counts in sync immediately.
     window.dispatchEvent(new Event('admin:refresh-counts'))
   }

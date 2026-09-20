@@ -23,6 +23,7 @@ export default function PublicNavbar() {
   const [mobileOpen,   setMobileOpen]   = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [freshPhotoUrl, setFreshPhotoUrl] = useState(null)
+  const [photoLoaded,   setPhotoLoaded]   = useState(false)
   const [appHref, setAppHref] = useState('/feed')
   const dropdownRef = useRef(null)
 
@@ -41,6 +42,7 @@ export default function PublicNavbar() {
       .then(async d => {
         if (!d.success) return
         setFreshPhotoUrl(d.data.profilePhotoUrl ?? null)
+        setPhotoLoaded(true)
 
         const dbTier = d.data.verificationTier
         const onboardingDone = d.data.onboardingCompleted
@@ -78,7 +80,11 @@ export default function PublicNavbar() {
 
   const user      = session?.user
   const isAuth    = status === 'authenticated'
-  const avatarSrc = freshPhotoUrl ?? user?.profilePhotoUrl ?? null
+  // Once fresh DB data has loaded it is authoritative — don't fall back to the
+  // (possibly stale) session JWT photo, so a removed/rejected photo disappears.
+  const avatarSrc = photoLoaded
+    ? freshPhotoUrl
+    : (freshPhotoUrl ?? user?.profilePhotoUrl ?? null)
 
   return (
     <>

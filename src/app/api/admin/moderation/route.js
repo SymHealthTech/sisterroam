@@ -92,12 +92,29 @@ export async function POST(request) {
     const status = action === 'approve' ? 'approved' : 'rejected'
 
     // Tell Cloudinary — approved assets start delivering; rejected stay blocked.
-    await cloudinary.api.update(publicId, { moderation_status: status })
+    // The asset may already be gone: rejecting one image of a multi-image
+    // community post tears down the whole post and deletes ALL its images from
+    // Cloudinary, so a sibling image still shown in the queue no longer exists.
+    // Treat "not found" as a no-op instead of surfacing a 500.
+    try {
+      await cloudinary.api.update(publicId, { moderation_status: status })
+    } catch (e) {
+      const notFound = e?.http_code === 404 || /not found/i.test(e?.message ?? '')
+      if (!notFound) throw e
+    }
 
     // Sync our own DB immediately (the webhook will also fire, idempotently).
+    // Also idempotent when the owning record is already gone (returns matched:false).
     const res = await applyModerationDecision(publicId, status, 'image')
 
-    return ok({ publicId, status, matched: res.matched })
+    return ok({
+      publicId,
+      status,
+      matched: res.matched,
+      // When a whole community post is rejected, every one of its images comes
+      // down together — hand them back so the client clears them from the queue.
+      removedPublicIds: res.removedPublicIds ?? [publicId],
+    })
   } catch (e) {
     return handleError(e)
   }

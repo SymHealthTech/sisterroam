@@ -143,7 +143,14 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
   if (!session) return <LoadingSkeleton />
 
   const user = session.user
-  const avatarSrc = freshData.profilePhotoUrl ?? user.profilePhotoUrl ?? null
+  // Once fresh DB data has loaded, it is authoritative for the photo. Do NOT
+  // fall back to the session JWT's photo — the JWT can be stale (e.g. after an
+  // admin rejects/removes the photo the DB clears it, but the old URL lingers
+  // in the JWT), which would otherwise keep showing a removed photo to the
+  // member on her own login. Before load completes, use the session optimistically.
+  const avatarSrc = freshData.tierLoaded
+    ? (freshData.profilePhotoUrl ?? null)
+    : (freshData.profilePhotoUrl ?? user.profilePhotoUrl ?? null)
   const freshUser = {
     ...user,
     profilePhotoUrl:  avatarSrc,

@@ -108,7 +108,8 @@ export async function applyModerationDecision(publicId, status, resourceType = '
     } else {
       // Rejected: the whole post comes down with the image — delete every
       // attached image from Cloudinary, remove the post, and notify the author.
-      for (const pid of post.imagePublicIds ?? []) {
+      const removedPublicIds = [...(post.imagePublicIds ?? [])]
+      for (const pid of removedPublicIds) {
         await deleteFile(pid, 'image').catch(() => {})
       }
       await CommunityPost.deleteOne({ _id: post._id })
@@ -119,6 +120,9 @@ export async function applyModerationDecision(publicId, status, resourceType = '
         body:  'A post you shared was removed by our team because an attached photo didn’t meet our community guidelines.',
         link:  '/feed',
       }).catch(() => {})
+      // Return every image that came down so the admin queue can drop the whole
+      // post's sibling images at once (they no longer exist in Cloudinary).
+      return { matched: true, kind: 'community_image', removedPublicIds }
     }
     return { matched: true, kind: 'community_image' }
   }
