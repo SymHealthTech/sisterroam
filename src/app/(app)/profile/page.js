@@ -347,7 +347,9 @@ export default function ProfilePage() {
   }
 
   async function handlePhotoUpdate({ url, publicId }) {
-    setUser((u) => ({ ...u, profilePhotoUrl: url }));
+    // Held for moderation — keep showing initials + the "under review" note
+    // (profilePhotoStatus: 'pending') rather than the new photo.
+    setUser((u) => ({ ...u, profilePhotoUrl: null, profilePhotoStatus: "pending" }));
     setPhotoModal(false);
     await fetch("/api/users", {
       method: "PATCH",
@@ -962,6 +964,7 @@ export default function ProfilePage() {
                 user.verificationTier === "verified" ||
                 user.verificationTier === "trusted"
               }
+              status={user.profilePhotoStatus}
               onUploadComplete={handlePhotoUpdate}
             />
           </div>

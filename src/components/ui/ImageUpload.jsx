@@ -27,15 +27,25 @@ async function resizeToWebp(file, maxPx = 800) {
   })
 }
 
-export default function ImageUpload({ currentImageUrl, name, isVerified = true, onUploadComplete }) {
+export default function ImageUpload({ currentImageUrl, name, isVerified = true, status, onUploadComplete }) {
   const [previewUrl,  setPreviewUrl]  = useState(null)
   const [rawFile,     setRawFile]     = useState(null)
   const [showCrop,    setShowCrop]    = useState(false)
   const [uploading,   setUploading]   = useState(false)
   const [offset,      setOffset]      = useState({ x: 0, y: 0 })
   const [dragStart,   setDragStart]   = useState(null)
+  // True right after a fresh upload — the photo is held for moderation, so we
+  // keep showing initials + a "pending review" note instead of the new image.
+  const [justUploaded, setJustUploaded] = useState(false)
 
   const fileInputRef = useRef(null)
+
+  // A profile photo is only ever displayed once an admin has approved it.
+  // Legacy photos have no status (treated as approved); anything 'pending' or
+  // 'rejected', or one just uploaded this session, shows initials instead.
+  const isApproved    = !status || status === 'approved'
+  const showImage     = !!currentImageUrl && isApproved && !justUploaded
+  const showPendingNote = justUploaded || status === 'pending'
 
   // Uploading a profile photo is a verified-member feature. It is also blocked
   // while photo uploads are globally on hold. In either case the picker button
@@ -117,6 +127,7 @@ export default function ImageUpload({ currentImageUrl, name, isVerified = true, 
         body: JSON.stringify({ profilePhotoUrl: url, profilePhotoPublicId: publicId }),
       })
 
+      setJustUploaded(true)
       onUploadComplete?.({ url, publicId })
       toast.success('Photo uploaded — it will appear once approved by our team.')
     } catch (err) {
@@ -138,8 +149,10 @@ export default function ImageUpload({ currentImageUrl, name, isVerified = true, 
           className="relative group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed"
           aria-label="Change profile photo"
         >
-          {currentImageUrl ? (
+          {showImage ? (
             <Avatar src={currentImageUrl} name={name} size="xl" />
+          ) : name ? (
+            <Avatar name={name} size="xl" />
           ) : (
             <div className="w-20 h-20 rounded-full bg-brand-lighter/50 flex items-center justify-center">
               <User className="w-10 h-10 text-brand/40" />
@@ -177,6 +190,12 @@ export default function ImageUpload({ currentImageUrl, name, isVerified = true, 
       {blocked && (
         <p className="text-xs text-gray-400 mt-2 max-w-[12rem]">
           {blockedMessage}
+        </p>
+      )}
+
+      {!blocked && showPendingNote && (
+        <p className="text-xs text-amber-dark mt-2 max-w-[12rem]">
+          Photo under review — your initials show until our team approves it.
         </p>
       )}
 

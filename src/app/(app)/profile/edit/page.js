@@ -407,6 +407,7 @@ export default function ProfileEditPage() {
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
   const [profilePhotoPublicId, setProfilePhotoPublicId] = useState("");
+  const [profilePhotoStatus, setProfilePhotoStatus] = useState("approved");
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -457,6 +458,7 @@ export default function ProfileEditPage() {
         const u = d.data;
         setProfilePhotoUrl(u.profilePhotoUrl ?? "");
         setProfilePhotoPublicId(u.profilePhotoPublicId ?? "");
+        setProfilePhotoStatus(u.profilePhotoStatus ?? "approved");
         setFullName(u.fullName ?? "");
         setAge(u.age ?? "");
         setGender(u.gender ?? "");
@@ -552,21 +554,25 @@ export default function ProfileEditPage() {
           toast.error(d.error ?? "Failed to save");
           return;
         }
+        // Only reflect the photo in the session once it's approved — a pending
+        // photo must not surface in avatars anywhere.
+        const sessionPhoto =
+          profilePhotoStatus === "approved" ? profilePhotoUrl || undefined : undefined;
         if (showToast) {
           setSavedAt(new Date());
           toast.success("Profile saved!");
-          update({ profilePhotoUrl: profilePhotoUrl || undefined, fullName });
+          update({ profilePhotoUrl: sessionPhoto, fullName });
           router.push("/profile");
           return;
         }
-        update({ profilePhotoUrl: profilePhotoUrl || undefined, fullName });
+        update({ profilePhotoUrl: sessionPhoto, fullName });
       } catch {
         toast.error("Network error. Try again.");
       } finally {
         setSaving(false);
       }
     },
-    [userId, buildPayload, profilePhotoUrl, fullName, update, router],
+    [userId, buildPayload, profilePhotoUrl, profilePhotoStatus, fullName, update, router],
   );
 
   function field(setter) {
@@ -607,10 +613,14 @@ export default function ProfileEditPage() {
               currentImageUrl={profilePhotoUrl}
               name={fullName}
               isVerified={isVerifiedMember}
+              status={profilePhotoStatus}
               onUploadComplete={({ url, publicId }) => {
+                // The photo is held for moderation — record it but do NOT push
+                // the pending URL into the session, so avatars keep showing
+                // initials until an admin approves it.
                 setProfilePhotoUrl(url);
                 setProfilePhotoPublicId(publicId ?? "");
-                update({ profilePhotoUrl: url });
+                setProfilePhotoStatus("pending");
               }}
             />
             {/* Only verified members can change their photo, so only show the

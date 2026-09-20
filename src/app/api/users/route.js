@@ -18,6 +18,14 @@ export async function GET() {
     const user = await User.findById(session.user.id).lean()
     if (!user) return fail('User not found', 404)
     delete user.password
+    // A profile photo is only surfaced once an admin approves it. While it is
+    // pending/rejected we withhold the URL so every avatar (sidebar, top bar,
+    // profile header, navbar — all read from here) falls back to initials.
+    // profilePhotoStatus is still returned so the UI can show the review notice.
+    if (user.profilePhotoStatus && user.profilePhotoStatus !== 'approved') {
+      user.profilePhotoUrl = null
+      user.profilePhotoPublicId = null
+    }
     return ok(user)
   } catch (e) {
     return handleError(e)
