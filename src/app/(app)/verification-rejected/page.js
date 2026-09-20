@@ -116,14 +116,23 @@ export default function VerificationRejectedPage() {
             </ul>
           </div>
 
-          {/* Contact support */}
-          <a
-            href="mailto:admin.sisterroam@gmail.com"
-            className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-brand text-brand text-sm font-semibold hover:bg-brand hover:text-white transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            Contact support
-          </a>
+          {/* Contact support — show the address itself so it's usable even
+              when the browser has no mail app to handle the mailto: link. */}
+          <div className="space-y-2">
+            <a
+              href="mailto:admin.sisterroam@gmail.com?subject=Verification%20support%20request"
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-brand text-brand text-sm font-semibold hover:bg-brand hover:text-white transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              Email admin.sisterroam@gmail.com
+            </a>
+            <p className="text-xs text-gray-400">
+              Contact support at{" "}
+              <span className="font-medium text-gray-600">
+                admin.sisterroam@gmail.com
+              </span>
+            </p>
+          </div>
 
           {/* Sign out */}
           <button
