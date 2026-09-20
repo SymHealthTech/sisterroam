@@ -85,12 +85,18 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
           if (!signal.aborted) setFreshData(prev => ({ ...prev, tierLoaded: true }))
           return
         }
-        const tier = d.data.verificationTier ?? null
-        if (tier && tier !== session?.user?.verificationTier) {
-          updateSession({ verificationTier: tier }).catch(() => {})
-        }
+        const tier    = d.data.verificationTier ?? null
+        const dbPhoto = d.data.profilePhotoUrl ?? null
+        // Keep the JWT in sync with the DB so the pre-fetch avatar (sidebar +
+        // top bar read the session first) doesn't flash a stale photo on every
+        // refresh — e.g. an old photo after it was replaced/rejected, or the
+        // login-time photo after an admin approves a newer one.
+        const sessionPatch = {}
+        if (tier && tier !== session?.user?.verificationTier) sessionPatch.verificationTier = tier
+        if (dbPhoto !== (session?.user?.profilePhotoUrl ?? null)) sessionPatch.profilePhotoUrl = dbPhoto
+        if (Object.keys(sessionPatch).length) updateSession(sessionPatch).catch(() => {})
         const update = {
-          profilePhotoUrl:  d.data.profilePhotoUrl ?? null,
+          profilePhotoUrl:  dbPhoto,
           verificationTier: tier,
           verifPending: false,
           verifRejected: false,
@@ -124,7 +130,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
 
     loadFreshUser()
     return () => controller.abort()
-  }, [status, router, session?.user?.verificationTier, updateSession])
+  }, [status, router, session?.user?.verificationTier, session?.user?.profilePhotoUrl, updateSession])
 
   useEffect(() => {
     const u1 = subscribe('new_cotraveller_interest', (d) => {

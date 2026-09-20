@@ -258,7 +258,7 @@ function HostingTab({ host, onToggle, onCreateListing }) {
 /* ── Main page ───────────────────────────────────────────── */
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
 
   const [user, setUser] = useState(null);
@@ -351,6 +351,9 @@ export default function ProfilePage() {
     // (profilePhotoStatus: 'pending') rather than the new photo.
     setUser((u) => ({ ...u, profilePhotoUrl: null, profilePhotoStatus: "pending" }));
     setPhotoModal(false);
+    // Clear the session photo now so the sidebar/top-bar avatars drop the old
+    // one immediately (they read the session before the fresh fetch resolves).
+    updateSession({ profilePhotoUrl: null }).catch(() => {});
     await fetch("/api/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

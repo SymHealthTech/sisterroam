@@ -615,12 +615,14 @@ export default function ProfileEditPage() {
               isVerified={isVerifiedMember}
               status={profilePhotoStatus}
               onUploadComplete={({ url, publicId }) => {
-                // The photo is held for moderation — record it but do NOT push
-                // the pending URL into the session, so avatars keep showing
-                // initials until an admin approves it.
+                // The photo is held for moderation. Record it locally, but never
+                // push the pending URL into the session — instead clear the
+                // session photo now so the sidebar/top-bar avatars drop the old
+                // one immediately and show initials until an admin approves it.
                 setProfilePhotoUrl(url);
                 setProfilePhotoPublicId(publicId ?? "");
                 setProfilePhotoStatus("pending");
+                update({ profilePhotoUrl: null });
               }}
             />
             {/* Only verified members can change their photo, so only show the
