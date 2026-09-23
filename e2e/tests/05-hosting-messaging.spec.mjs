@@ -183,3 +183,26 @@ test('ticks: sent → delivered → read, and delete for me / for everyone', asy
   await g.ctx.close()
   await h.ctx.close()
 })
+
+test('unverified member: "Get verified" in a chat opens the verification flow', async ({ page }) => {
+  const host = await createHost()
+  const guest = await createUser({ verificationTier: 'basic' })
+  const { insertedId } = await (await db()).collection('hostingrequests').insertOne({
+    guestId: guest._id, hostId: host._id, status: 'accepted', requestType: 'direct', createdAt: new Date(), updatedAt: new Date(),
+  })
+  await login(page, guest.email)
+  await page.goto(`/messages/${insertedId}`)
+  await expect(page.getByText('Only verified sisters can reply')).toBeVisible()
+  await page.getByRole('link', { name: 'Get verified' }).tap()
+  await page.waitForURL(/\/onboarding\/verify/)
+  await expect(page.getByRole('heading', { name: 'Where are you from?' })).toBeVisible()
+  await expect(page.getByText('No verification request found.')).toHaveCount(0)
+})
+
+test('paid member without documents still gets the re-upload screen', async ({ page }) => {
+  const user = await createUser({ verificationTier: 'paid' })
+  await login(page, user.email)
+  await page.goto('/profile/verification')
+  await expect(page).toHaveURL(/\/profile\/verification/)
+  await expect(page.getByText('No verification request found.')).toHaveCount(0)
+})

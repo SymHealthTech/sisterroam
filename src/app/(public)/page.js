@@ -435,7 +435,7 @@ export default async function HomePage() {
                   {[
                     "ID-verified hosts",
                     "SOS safety button",
-                    "Free to join · verify for $5",
+                    "Free to join · $5 one-time verification",
                   ].map((point) => (
                     <div key={point} className="flex items-center gap-2">
                       <span

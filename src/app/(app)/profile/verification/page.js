@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/AppLayout";
 import Skeleton from "@/components/ui/Skeleton";
 import { CheckCircle, Clock, XCircle, ShieldCheck, Mail } from "lucide-react";
@@ -10,6 +11,7 @@ import FinishVerification from "@/components/verification/FinishVerification";
 export default function VerificationStatusPage() {
   const [loading, setLoading] = useState(true);
   const [verifData, setVerifData] = useState(null);
+  const router = useRouter();
 
   const load = useCallback(() => {
     return fetch("/api/verification/status")
@@ -23,7 +25,16 @@ export default function VerificationStatusPage() {
     load().finally(() => setLoading(false));
   }, [load]);
 
-  if (loading) {
+  // A member who hasn't started verification (not paid, nothing submitted) has
+  // no status to show — every "Get verified" link lands here, so send her to
+  // the verification flow itself instead of a "No verification request" dead end.
+  const notStarted =
+    !loading && verifData?.user?.verificationTier === "basic" && !verifData?.verification;
+  useEffect(() => {
+    if (notStarted) router.replace("/onboarding/verify");
+  }, [notStarted, router]);
+
+  if (loading || notStarted) {
     return (
       <AppLayout title="Verification Status">
         <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
