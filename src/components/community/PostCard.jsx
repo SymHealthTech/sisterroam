@@ -876,8 +876,10 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
       <div className="flex items-center gap-4 pt-1 border-t border-gray-50">
         <button
           onClick={toggleLike}
+          aria-label={post.hasLiked ? 'Unlike' : 'Like'}
+          aria-pressed={!!post.hasLiked}
           className={cn(
-            'flex items-center gap-1.5 text-sm transition-colors',
+            'flex items-center gap-1.5 text-sm transition-colors min-h-[40px] px-1',
             post.hasLiked ? 'text-pink' : 'text-gray-400 hover:text-pink',
           )}
         >
@@ -887,7 +889,9 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
 
         <button
           onClick={toggleComments}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors"
+          aria-label="Comments"
+          aria-expanded={showComments}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand transition-colors min-h-[40px] px-1"
         >
           <MessageCircle className="w-4 h-4" />
           <span>{post.commentsCount || 0}</span>
@@ -895,7 +899,8 @@ export default function PostCard({ post: initialPost, currentUserId, currentUser
 
         <button
           onClick={share}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-teal transition-colors ml-auto"
+          aria-label="Share"
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-teal transition-colors ml-auto min-h-[40px] px-1"
         >
           <Share2 className="w-4 h-4" />
         </button>

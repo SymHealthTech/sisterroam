@@ -1,9 +1,22 @@
 import DodoPayments from 'dodopayments'
 
+// Which Dodo API to talk to. DODO_ENV ('live_mode' | 'test_mode') wins when set.
+// Otherwise production is live, and Vercel preview deployments are forced to
+// test mode — they also run with NODE_ENV=production and must never charge real
+// cards. DODO_BASE_URL points at a local mock and is only used by the e2e tests.
+function dodoTarget() {
+  if (process.env.DODO_BASE_URL) return { baseURL: process.env.DODO_BASE_URL }
+  if (process.env.DODO_ENV === 'live_mode' || process.env.DODO_ENV === 'test_mode') {
+    return { environment: process.env.DODO_ENV }
+  }
+  if (process.env.VERCEL_ENV === 'preview') return { environment: 'test_mode' }
+  return { environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode' }
+}
+
 const dodoClient = new DodoPayments({
   bearerToken: process.env.DODO_SECRET_KEY,
   webhookKey:  process.env.DODO_WEBHOOK_SECRET,
-  environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode',
+  ...dodoTarget(),
 })
 
 export default dodoClient

@@ -84,11 +84,18 @@ body {
     pointer-events: none;
     opacity: 1;
     transition: opacity 0.4s ease;
+    /* Safety net: if JS never runs (offline, failed chunk after a deploy) the
+       cover would stay forever and the app looks blank — fade it out anyway. */
+    animation: sr-splash-fallback 0.4s ease 4s forwards;
   }
 
   body.sr-splash-done #pwa-splash-bg {
     opacity: 0;
   }
+}
+
+@keyframes sr-splash-fallback {
+  to { opacity: 0; visibility: hidden; }
 }
 
 /* ── Utility: safe bottom padding helper ──────────────────── */

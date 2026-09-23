@@ -92,6 +92,8 @@ const userSchema = new mongoose.Schema(
     lastActive: { type: Date, default: Date.now },
 
     passwordResetToken: { type: String },
+    // Set on password change/reset — sessions that signed in earlier are revoked.
+    passwordChangedAt: { type: Date },
     passwordResetExpires: { type: Date },
   },
   {

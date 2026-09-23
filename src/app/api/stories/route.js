@@ -3,7 +3,8 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import { slugify } from '@/lib/utils'
-import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
+import { notifyAdminsOfPendingModeration, checkStoryCoverChange } from '@/lib/moderation'
+import { sanitizeStoryHtml } from '@/lib/sanitize'
 
 const CATEGORIES = [
   'solo_travel', 'cycling', 'trekking', 'running',
@@ -73,11 +74,15 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const { title, content, category, tags, excerpt, coverImageUrl, coverImagePublicId, isPublished } = body
+    const { title, category, tags, excerpt, coverImageUrl, coverImagePublicId, isPublished } = body
+    // Member-written HTML: strip anything that could run script (XSS).
+    const content = sanitizeStoryHtml(body.content)
 
     if (!title?.trim() || title.trim().length < 10) return fail('Title must be at least 10 characters', 400)
     if (!content?.trim() || content.trim().length < 200) return fail('Content must be at least 200 characters', 400)
     if (!category || !CATEGORIES.includes(category)) return fail('Valid category is required', 400)
+    const cover = checkStoryCoverChange(undefined, coverImageUrl)
+    if (cover.error) return fail(cover.error, 400)
 
     const wordCount       = content.trim().split(/\s+/).filter(Boolean).length
     const readTimeMinutes = Math.ceil(wordCount / 200)
@@ -88,7 +93,7 @@ export async function POST(request) {
     if (existing) slug = slug + '-' + Date.now()
 
     // Auto-generate excerpt if not provided
-    const autoExcerpt = excerpt?.trim()
+    const autoExcerpt = (typeof excerpt === 'string' && excerpt.trim())
       || content.replace(/<[^>]+>/g, '').slice(0, 160) + '…'
 
     const story = await TravelStory.create({
@@ -100,7 +105,7 @@ export async function POST(request) {
       coverImageUrl,
       coverImagePublicId,
       // Cover is public + manually moderated — hold it until an admin approves.
-      coverModerationStatus: coverImagePublicId ? 'pending' : 'approved',
+      coverModerationStatus: coverImagePublicId || cover.pending ? 'pending' : 'approved',
       category,
       tags:               Array.isArray(tags) ? tags.map(t => t.toLowerCase().trim()).filter(Boolean) : [],
       isPublished:        isPublished ?? false,

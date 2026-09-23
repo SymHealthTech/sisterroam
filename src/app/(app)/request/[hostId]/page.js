@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, nightsBetween } from '@/lib/utils'
+import { useSafeBack } from '@/hooks/useSafeBack'
 
 const ROOM_LABELS = {
   private_room: 'Private room',
@@ -155,9 +156,11 @@ function EmergencyContactForm({ register, errors, watch }) {
 
 export default function RequestPage() {
   const router = useRouter()
+  const goBack = useSafeBack('/explore')
   const { hostId } = useParams()
   const { data: session } = useSession()
-  const isVerified = session?.user?.verificationTier && session.user.verificationTier !== 'basic'
+  // Must match the API (requireVerified): paid members are still under review.
+  const isVerified = ['verified', 'trusted'].includes(session?.user?.verificationTier)
 
   const [host, setHost] = useState(null)
   const [hostLoading, setHostLoading] = useState(true)
@@ -501,7 +504,7 @@ export default function RequestPage() {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={() => goBack()}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 Cancel

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Home, Search, MessageCircle, Users, User, UserPlus, MapPin, BookOpen, LogOut, X, MoreHorizontal, Shield, Settings } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,24 @@ export default function TabBar() {
   const pathname   = usePathname()
   const unread     = useUnreadCount()
   const [showMore, setMore] = useState(false)
+  const router     = useRouter()
+
+  // Android back button closes the sheet instead of leaving the page: opening
+  // it adds a same-URL history entry, and "back" pops that entry.
+  const openMore = useCallback(() => {
+    window.history.pushState({ ...window.history.state, __srSheet: true }, '')
+    setMore(true)
+  }, [])
+  const closeMore = useCallback(() => {
+    if (window.history.state?.__srSheet) window.history.back() // popstate closes it
+    else setMore(false)
+  }, [])
+  useEffect(() => {
+    if (!showMore) return
+    const onPop = () => setMore(false)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [showMore])
 
   const isMoreActive = MORE_ITEMS.some(item => pathname === item.href || (item.href !== '/community' && pathname.startsWith(item.href + '/')))
 
@@ -88,7 +106,7 @@ export default function TabBar() {
           {/* More button */}
           <button
             type="button"
-            onClick={() => setMore(m => !m)}
+            onClick={() => (showMore ? closeMore() : openMore())}
             className={cn(
               'flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors',
               isMoreActive ? 'text-brand' : 'text-gray-400 hover:text-gray-600',
@@ -103,7 +121,7 @@ export default function TabBar() {
 
       {/* More drawer */}
       {showMore && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMore(false)}>
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={closeMore}>
           <div className="absolute inset-0 bg-black/30" />
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl pb-safe"
@@ -112,7 +130,7 @@ export default function TabBar() {
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
               <p className="text-sm font-semibold text-gray-900">More</p>
-              <button type="button" onClick={() => setMore(false)} className="p-1.5 text-gray-400 hover:text-gray-700">
+              <button type="button" onClick={closeMore} aria-label="Close" className="p-2.5 -m-1 text-gray-400 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -124,7 +142,12 @@ export default function TabBar() {
                   <Link
                     key={href}
                     href={href}
-                    onClick={() => setMore(false)}
+                    onClick={(e) => {
+                      // Replace the sheet's history entry rather than stacking a new one.
+                      e.preventDefault()
+                      setMore(false)
+                      router.replace(href)
+                    }}
                     className={cn(
                       'flex items-center gap-3 px-3 py-3 rounded-xl transition-colors',
                       active ? 'bg-brand-lighter text-brand' : 'text-gray-700 hover:bg-gray-50'

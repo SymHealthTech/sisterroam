@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import HostDetailClient from './HostDetailClient'
 
 const BASE = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
 async function fetchHost(hostId) {
   try {
-    const res = await fetch(`${BASE}/api/hosts/${hostId}`, {
-      next: { revalidate: 300 },
-    })
+    // Forward the member's session so she sees member-only fields (age, socials).
+    const cookie = (await headers()).get('cookie') ?? ''
+    const res = await fetch(`${BASE}/api/hosts/${hostId}`, { cache: 'no-store', headers: { cookie } })
     if (res.status === 404) return null
     if (!res.ok) return null
     const json = await res.json()

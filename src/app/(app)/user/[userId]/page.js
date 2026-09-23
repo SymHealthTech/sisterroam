@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import HostDetailClient from '@/app/(app)/explore/[hostId]/HostDetailClient'
 import TravelerProfileClient from './TravelerProfileClient'
 
@@ -6,7 +7,8 @@ const BASE = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
 async function fetchHostProfile(userId) {
   try {
-    const res = await fetch(`${BASE}/api/hosts/${userId}`, { cache: 'no-store' })
+    const cookie = (await headers()).get('cookie') ?? ''
+    const res = await fetch(`${BASE}/api/hosts/${userId}`, { cache: 'no-store', headers: { cookie } })
     if (!res.ok) return null
     const json = await res.json()
     return json.data ?? null
@@ -17,7 +19,9 @@ async function fetchHostProfile(userId) {
 
 async function fetchUser(userId) {
   try {
-    const res = await fetch(`${BASE}/api/users/${userId}`, { cache: 'no-store' })
+    // The profile API needs the visitor's session — forward her cookie.
+    const cookie = (await headers()).get('cookie') ?? ''
+    const res = await fetch(`${BASE}/api/users/${userId}`, { cache: 'no-store', headers: { cookie } })
     if (!res.ok) return null
     const json = await res.json()
     return json.data ?? null

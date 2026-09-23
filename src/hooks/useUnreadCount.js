@@ -35,10 +35,18 @@ export function useUnreadCount() {
     return () => clearInterval(id)
   }, [fetchUnread])
 
-  // Real-time increment via the shared SSE connection — no extra DB query
+  // Real-time increment via the shared SSE connection. A short debounced refetch
+  // follows: it tells the server the message reached this device, so the
+  // sender's tick turns to ✓✓ "delivered".
   useEffect(() => {
-    return subscribe('new_message', () => setUnreadCount(c => c + 1))
-  }, [subscribe])
+    let t
+    const off = subscribe('new_message', () => {
+      setUnreadCount(c => c + 1)
+      clearTimeout(t)
+      t = setTimeout(fetchUnread, 1500)
+    })
+    return () => { off(); clearTimeout(t) }
+  }, [subscribe, fetchUnread])
 
   return unreadCount
 }

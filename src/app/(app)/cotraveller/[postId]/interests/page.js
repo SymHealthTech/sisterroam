@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare, Star, Globe } from 'lucide-react'
 import { cn, formatRelativeTime } from '@/lib/utils'
+import { useSafeBack } from '@/hooks/useSafeBack'
 
 const TABS = ['All', 'Pending', 'Accepted', 'Declined']
 
@@ -135,6 +136,7 @@ export default function TripInterestsPage({ params }) {
   const { postId } = use(params)
   const { data: session } = useSession()
   const router = useRouter()
+  const goBack = useSafeBack('/cotraveller')
   const userId = session?.user?.id
 
   const [post,      setPost]      = useState(null)
@@ -223,7 +225,7 @@ export default function TripInterestsPage({ params }) {
     <AppLayout title="Trip interests">
       <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
         {/* Back */}
-        <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800">
+        <button type="button" onClick={() => goBack()} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800">
           <ArrowLeft className="w-4 h-4" />Back to trip
         </button>
 

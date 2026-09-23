@@ -3,7 +3,8 @@ import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
 import { connectDB } from '@/lib/mongodb'
 import { auth } from '@/lib/auth'
 import { deleteFile } from '@/lib/cloudinary'
-import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
+import { notifyAdminsOfPendingModeration, checkStoryCoverChange } from '@/lib/moderation'
+import { sanitizeStoryHtml } from '@/lib/sanitize'
 
 const ALLOWED_FIELDS = [
   'title', 'content', 'excerpt', 'coverImageUrl', 'coverImagePublicId',
@@ -39,7 +40,10 @@ export async function GET(request, { params }) {
     const userId  = session?.user?.id
     const isSaved = userId ? story.saves?.some(id => id.toString() === userId) : false
 
-    return ok({ story: { ...story, isSaved }, related })
+    // Sanitise on read too (stories saved before sanitising existed), and never
+    // publish the list of members who saved it.
+    const { saves, ...rest } = story
+    return ok({ story: { ...rest, content: sanitizeStoryHtml(story.content), isSaved }, related })
   } catch (e) {
     return handleError(e)
   }
@@ -59,9 +63,13 @@ export async function PATCH(request, { params }) {
 
     const wasPublished = story.isPublished
     const prevCoverPubId = story.coverImagePublicId
+    const cover = checkStoryCoverChange(story.coverImageUrl, body.coverImageUrl)
+    if (cover.error) return fail(cover.error, 400)
+    if (body.content !== undefined) body.content = sanitizeStoryHtml(body.content)
     for (const key of ALLOWED_FIELDS) {
       if (body[key] !== undefined) story[key] = body[key]
     }
+    if (cover.pending) story.coverModerationStatus = 'pending'
     // A newly swapped-in cover is public + manually moderated — re-hold it.
     let coverReheld = false
     if (body.coverImagePublicId !== undefined && body.coverImagePublicId && body.coverImagePublicId !== prevCoverPubId) {

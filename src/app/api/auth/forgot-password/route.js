@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import { sendPasswordResetEmail } from '@/lib/resend'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(request) {
   try {
@@ -14,6 +15,11 @@ export async function POST(request) {
     }
 
     await connectDB()
+
+    // At most 3 reset emails per address per hour (stops inbox flooding). Still
+    // answer 200 so the response never reveals whether the account exists.
+    const limit = await checkRateLimit(`reset:${email}`, { max: 3, windowMs: 60 * 60 * 1000 })
+    if (!limit.allowed) return NextResponse.json({ success: true })
 
     const rawToken = crypto.randomBytes(32).toString('hex')
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex')

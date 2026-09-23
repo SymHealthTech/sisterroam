@@ -37,8 +37,21 @@ export async function GET(request, { params }) {
       .populate('reviewerId', 'fullName username profilePhotoUrl')
       .lean()
 
+    // Privacy: the street address is only ever returned to the host herself;
+    // age and social links only to signed-in members (never anonymous visitors).
+    const session = await auth()
+    const viewerId = session?.user?.id
+    const isOwner = viewerId && profile.userId?._id?.toString() === viewerId
+    if (!isOwner) delete profile.addressLine
+    if (!viewerId && profile.userId) {
+      delete profile.userId.age
+      delete profile.userId.instagramUrl
+      delete profile.userId.linkedinUrl
+    }
+
     const res = ok({ ...profile, reviews })
-    res.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=300')
+    // The answer depends on who is asking, so it must never be shared-cached.
+    res.headers.set('Cache-Control', 'private, no-store')
     return res
   } catch (e) {
     return handleError(e)

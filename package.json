@@ -10,7 +10,9 @@
     "generate-favicon": "node scripts/generate-favicon.mjs",
     "seed:promo": "node scripts/seed-promo-codes.mjs",
     "seed:community": "node scripts/seed-community-posts.mjs",
-    "cleanup:media": "node scripts/cleanup-pending-media.mjs"
+    "cleanup:media": "node scripts/cleanup-pending-media.mjs",
+    "cleanup:ghosts": "node scripts/cleanup-ghost-users.mjs",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.4",
@@ -28,9 +30,11 @@
     "react-hook-form": "^7.72.1",
     "react-hot-toast": "^2.6.0",
     "resend": "^6.12.0",
+    "sanitize-html": "^2.17.7",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",

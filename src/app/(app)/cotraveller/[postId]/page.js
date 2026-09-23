@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { UnderReviewModal, VerificationRequiredModal } from "@/components/ui/VerificationGate";
 import { cn, formatRelativeTime } from "@/lib/utils";
+import { useSafeBack } from "@/hooks/useSafeBack";
 
 const CATEGORY_LABELS = {
   solo_traveller: "Solo traveller",
@@ -89,6 +90,7 @@ export default function TripDetailPage({ params }) {
   const { data: session } = useSession();
   const appUser = useAppUser();
   const router = useRouter();
+  const goBack = useSafeBack('/cotraveller');
   const userId = session?.user?.id;
   const userTier = appUser?.verificationTier ?? session?.user?.verificationTier;
   const isUnderReview = userTier === 'paid';
@@ -189,7 +191,7 @@ export default function TripDetailPage({ params }) {
         {/* Back */}
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => goBack()}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

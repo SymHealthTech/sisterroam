@@ -6,6 +6,8 @@ import User from '@/models/User'
 import { sendToUser } from '@/lib/sse'
 import { sendNewDirectMessageEmail } from '@/lib/resend'
 import { ok, fail, getSession, requireVerified, handleError } from '@/lib/apiHelpers'
+import { stripFormatting } from '@/lib/messageText'
+import { markMessages } from '@/lib/messageStatus'
 
 async function getRequestAndVerify(requestId, userId) {
   const req = await HostingRequest.findById(requestId)
@@ -37,7 +39,8 @@ export async function GET(request, { params }) {
     const cleared = conversation.clearedAt?.find(
       c => c.user?.toString() === session.user.id
     )?.at
-    const msgFilter = { requestId }
+    // Hide messages she deleted "for me".
+    const msgFilter = { requestId, deletedFor: { $ne: session.user.id } }
     if (cleared) msgFilter.createdAt = { $gt: cleared }
 
     const messages = await Message.find(msgFilter)
@@ -45,13 +48,26 @@ export async function GET(request, { params }) {
       .populate('senderId', 'fullName username profilePhotoUrl')
       .lean()
 
-    // Mark messages from the other party as read
-    await Message.updateMany(
-      { requestId, senderId: { $ne: session.user.id }, isRead: false },
-      { $set: { isRead: true, readAt: new Date() } }
-    )
+    // Opening the conversation reads the other party's messages (blue ✓✓).
+    await markMessages(session.user.id, { requestIds: [conversation._id], read: true })
 
-    return ok(messages)
+    // Never expose who else hid a message.
+    return ok(messages.map(({ deletedFor, ...m }) => m))
+  } catch (e) {
+    return handleError(e)
+  }
+}
+
+// Mark the other party's messages read while the chat is open (e.g. a message
+// arrived live over SSE) so the sender's ticks turn blue straight away.
+export async function PATCH(request, { params }) {
+  try {
+    await connectDB()
+    const session = await getSession()
+    const { requestId } = await params
+    const conversation = await getRequestAndVerify(requestId, session.user.id)
+    await markMessages(session.user.id, { requestIds: [conversation._id], read: true })
+    return ok({ read: true })
   } catch (e) {
     return handleError(e)
   }
@@ -115,7 +131,7 @@ export async function POST(request, { params }) {
       recipientId,
       type: 'new_message',
       title: 'New message',
-      body: `${session.user.fullName}: ${content.slice(0, 100)}`,
+      body: `${session.user.fullName}: ${stripFormatting(content).slice(0, 100)}`,
       link: `/messages/${requestId}`,
     })
 
@@ -142,7 +158,7 @@ export async function POST(request, { params }) {
           sendNewDirectMessageEmail({
             recipient,
             senderName: session.user.fullName,
-            preview: content.trim(),
+            preview: stripFormatting(content),
             requestId,
           }).catch(console.error)
         }

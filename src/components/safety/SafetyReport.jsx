@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import Button from '@/components/ui/Button'
+import { useSafeBack } from '@/hooks/useSafeBack'
 
 const reportTypes = [
   { value: 'harassment', label: 'Harassment' },
@@ -18,6 +19,7 @@ const reportTypes = [
 
 export default function SafetyReportForm({ reportedUserId }) {
   const router = useRouter()
+  const goBack = useSafeBack('/safety')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
 
   async function onSubmit(data) {
@@ -28,7 +30,7 @@ export default function SafetyReportForm({ reportedUserId }) {
     })
     if (!res.ok) { toast.error('Report failed. Please try again.'); return }
     toast.success('Report submitted. Our team will review it promptly.')
-    router.back()
+    goBack()
   }
 
   return (

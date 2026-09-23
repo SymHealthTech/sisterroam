@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUp, ArrowLeft, MoreVertical, Clock, CheckCircle, XCircle, Shield,
-  WifiOff, Star, AlertTriangle, ChevronDown, Trash2, X,
+  WifiOff, Star, AlertTriangle, ChevronDown, Trash2, X, Check, CheckCheck, Copy,
 } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
@@ -16,6 +16,8 @@ import ReviewModal from '@/components/reviews/ReviewModal'
 import { useSSEContext } from '@/context/SSEContext'
 import { cn, formatDateRange, formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { useSafeBack } from '@/hooks/useSafeBack'
+import { parseMessage } from '@/lib/messageText'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -68,6 +70,26 @@ function DateSeparator({ label }) {
       <div className="flex-1 h-px bg-gray-100" />
     </div>
   )
+}
+
+// *bold*, _italic_, ~strike~ — rendered as elements (never HTML); line breaks
+// are kept by the bubble's whitespace-pre-wrap.
+function FormattedMessage({ text }) {
+  return parseMessage(text).map((p, i) => {
+    if (p.type === 'bold') return <strong key={i} className="font-semibold">{p.text}</strong>
+    if (p.type === 'italic') return <em key={i}>{p.text}</em>
+    if (p.type === 'strike') return <s key={i}>{p.text}</s>
+    return p.text
+  })
+}
+
+// WhatsApp-style status for my own messages:
+// 🕓 sending · ✓ sent · ✓✓ delivered (grey) · ✓✓ read (blue)
+function MessageTicks({ msg }) {
+  if (msg.isOptimistic) return <Clock className="w-3 h-3 text-gray-400" aria-label="Sending" />
+  if (msg.isRead) return <CheckCheck className="w-3.5 h-3.5 text-sky-500" aria-label="Read" />
+  if (msg.deliveredAt) return <CheckCheck className="w-3.5 h-3.5 text-gray-400" aria-label="Delivered" />
+  return <Check className="w-3.5 h-3.5 text-gray-400" aria-label="Sent" />
 }
 
 function SystemMessage({ content }) {
@@ -286,6 +308,7 @@ function SafetyCheckinPrompt({ requestId }) {
 
 export default function ChatWindow({ requestId, currentUserId, canReply = true }) {
   const router = useRouter()
+  const goBack = useSafeBack('/messages')
   const [request, setRequest] = useState(null)
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -301,6 +324,10 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  // Message picked with long-press / right-click → action sheet.
+  const [actionMsg, setActionMsg] = useState(null)
+  const longPressTimer = useRef(null)
+  const longPressStart = useRef(null)
 
   const messagesEndRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -381,8 +408,41 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
         if (prev.some(m => m._id?.toString() === msg._id?.toString())) return prev
         return [...prev, msg]
       })
+      // She's looking at this chat → the sender's ticks turn blue now.
+      if (!document.hidden) fetch(`/api/messages/${requestId}`, { method: 'PATCH' }).catch(() => {})
     })
   }, [subscribe, requestId])
+
+  // Ticks on my messages update live when she receives / reads them.
+  useEffect(() => {
+    return subscribe('messages_status', (data) => {
+      if (data?.requestId !== requestId) return
+      const ids = new Set(data.ids)
+      setMessages(prev => prev.map(m => {
+        if (!ids.has(m._id?.toString())) return m
+        return data.status === 'read'
+          ? { ...m, isRead: true, readAt: data.at, deliveredAt: m.deliveredAt ?? data.at }
+          : { ...m, deliveredAt: m.deliveredAt ?? data.at }
+      }))
+    })
+  }, [subscribe, requestId])
+
+  // The other person deleted a message "for everyone".
+  useEffect(() => {
+    return subscribe('message_deleted', (data) => {
+      if (data?.requestId !== requestId) return
+      setMessages(prev => prev.filter(m => m._id?.toString() !== data.id))
+    })
+  }, [subscribe, requestId])
+
+  // Coming back to an open chat reads anything that arrived meanwhile.
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) fetch(`/api/messages/${requestId}`, { method: 'PATCH' }).catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [requestId])
 
   // ── Polling fallback (8 s) ─────────────────────────────────────────────
   // SSE requires the connections Map to be shared in-process; on multi-instance
@@ -393,6 +453,14 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
   //   • the window has been idle (no typing/scrolling) for 2 minutes
 
   const lastActivityAt = useRef(0)
+  // True while any of my messages is not yet read — keep polling so the ticks
+  // still update when SSE can't reach this instance.
+  const ticksPendingRef = useRef(false)
+  useEffect(() => {
+    ticksPendingRef.current = messages.some(m =>
+      !m.isOptimistic && !m.isRead && m.messageType !== 'system' &&
+      (m.senderId?._id?.toString() ?? m.senderId?.toString()) === currentUserId)
+  }, [messages, currentUserId])
 
   useEffect(() => {
     const touch = () => { lastActivityAt.current = Date.now() }
@@ -410,23 +478,31 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
     if (!requestId) return
     const id = setInterval(async () => {
       if (document.hidden) return
-      // Back off if SSE is actively working
-      if (Date.now() - lastSseMessageAt.current < 20000) return
-      // Stop polling idle windows (no user activity for 2 minutes)
-      if (Date.now() - lastActivityAt.current > 120000) return
+      const idleMs = Date.now() - lastActivityAt.current
+      if (ticksPendingRef.current) {
+        // Waiting for her to read: keep checking for up to 10 idle minutes.
+        if (idleMs > 600000) return
+      } else {
+        // Back off if SSE is actively working
+        if (Date.now() - lastSseMessageAt.current < 20000) return
+        // Stop polling idle windows (no user activity for 2 minutes)
+        if (idleMs > 120000) return
+      }
       try {
         const res = await fetch(`/api/messages/${requestId}`)
         const json = await res.json()
         if (!json.success || !json.data) return
         setMessages(prev => {
-          const polledIds = new Set(json.data.map(m => m._id?.toString()))
+          // Compare ids AND tick status, so read/delivered changes show up.
+          const sig = m => `${m._id}:${m.isRead ? 2 : m.deliveredAt ? 1 : 0}`
+          const polledSigs = new Set(json.data.map(sig))
           // Keep still-pending optimistic messages (they have temp- IDs)
           const pendingOptimistic = prev.filter(m => m.isOptimistic)
           // Skip re-render if nothing new arrived
           const prevReal = prev.filter(m => !m.isOptimistic)
           if (
             prevReal.length === json.data.length &&
-            prevReal.every(m => polledIds.has(m._id?.toString()))
+            prevReal.every(m => polledSigs.has(sig(m)))
           ) return prev
           return [...json.data, ...pendingOptimistic]
         })
@@ -475,9 +551,7 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
 
   function handleInputChange(e) {
     setInput(e.target.value)
-    const ta = e.target
-    ta.style.height = 'auto'
-    ta.style.height = Math.min(ta.scrollHeight, 96) + 'px' // max 4 lines ≈ 96px
+    resizeTextarea(e.target) // grows to ~5 lines, then scrolls
   }
 
   // ── Send ────────────────────────────────────────────────────────────────
@@ -536,20 +610,46 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Phone keyboards have no Shift+Enter, so there Enter is a new line and the
+    // send button sends. On a computer Enter sends and Shift+Enter is a new line.
+    const touch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+    if (e.key === 'Enter' && !e.shiftKey && !touch && !e.nativeEvent.isComposing) {
       e.preventDefault()
       sendMessage()
     }
   }
 
+  function resizeTextarea(ta) {
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+  }
+
+  // B / I buttons: wrap the selection (or insert an empty pair) in * or _.
+  function wrapSelection(marker) {
+    const ta = textareaRef.current
+    if (!ta) return
+    const { selectionStart: start, selectionEnd: end } = ta
+    const selected = input.slice(start, end)
+    const next = input.slice(0, start) + marker + selected + marker + input.slice(end)
+    setInput(next)
+    requestAnimationFrame(() => {
+      ta.focus()
+      const cursorStart = start + marker.length
+      ta.setSelectionRange(cursorStart, cursorStart + selected.length)
+      resizeTextarea(ta)
+    })
+  }
+
   // ── Delete conversation ───────────────────────────────────────────────────
 
-  async function deleteMessage(id) {
+  async function deleteMessage(id, scope = 'everyone') {
+    setActionMsg(null)
     const snapshot = messages
     // Optimistically remove, restore on failure
     setMessages(cur => cur.filter(m => m._id !== id))
     try {
-      const res = await fetch(`/api/messages/item/${id}`, { method: 'DELETE' })
+      // keepalive: finishes even if she closes/leaves the chat right after deleting.
+      const res = await fetch(`/api/messages/item/${id}?for=${scope}`, { method: 'DELETE', keepalive: true })
       const json = await res.json()
       if (!json.success) {
         setMessages(snapshot)
@@ -558,6 +658,35 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
     } catch {
       setMessages(snapshot)
       toast.error('Network error')
+    }
+  }
+
+  // ── Long-press (touch) / right-click (mouse) opens the message actions ──
+  function openActions(msg) {
+    if (msg.isOptimistic || msg.messageType === 'system') return
+    navigator.vibrate?.(15)
+    setActionMsg(msg)
+  }
+  function onBubbleTouchStart(msg, e) {
+    const t = e.touches[0]
+    longPressStart.current = { x: t.clientX, y: t.clientY }
+    clearTimeout(longPressTimer.current)
+    longPressTimer.current = setTimeout(() => openActions(msg), 450)
+  }
+  function onBubbleTouchMove(e) {
+    const t = e.touches[0]
+    const s0 = longPressStart.current
+    if (s0 && Math.hypot(t.clientX - s0.x, t.clientY - s0.y) > 10) clearTimeout(longPressTimer.current)
+  }
+  function cancelLongPress() { clearTimeout(longPressTimer.current) }
+
+  async function copyMessage(msg) {
+    setActionMsg(null)
+    try {
+      await navigator.clipboard.writeText(msg.content)
+      toast.success('Copied')
+    } catch {
+      toast.error('Could not copy')
     }
   }
 
@@ -659,7 +788,7 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
         <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
           {/* Back button — mobile only */}
           <button
-            onClick={() => router.back()}
+            onClick={() => goBack()}
             className="lg:hidden p-1.5 -ml-1.5 text-gray-600 hover:text-gray-900 shrink-0"
             aria-label="Go back"
           >
@@ -803,33 +932,103 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
               {isMine && !msg.isOptimistic && (
                 <button
                   type="button"
-                  onClick={() => deleteMessage(msg._id)}
-                  aria-label="Delete message"
-                  title="Delete message"
-                  className="mr-1.5 p-1 rounded-full text-gray-400 hover:text-danger hover:bg-red-50 transition shrink-0
-                             opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
+                  onClick={() => openActions(msg)}
+                  aria-label="Message options"
+                  title="Message options"
+                  className="hidden lg:block mr-1.5 p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition shrink-0
+                             lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-3.5 h-3.5" />
                 </button>
               )}
               <div className={cn('flex flex-col max-w-[75%]', isMine ? 'items-end' : 'items-start')}>
-                <div className={cn(
-                  'px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words',
+                <div
+                  onTouchStart={(e) => onBubbleTouchStart(msg, e)}
+                  onTouchMove={onBubbleTouchMove}
+                  onTouchEnd={cancelLongPress}
+                  onTouchCancel={cancelLongPress}
+                  onContextMenu={(e) => { e.preventDefault(); openActions(msg) }}
+                  className={cn(
+                  'select-none lg:select-text [-webkit-touch-callout:none]',
+                  'px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words whitespace-pre-wrap',
                   isMine
                     ? cn('bg-brand text-white rounded-br-sm', msg.isOptimistic && 'opacity-70')
                     : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                 )}>
-                  {msg.content}
+                  <FormattedMessage text={msg.content} />
                 </div>
-                <span className="text-[10px] text-gray-400 mt-1 px-1">
+                <span className="flex items-center gap-1 text-[10px] text-gray-400 mt-1 px-1">
                   {formatTime(msg.createdAt)}
+                  {isMine && <MessageTicks msg={msg} />}
                 </span>
               </div>
+              {!isMine && (
+                <button
+                  type="button"
+                  onClick={() => openActions(msg)}
+                  aria-label="Message options"
+                  title="Message options"
+                  className="hidden lg:block ml-1.5 p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition shrink-0
+                             lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           )
         })}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* ── Message actions (long-press / right-click) ── */}
+      {actionMsg && (() => {
+        const mine = (actionMsg.senderId?._id?.toString() ?? actionMsg.senderId?.toString()) === currentUserId
+        return (
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center" onClick={() => setActionMsg(null)}>
+            <div className="absolute inset-0 bg-black/30" />
+            <div
+              role="dialog"
+              aria-label="Message options"
+              className="relative w-full lg:max-w-sm bg-white rounded-t-2xl lg:rounded-2xl p-2 pb-safe shadow-xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <p className="px-4 pt-2 pb-3 text-xs text-gray-500 line-clamp-2 whitespace-pre-wrap border-b border-gray-100">
+                {actionMsg.content}
+              </p>
+              <button
+                type="button"
+                onClick={() => copyMessage(actionMsg)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-800 rounded-xl hover:bg-gray-50"
+              >
+                <Copy className="w-4 h-4 text-gray-500" /> Copy
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteMessage(actionMsg._id, 'me')}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-danger rounded-xl hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" /> Delete for me
+              </button>
+              {mine && (
+                <button
+                  type="button"
+                  onClick={() => deleteMessage(actionMsg._id, 'everyone')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-danger rounded-xl hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete for everyone
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setActionMsg(null)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-500 rounded-xl hover:bg-gray-50"
+              >
+                <X className="w-4 h-4" /> Cancel
+              </button>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Scroll-to-bottom button ── */}
       {showScrollButton && (
@@ -863,6 +1062,28 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
       /* ── Message input (never scrolls, always visible at bottom) ── */
       <div className="flex-none border-t border-gray-100 px-4 py-3 bg-white">
         <div className="flex items-end gap-2">
+          <div className="flex shrink-0 pb-0.5">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => wrapSelection('*')}
+              aria-label="Bold"
+              title="Bold — *text*"
+              className="w-9 h-10 rounded-lg text-sm font-bold text-gray-500 hover:text-brand hover:bg-gray-50"
+            >
+              B
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => wrapSelection('_')}
+              aria-label="Italic"
+              title="Italic — _text_"
+              className="w-9 h-10 rounded-lg text-sm italic font-serif text-gray-500 hover:text-brand hover:bg-gray-50"
+            >
+              I
+            </button>
+          </div>
           <textarea
             ref={textareaRef}
             rows={1}
@@ -872,8 +1093,8 @@ export default function ChatWindow({ requestId, currentUserId, canReply = true }
             placeholder="Type a message…"
             className="flex-1 resize-none px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-2xl
                        placeholder:text-gray-400 focus:outline-none focus:border-brand focus:ring-0/30
-                        transition-colors overflow-hidden leading-relaxed"
-            style={{ minHeight: '44px', maxHeight: '96px' }}
+                        transition-colors overflow-y-auto leading-relaxed"
+            style={{ minHeight: '44px', maxHeight: '120px' }}
           />
           <button
             onClick={() => sendMessage()}

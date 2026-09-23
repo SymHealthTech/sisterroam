@@ -147,7 +147,7 @@ export default function PublicFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.label}
-                className="text-gray-400 hover:text-brand transition-colors"
+                className="inline-flex p-1.5 -m-1.5 text-gray-400 hover:text-brand transition-colors"
               >
                 <s.Icon />
               </a>

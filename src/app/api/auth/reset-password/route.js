@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
+import { forgetPasswordChange } from '@/lib/sessionRevocation'
 
 export async function POST(request) {
   try {
@@ -37,7 +38,9 @@ export async function POST(request) {
     user.password = password
     user.passwordResetToken = undefined
     user.passwordResetExpires = undefined
+    user.passwordChangedAt = new Date() // signs out every device
     await user.save()
+    forgetPasswordChange(user._id)
 
     return NextResponse.json({ success: true })
   } catch (e) {

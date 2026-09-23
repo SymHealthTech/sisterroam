@@ -8,6 +8,7 @@ import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import StoryCard from '@/components/stories/StoryCard'
 import { formatDate } from '@/lib/utils'
+import { safeJsonLd } from '@/lib/sanitize'
 
 const BASE = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 
@@ -92,7 +93,7 @@ export default async function StoryPage({ params }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <PublicNavbar />
       <main className="min-h-screen bg-gray-50">

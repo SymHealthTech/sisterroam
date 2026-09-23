@@ -152,3 +152,40 @@ export async function applyModerationDecision(publicId, status, resourceType = '
 
   return { matched: false }
 }
+
+/**
+ * Validate a profile-photo change coming from a member. A new photo URL must be
+ * one of OUR Cloudinary profile uploads (so it went through manual moderation)
+ * and always goes back to 'pending'. Clearing the photo, or re-sending the URL
+ * already on file, is allowed as-is.
+ *
+ * @returns {{ error?: string, $set?: object }} extra fields to $set, or an error
+ */
+export function checkProfilePhotoChange(currentUrl, nextUrl) {
+  if (nextUrl === undefined || nextUrl === null || nextUrl === '') return {}
+  if (nextUrl === currentUrl) return {}
+  const cloud = process.env.CLOUDINARY_CLOUD_NAME
+  const prefix = `https://res.cloudinary.com/${cloud}/image/upload/`
+  if (typeof nextUrl !== 'string' || !cloud || !nextUrl.startsWith(prefix) || !nextUrl.includes('/sisterroam/profiles/')) {
+    return { error: 'Invalid profile photo' }
+  }
+  return { $set: { profilePhotoStatus: 'pending' } }
+}
+
+/**
+ * Same rule for a travel-story cover: a new URL must be our own Cloudinary
+ * `sisterroam/stories` upload and is held for review. Clearing it, or keeping
+ * the URL already on the story, is allowed.
+ *
+ * @returns {{ error?: string, pending?: boolean }}
+ */
+export function checkStoryCoverChange(currentUrl, nextUrl) {
+  if (nextUrl === undefined || nextUrl === null || nextUrl === '') return {}
+  if (nextUrl === currentUrl) return {}
+  const cloud = process.env.CLOUDINARY_CLOUD_NAME
+  const prefix = `https://res.cloudinary.com/${cloud}/image/upload/`
+  if (typeof nextUrl !== 'string' || !cloud || !nextUrl.startsWith(prefix) || !nextUrl.includes('/sisterroam/stories/')) {
+    return { error: 'Invalid cover image' }
+  }
+  return { pending: true }
+}

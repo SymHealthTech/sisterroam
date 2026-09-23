@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
+import { safeJsonLd } from '@/lib/sanitize';
 
 export const metadata = {
   title: "About SisterRoam — Founded by Dr Manisha Sonawane",
@@ -250,7 +251,7 @@ export default function AboutPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {

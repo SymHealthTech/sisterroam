@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 
 const inputBase =
   'w-full h-[44px] sm:h-[40px] px-3 rounded-lg border bg-white text-sm text-gray-900 ' +
@@ -11,7 +11,9 @@ const Input = forwardRef(function Input(
   { label, error, helper, type = 'text', required, name, id, className, ...props },
   ref
 ) {
-  const inputId = id ?? name
+  // Controlled inputs often have neither id nor name — still link the label.
+  const autoId = useId()
+  const inputId = id ?? name ?? autoId
 
   return (
     <div className="flex flex-col">

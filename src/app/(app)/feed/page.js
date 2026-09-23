@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { FeedTab } from "@/app/(app)/community/page";
 import { formatDateRange } from "@/lib/utils";
+import { useSafeBack } from "@/hooks/useSafeBack";
 
 const QUICK_ACTIONS = [
   { label: "All sisters", href: "/sisters" },
@@ -225,6 +226,7 @@ function ShortcutsCard() {
 export default function FeedPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const goBack = useSafeBack('/feed');
   const freshUser = useAppUser();
   const sessionUser = freshUser ?? session?.user;
 
@@ -289,7 +291,7 @@ export default function FeedPage() {
       {/* ── Custom mobile header ── */}
       <div className="lg:hidden sticky top-0 z-20 bg-white border-b border-gray-100 flex items-center gap-2 min-h-[52px] py-2 px-4 shrink-0">
         <button
-          onClick={() => router.back()}
+          onClick={() => goBack()}
           className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 shrink-0"
           aria-label="Go back"
         >

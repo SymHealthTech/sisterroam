@@ -13,6 +13,7 @@ import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import ImageUpload from "@/components/ui/ImageUpload";
 import Skeleton from "@/components/ui/Skeleton";
+import { useSafeBack } from "@/hooks/useSafeBack";
 
 /* ── Static data ─────────────────────────────────────────── */
 
@@ -254,7 +255,7 @@ function TagInput({ label, tags, onChange, suggestions = [], placeholder }) {
             <button
               type="button"
               onClick={() => removeTag(t)}
-              className="text-brand/60 hover:text-brand"
+              className="p-1.5 -m-1.5 text-brand/60 hover:text-brand"
               aria-label={`Remove ${t}`}
             >
               <X className="w-3 h-3" />
@@ -398,6 +399,7 @@ function Section({ title, children }) {
 export default function ProfileEditPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
+  const goBack = useSafeBack('/profile');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -872,7 +874,7 @@ export default function ProfileEditPage() {
 
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-2 mb-20 sm:mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="sm" onClick={() => goBack()}>
             Cancel
           </Button>
           <Button size="sm" loading={saving} onClick={() => save(true)}>

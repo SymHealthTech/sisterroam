@@ -2,7 +2,9 @@ import withPWA from 'next-pwa'
 
 const pwa = withPWA({
   dest: 'public',
-  register: true,
+  // Registered from components/pwa/SWUpdater.jsx — next-pwa's own register
+  // script only runs on Pages-Router pages, which this app doesn't use.
+  register: false,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
@@ -11,15 +13,10 @@ const pwa = withPWA({
     document: '/offline.html',
   },
   buildExcludes: [/middleware-manifest\.json$/],
+  // API responses are deliberately NOT cached: they are per-member (profile,
+  // messages, payment status) and a shared device would serve one member's data
+  // to the next. Offline, API calls fail and pages show their error states.
   runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/sisterroam\.com\/api\//,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'sisterroam-api-cache',
-        expiration: { maxEntries: 64, maxAgeSeconds: 86400 },
-      },
-    },
     {
       urlPattern: /\.(png|jpg|jpeg|svg|gif|webp|ico)$/,
       handler: 'CacheFirst',
@@ -29,12 +26,21 @@ const pwa = withPWA({
       },
     },
     {
-      urlPattern: /^https:\/\/res\.cloudinary\.com\//,
+      // Never cache private media (ID documents, intro videos) on the device.
+      urlPattern: /^https:\/\/res\.cloudinary\.com\/(?!.*\/authenticated\/)/,
       handler: 'CacheFirst',
       options: {
         cacheName: 'sisterroam-cloudinary-cache',
         expiration: { maxEntries: 64, maxAgeSeconds: 2592000 },
       },
+    },
+    {
+      // Page navigations always go to the network (HTML is per-member, never
+      // cached). The route exists so that, offline, next-pwa's fallback serves
+      // /offline.html instead of the browser's error page.
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkOnly',
+      options: {},
     },
   ],
 })
@@ -70,6 +76,9 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self)' },
+          // Minimal CSP: no <base> hijacking, no plugins, no framing (clickjacking).
+          // Scripts are not restricted here so GA / Dodo / Cloudinary keep working.
+          { key: 'Content-Security-Policy', value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'" },
         ],
       },
     ]

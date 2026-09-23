@@ -1,5 +1,6 @@
 import User from '@/models/User'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
+import { forgetPasswordChange } from '@/lib/sessionRevocation'
 
 export async function POST(request) {
   try {
@@ -18,7 +19,11 @@ export async function POST(request) {
     if (!isMatch) return fail('Current password is incorrect')
 
     user.password = newPassword
+    // Signs out every device that logged in before now (this device signs
+    // straight back in with the new password — see profile/settings).
+    user.passwordChangedAt = new Date()
     await user.save()
+    forgetPasswordChange(user._id)
 
     return ok({ message: 'Password updated successfully' })
   } catch (e) {

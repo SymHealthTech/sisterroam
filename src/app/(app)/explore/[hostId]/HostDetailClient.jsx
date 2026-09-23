@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button'
 import MessageButton from '@/components/messages/MessageButton'
 import Skeleton from '@/components/ui/Skeleton'
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
+import { useSafeBack } from '@/hooks/useSafeBack'
 
 const ROOM_LABELS = {
   private_room: 'Private room',
@@ -555,6 +556,7 @@ function RequestCard({ host, className }) {
 
 export default function HostDetailClient({ host }) {
   const router = useRouter()
+  const goBack = useSafeBack('/explore')
   const { data: session } = useSession()
   const appUser = useAppUser()
   const tier = appUser?.verificationTier ?? session?.user?.verificationTier
@@ -586,7 +588,7 @@ export default function HostDetailClient({ host }) {
         {/* Back button */}
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => goBack()}
           className="hidden lg:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-5 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

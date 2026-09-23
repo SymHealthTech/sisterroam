@@ -6,6 +6,10 @@ import { ok, fail, getSession, handleError } from '@/lib/apiHelpers'
 import { sendEmail } from '@/lib/resend'
 import { deleteFile } from '@/lib/cloudinary'
 
+// Member names and admin notes are user-supplied — never inject them raw into HTML.
+const escapeHtml = (s = '') =>
+  String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
 export async function PATCH(request, { params }) {
   try {
     await connectDB()
@@ -62,11 +66,11 @@ export async function PATCH(request, { params }) {
     })
 
     const user = await User.findById(verif.userId).select('email fullName emailNotifications').lean()
-    if (user?.emailNotifications?.verificationUpdate !== false) {
+    if (user && user.emailNotifications?.verificationUpdate !== false) {
       sendEmail({
         to:      user.email,
         subject: isApproved ? 'You\'re verified on SisterRoam! 🎉' : `Verification update – SisterRoam`,
-        html:    `<p>Hi ${user.fullName},</p><p>${notifBody}</p>`,
+        html:    `<p>Hi ${escapeHtml(user.fullName)},</p><p>${escapeHtml(notifBody)}</p>`,
       }).catch(console.error)
     }
 

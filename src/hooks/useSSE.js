@@ -59,6 +59,8 @@ export function useSSE() {
       const events = [
         'connected',
         'new_message',
+        'messages_status',   // delivered / read ticks for my messages
+        'message_deleted',   // the other person deleted a message for everyone
         'conversation_update',
         'new_notification',
         'pending_notifications',

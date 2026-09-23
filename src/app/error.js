@@ -7,6 +7,20 @@ import Link from 'next/link'
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
     console.error('[App Error]', error)
+    // After a deploy, a page opened on the old build can ask for JS chunks that
+    // no longer exist. Reload once to pick up the new build instead of erroring.
+    const isChunkError =
+      error?.name === 'ChunkLoadError' || /Loading (CSS )?chunk [\w-]+ failed/i.test(error?.message ?? '')
+    if (isChunkError) {
+      try {
+        if (!sessionStorage.getItem('sr_chunk_reload')) {
+          sessionStorage.setItem('sr_chunk_reload', '1')
+          window.location.reload()
+          return
+        }
+        sessionStorage.removeItem('sr_chunk_reload')
+      } catch {}
+    }
   }, [error])
 
   return (

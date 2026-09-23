@@ -15,6 +15,7 @@ import CheckInPrompt from '@/components/safety/CheckInPrompt'
 import { useSafetyCheckins } from '@/hooks/useSafetyCheckins'
 import { SSEProvider } from '@/context/SSEContext'
 import { useSSEContext } from '@/context/SSEContext'
+import { useSafeBack } from '@/hooks/useSafeBack'
 
 const AppUserContext = createContext(null)
 export function useAppUser() { return useContext(AppUserContext) }
@@ -40,6 +41,7 @@ function LoadingSkeleton() {
 function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar = false }) {
   const { data: session, status, update: updateSession } = useSession()
   const router = useRouter()
+  const goBack = useSafeBack('/feed')
   const [freshData, setFreshData] = useState(() => freshDataCache ?? FRESH_DATA_DEFAULT)
   // Must be called unconditionally — useSafetyCheckins guards against null userId internally
   const { prompt, confirm, snooze } = useSafetyCheckins(session?.user?.id ?? null)
@@ -189,7 +191,7 @@ function AppLayoutInner({ children, title, subtitle, scrollable = true, noTopBar
         {/* Mobile mini-header */}
         {!noTopBar && <div className="lg:hidden flex items-center min-h-[52px] py-2 px-4 bg-white border-b border-gray-100 sticky top-0 z-20 shrink-0">
           <button
-            onClick={() => router.back()}
+            onClick={() => goBack()}
             className="p-1.5 text-gray-600 hover:text-gray-900 -ml-1.5 self-start mt-0.5"
             aria-label="Go back"
           >

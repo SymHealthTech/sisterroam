@@ -10,6 +10,7 @@ import Modal from '@/components/ui/Modal'
 import { useSSEContext } from '@/context/SSEContext'
 import { cn, formatRelativeTime, formatDateRange, truncate } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { stripFormatting } from '@/lib/messageText'
 
 const STATUS_BADGE = {
   pending:   { variant: 'warning', label: 'Pending' },
@@ -225,7 +226,7 @@ export default function ConversationList({ currentUserId, selectedRequestId, onS
                       unread > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'
                     )}>
                       {req.lastMessagePreview
-                        ? truncate(req.lastMessagePreview, 55)
+                        ? truncate(stripFormatting(req.lastMessagePreview), 55)
                         : req.message
                           ? truncate(req.message, 55)
                           : isDirect

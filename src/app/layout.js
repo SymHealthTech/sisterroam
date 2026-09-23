@@ -6,6 +6,8 @@ import ToastProvider from '@/components/ui/Toast'
 import SplashScreen from '@/components/ui/SplashScreen'
 import PWAInstallButton from '@/components/ui/PWAInstallButton'
 import SWUpdater from '@/components/pwa/SWUpdater'
+import { NavTracker } from '@/hooks/useSafeBack'
+import { safeJsonLd } from '@/lib/sanitize'
 
 export const metadata = {
   metadataBase: new URL('https://sisterroam.com'),
@@ -127,6 +129,9 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  // Android: shrink the layout when the on-screen keyboard opens, so the 100dvh
+  // app shell (chat composer, bottom sheets) stays above the keyboard.
+  interactiveWidget: 'resizes-content',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#5D1A8B' },
     { media: '(prefers-color-scheme: dark)', color: '#5D1A8B' },
@@ -144,11 +149,11 @@ export default async function RootLayout({ children }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }}
         />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 antialiased">
@@ -158,6 +163,7 @@ export default async function RootLayout({ children }) {
         <div id="pwa-splash-bg" aria-hidden="true" />
         <SessionProvider session={session}>
           <SWUpdater />
+          <NavTracker />
           <SplashScreen />
           {children}
           <PWAInstallButton />

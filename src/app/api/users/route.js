@@ -2,7 +2,7 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import HostProfile from '@/models/HostProfile'
 import { ok, fail, connectAndAuth, handleError } from '@/lib/apiHelpers'
-import { notifyAdminsOfPendingModeration } from '@/lib/moderation'
+import { notifyAdminsOfPendingModeration, checkProfilePhotoChange } from '@/lib/moderation'
 
 const UPDATABLE = [
   'fullName', 'age', 'gender', 'city', 'country', 'languages', 'education',
@@ -41,12 +41,22 @@ export async function PATCH(request) {
     for (const field of UPDATABLE) {
       if (body[field] !== undefined) $set[field] = body[field]
     }
+    // Settings → "Deactivate account". Signing in again reactivates (lib/auth.js).
+    if (body.isActive === false) $set.isActive = false
 
     // A newly uploaded profile photo is public + manually moderated: mark it
     // 'pending' so the UI shows initials until an admin approves it. Cloudinary
     // won't deliver the image until then either.
     if (body.profilePhotoPublicId !== undefined && body.profilePhotoPublicId) {
       $set.profilePhotoStatus = 'pending'
+    }
+    // A bare URL change must also be our own moderated upload (never an
+    // arbitrary link) and goes back to review.
+    if ($set.profilePhotoUrl) {
+      const current = await User.findById(session.user.id).select('profilePhotoUrl').lean()
+      const photo = checkProfilePhotoChange(current?.profilePhotoUrl, $set.profilePhotoUrl)
+      if (photo.error) return fail(photo.error, 400)
+      Object.assign($set, photo.$set)
     }
 
     const user = await User.findByIdAndUpdate(

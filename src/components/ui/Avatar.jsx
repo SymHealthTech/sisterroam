@@ -30,12 +30,13 @@ export default function Avatar({ name, src, size = 'md', className }) {
         className
       )}
       style={showImage ? { position: 'relative' } : { position: 'relative', backgroundColor: color.bg, color: color.text }}
+      role="img"
       aria-label={name ?? 'User avatar'}
     >
       {showImage ? (
         <Image
           src={src}
-          alt={name ?? 'User avatar'}
+          alt=""
           fill
           sizes={`${px}px`}
           className="object-cover"

@@ -32,6 +32,7 @@ import PWAInstallButtons from "@/components/ui/PWAInstallButtons";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
 import { HeroCta, HowItWorksCta, FinalCta } from "@/components/home/HomeCtas";
+import { safeJsonLd } from '@/lib/sanitize';
 
 export const revalidate = 3600;
 
@@ -322,20 +323,26 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <PublicNavbar />
 
       <main>
         {/* ── S1: Hero ─────────────────────────────────────────────────── */}
         <section
-          className="relative min-h-[560px] lg:min-h-[640px] flex items-center overflow-hidden bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url(https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80)",
-          }}
+          className="relative min-h-[560px] lg:min-h-[640px] flex items-center overflow-hidden"
           aria-label="Hero"
         >
+          {/* LCP image: next/image + priority so it is preloaded, sized for the
+              device and served as WebP/AVIF (was a late-discovered 1920px CSS bg). */}
+          <Image
+            src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
           {/* Mobile overlay — brand purple, left-heavy */}
           <div
             className="absolute inset-0 lg:hidden"

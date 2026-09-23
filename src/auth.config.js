@@ -19,6 +19,8 @@ const authConfig = {
       session.user.onboardingCompleted = token.onboardingCompleted
       session.user.onboardingStep    = token.onboardingStep
       session.user.username          = token.username
+      // When this session signed in (ms). Older tokens fall back to their iat.
+      session.user.authAt            = token.authAt ?? (token.iat ? token.iat * 1000 : 0)
       return session
     },
   },

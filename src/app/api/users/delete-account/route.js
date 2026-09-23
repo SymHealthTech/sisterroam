@@ -91,13 +91,21 @@ export async function DELETE() {
     ])
 
     // --- Verification request assets ---
+    // ID photos and the intro video are private ('authenticated') media and must
+    // be destroyed with that type, or Cloudinary answers 'not found' and keeps
+    // them. Older submissions may be public uploads, so fall back to 'upload'.
+    const destroyPrivate = async (publicId, resourceType) => {
+      const r = await deleteFile(publicId, resourceType, 'authenticated').catch(() => null)
+      if (r?.result !== 'ok') await deleteFile(publicId, resourceType, 'upload').catch(() => {})
+    }
     const verReqs = await VerificationRequest.find({ userId: uid })
-      .select('idDocumentPublicId selfieVideoPublicId')
+      .select('idDocumentPublicId idDocumentBackPublicId selfieVideoPublicId')
       .lean()
     await Promise.all(
       verReqs.flatMap(v => [
-        v.idDocumentPublicId   ? deleteFile(v.idDocumentPublicId).catch(() => {})            : null,
-        v.selfieVideoPublicId  ? deleteFile(v.selfieVideoPublicId, 'video').catch(() => {})  : null,
+        v.idDocumentPublicId     ? destroyPrivate(v.idDocumentPublicId, 'image')     : null,
+        v.idDocumentBackPublicId ? destroyPrivate(v.idDocumentBackPublicId, 'image') : null,
+        v.selfieVideoPublicId    ? destroyPrivate(v.selfieVideoPublicId, 'video')    : null,
       ].filter(Boolean))
     )
     await VerificationRequest.deleteMany({ userId: uid })

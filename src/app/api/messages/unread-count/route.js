@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb'
 import HostingRequest from '@/models/HostingRequest'
 import Message from '@/models/Message'
 import { ok, getSession, handleError } from '@/lib/apiHelpers'
+import { markMessages } from '@/lib/messageStatus'
 
 export async function GET() {
   try {
@@ -20,7 +21,11 @@ export async function GET() {
       requestId: { $in: requestIds },
       senderId:  { $ne: uid },
       isRead:    false,
+      deletedFor: { $ne: uid },
     })
+
+    // Her app is open and polling → everything sent to her has been delivered (✓✓).
+    await markMessages(session.user.id, { requestIds })
 
     return ok({ count })
   } catch (e) {

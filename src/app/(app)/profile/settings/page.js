@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,7 @@ function AccountRow({ label, value, children }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
       >
         <div>
@@ -262,7 +263,19 @@ export default function SettingsPage() {
       });
       const d = await res.json();
       if (d.success) {
-        toast.success("Password updated!");
+        // Every other device is now signed out; sign this one back in with the
+        // new password so she stays logged in here.
+        const again = await signIn("credentials", {
+          email: userData?.email,
+          password: newPassword,
+          redirect: false,
+        });
+        if (again?.error || !again?.ok) {
+          toast.success("Password updated. Please log in again.");
+          await signOut({ callbackUrl: "/login" });
+          return;
+        }
+        toast.success("Password updated! Other devices have been signed out.");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
