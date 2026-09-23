@@ -1,4 +1,4 @@
-import { test, expect, resetDb, createUser, createHost, login, db } from '../helpers.mjs'
+import { test, expect, resetDb, createUser, createHost, login, db, emailsTo } from '../helpers.mjs'
 
 test.beforeAll(resetDb)
 
@@ -205,4 +205,55 @@ test('paid member without documents still gets the re-upload screen', async ({ p
   await page.goto('/profile/verification')
   await expect(page).toHaveURL(/\/profile\/verification/)
   await expect(page.getByText('No verification request found.')).toHaveCount(0)
+})
+
+test('new-message email: at most one per 24 h, then again after a quiet day', async ({ browser }) => {
+  const d = await db()
+  const recipient = await createHost()
+  const alice = await createUser({ fullName: 'Alice <b>Bold</b> Sender' })
+  const bella = await createUser()
+  const convo = async (guest) => (await d.collection('hostingrequests').insertOne({
+    guestId: guest._id, hostId: recipient._id, status: 'accepted', requestType: 'direct', createdAt: new Date(), updatedAt: new Date(),
+  })).insertedId
+  const aliceChat = await convo(alice)
+  const bellaChat = await convo(bella)
+  const as = async (user) => {
+    const ctx = await browser.newContext(test.info().project.use)
+    const p = await ctx.newPage()
+    await p.route(/googletagmanager|google-analytics|cdn\.jsdelivr/, (r) => r.abort())
+    await login(p, user.email)
+    return { ctx, send: (id, text) => p.evaluate(({ id, text }) => fetch(`/api/messages/${id}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: text }),
+    }).then((r) => r.status), { id: id.toString(), text }) }
+  }
+  const messageEmails = async () => (await emailsTo(recipient.email)).filter((e) => /sent you a message/.test(e.subject))
+
+  const a = await as(alice)
+  const b = await as(bella)
+  expect(await a.send(aliceChat, 'Hi <i>there</i>!')).toBe(200)
+  await expect.poll(async () => (await messageEmails()).length).toBe(1)
+  const first = (await messageEmails())[0]
+  expect(first.html).toContain('Alice &lt;b&gt;Bold&lt;/b&gt; Sender')   // escaped, not markup
+  expect(first.html).toContain('&lt;i&gt;there&lt;/i&gt;')
+
+  // Within 24 h: more messages from her AND from another member → no new email.
+  expect(await a.send(aliceChat, 'Are you there?')).toBe(200)
+  expect(await b.send(bellaChat, 'Hello from Bella')).toBe(200)
+  await new Promise((r) => setTimeout(r, 2000))
+  expect(await messageEmails()).toHaveLength(1)
+
+  // A day later, the next message (from anyone) emails again.
+  await d.collection('users').updateOne({ _id: recipient._id }, { $set: { lastMessageEmailAt: new Date(Date.now() - 25 * 3600 * 1000) } })
+  expect(await b.send(bellaChat, 'Reminder: see my message?')).toBe(200)
+  await expect.poll(async () => (await messageEmails()).length).toBe(2)
+  expect((await messageEmails())[1].html).toContain('sent you a new message')
+
+  // She turned message emails off → never emailed.
+  await d.collection('users').updateOne({ _id: recipient._id }, { $set: { 'emailNotifications.newMessage': false, lastMessageEmailAt: null } })
+  expect(await a.send(aliceChat, 'One more')).toBe(200)
+  await new Promise((r) => setTimeout(r, 2000))
+  expect(await messageEmails()).toHaveLength(2)
+
+  await a.ctx.close()
+  await b.ctx.close()
 })

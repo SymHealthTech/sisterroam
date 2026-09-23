@@ -63,6 +63,8 @@ const userSchema = new mongoose.Schema(
     // Set when the "you paid but never uploaded your verification documents"
     // reminder email has been sent, so the daily job emails each member at most once.
     verificationDocsReminderSentAt: { type: Date },
+    // Last "you have a new message" email — at most one per 24 hours.
+    lastMessageEmailAt: { type: Date },
     role: { type: String, enum: ['guest', 'host', 'both'], default: 'guest' },
     isAdmin: { type: Boolean, default: false },
 

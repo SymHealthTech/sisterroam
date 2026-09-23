@@ -85,8 +85,14 @@ function btn(text, url) {
   `;
 }
 
+// Member-supplied text (names, message previews) must never be injected into
+// email HTML as-is — it could add links or markup to a mail from our domain.
+export function esc(value = "") {
+  return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
 function hi(name) {
-  return `<p style="margin:0 0 16px;font-size:16px;font-weight:600;color:#111827;">Hi ${name} 👋</p>`;
+  return `<p style="margin:0 0 16px;font-size:16px;font-weight:600;color:#111827;">Hi ${esc(name)} 👋</p>`;
 }
 
 function p(text) {
@@ -180,16 +186,18 @@ export async function sendNewRequestEmail(host, guest, hostingRequest) {
 
 /* ── New direct message (recipient) ─────────────────────────── */
 
-export async function sendNewDirectMessageEmail({ recipient, senderName, preview, requestId }) {
+export async function sendNewDirectMessageEmail({ recipient, senderName, preview, requestId, isNewConversation = true }) {
   const firstName = recipient.fullName?.split(" ")[0] ?? "sister";
   const from = senderName ?? "A sister";
-  const snippet = (preview ?? "").slice(0, 240);
+  const snippet = esc((preview ?? "").slice(0, 240));
   return sendEmail({
     to: recipient.email,
     subject: `${from} sent you a message on SisterRoam`,
     html: layout(`
       ${hi(firstName)}
-      ${p(`<strong>${from}</strong> just started a conversation with you on SisterRoam.`)}
+      ${p(isNewConversation
+        ? `<strong>${esc(from)}</strong> just started a conversation with you on SisterRoam.`
+        : `<strong>${esc(from)}</strong> sent you a new message on SisterRoam.`)}
       ${
         snippet
           ? `<div style="background:#f9fafb;border-radius:12px;padding:14px 18px;margin:16px 0;border-left:3px solid ${BRAND};">

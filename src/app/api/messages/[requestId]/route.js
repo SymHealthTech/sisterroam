@@ -146,23 +146,43 @@ export async function POST(request, { params }) {
       },
     })
 
-    // Email the recipient the first time a direct conversation is opened, so a
-    // sister who isn't currently online still learns someone reached out.
-    if (req.requestType === 'direct') {
-      const messageCount = await Message.countDocuments({ requestId })
-      if (messageCount === 1) {
-        const recipient = await User.findById(recipientId)
-          .select('email fullName emailNotifications')
-          .lean()
-        if (recipient?.email && recipient.emailNotifications?.newMessage !== false) {
-          sendNewDirectMessageEmail({
-            recipient,
-            senderName: session.user.fullName,
-            preview: stripFormatting(content),
-            requestId,
-          }).catch(console.error)
-        }
-      }
+    // Email the recipient about a new message — at most ONE such email per member
+    // per 24 hours (across all her conversations), so an active chat doesn't
+    // flood her inbox but a message after a quiet day brings her back.
+    // Claimed atomically, so two messages at once can't both send an email.
+    const DAY_MS = 24 * 60 * 60 * 1000
+    const claimed = await User.findOneAndUpdate(
+      {
+        _id: recipientId,
+        email: { $exists: true, $ne: '' },
+        'emailNotifications.newMessage': { $ne: false },
+        $or: [
+          { lastMessageEmailAt: null },
+          { lastMessageEmailAt: { $lt: new Date(Date.now() - DAY_MS) } },
+        ],
+      },
+      { $set: { lastMessageEmailAt: new Date() } },
+      { projection: 'email fullName lastMessageEmailAt' },
+    ).lean()
+    if (claimed) {
+      const isNewConversation =
+        req.requestType === 'direct' && (await Message.countDocuments({ requestId })) === 1
+      sendNewDirectMessageEmail({
+        recipient: claimed,
+        senderName: session.user.fullName,
+        preview: stripFormatting(content),
+        requestId,
+        isNewConversation,
+      }).catch((err) => {
+        console.error('[message email]', err)
+        // Not sent — give the 24-hour slot back so the next message can try.
+        User.updateOne(
+          { _id: recipientId },
+          claimed.lastMessageEmailAt
+            ? { $set: { lastMessageEmailAt: claimed.lastMessageEmailAt } }
+            : { $unset: { lastMessageEmailAt: '' } },
+        ).catch(() => {})
+      })
     }
 
     return ok(messageObj)
